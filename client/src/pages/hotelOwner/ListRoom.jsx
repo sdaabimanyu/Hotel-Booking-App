@@ -1,7 +1,47 @@
-import React from "react";
-import { roomsDummyData } from "../../assets/assets";
+import React, { useEffect, useState } from "react";
+import { useAppContext } from "../../context/appContext";
+import toast from "react-hot-toast";
 
 export default function ListRoom() {
+  const [rooms, setRooms] = useState();
+  const { axios, getToken, user, currency } = useAppContext();
+
+  // Fetch Rooms of the Hotel Owner
+  const fetchRooms = async () => {
+    try {
+      const { data } = await axios.get("/api/rooms/owner", {
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+      if (data.success) {
+        setRooms(data.rooms);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+  // Toggle Availability of the Room
+  const toggleAvailability = async (roomId) => {
+    const { data } = await axios.post(
+      "/api/rooms/toggle-availability",
+      { roomId },
+      { headers: { Authorization: `Bearer ${await getToken()} ` } },
+    );
+    if (data.success) {
+      toast.success(data.message);
+      fetchRooms();
+    } else {
+      toast.error(error.message);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchRooms();
+    }
+  }, [user]);
+
   return (
     <div>
       <h1 className=" text-[40px] ">List Room</h1>
@@ -26,7 +66,7 @@ export default function ListRoom() {
             </tr>
           </thead>
           <tbody className="text-sm">
-            {roomsDummyData.map((room, index) => (
+            {rooms?.map((room, index) => (
               <tr key={index}>
                 <td className="py-3 px-4 text-gray-700 border-t border-gray-300">
                   {room.roomType}
@@ -35,11 +75,13 @@ export default function ListRoom() {
                   {room.amenities.join(",")}{" "}
                 </td>
                 <td className="py-3 px-4 text-gray-700 border-t border-gray-300">
+                  {currency}
                   {room.pricePerNight}
                 </td>
                 <td className="py-3 px-4 text-red-500 border-t border-gray-300 text-center">
                   <label className="relative inline-flex items-center cursor-pointer text-gray-900 gap-3">
                     <input
+                      onChange={() => toggleAvailability(room._id)}
                       type="checkbox"
                       className="sr-only peer"
                       checked={room.isAvailable}

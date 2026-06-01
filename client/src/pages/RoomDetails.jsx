@@ -1,28 +1,114 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { roomCommonData, rooms } from "../assets/assets";
 import StarRating from "../components/StarRating";
+import { useAppContext } from "../context/appContext";
+import { roomCommonData } from "../assets/assets";
+import toast from "react-hot-toast";
 
 export default function RoomDetails() {
   const { id } = useParams();
+  const { rooms, getToken, axios, navigate } = useAppContext();
   const [room, setRoom] = useState(null);
   const [mainImage, setMainImage] = useState(null);
+  const [checkInDate, setCheckInDate] = useState(null);
+  const [checkOutDate, setCheckOutDate] = useState(null);
+  const [guests, setGuests] = useState(1);
+
+  const [isAvailable, setIsAvailable] = useState(false);
+
+  // Check if the Room is Available
+  const checkAvailability = async () => {
+    try {
+      if (!checkInDate || !checkOutDate) {
+        toast.error("Please select both dates");
+        return;
+      }
+
+      if (checkInDate >= checkOutDate) {
+        toast.error("Check-In Date should be before Check-Out Date");
+        return;
+      }
+
+      const { data } = await axios.post("/api/bookings/check-availability", {
+        room: id,
+        checkInDate,
+        checkOutDate,
+      });
+
+      if (data.success) {
+        if (data.isAvailable) {
+          setIsAvailable(true);
+          toast.success("Room is Available");
+        } else {
+          setIsAvailable(false);
+          toast.error("Room is Not Available");
+        }
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  // onSubmitHandler function to check availability & book the room
+  const onSubmitHandler = async (e) => {
+    try {
+      e.preventDefault();
+      if (!isAvailable) {
+        return checkAvailability();
+      } else {
+        const { data } = await axios.post(
+          "/api/bookings/book",
+          {
+            room: id,
+            checkInDate,
+            checkOutDate,
+            guests,
+            paymentMethod: "Pay At Hotel",
+          },
+          { headers: { Authorization: `Bearer ${await getToken()}` } },
+        );
+        if (data.success) {
+          toast.success(data.message);
+          navigate("/my-bookings");
+          scrollTo(0, 0);
+        } else {
+          toast.error(data.message);
+        }
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
 
   useEffect(() => {
-    const room = rooms.find((room) => room._id === Number(id));
-    if (room) {
-      room && setRoom(room);
-      room && setMainImage(room.image[0]);
+    if (!rooms.length) return;
+
+    const foundRoom = rooms.find((room) => room._id === id);
+
+    if (foundRoom) {
+      setRoom(foundRoom);
+      setMainImage(foundRoom.images?.[0]);
     }
-  }, [id]);
+  }, [id, rooms]);
+
+  const amenityIcons = {
+    "Free WiFi": "fa-solid fa-wifi",
+    "Free Breakfast": "fa-solid fa-mug-hot",
+    "Room Service": "fa-solid fa-bell-concierge",
+    "Pool Access": "fa-solid fa-person-swimming",
+    "Mountain View": "fa-solid fa-mountain",
+  };
+
   return (
     room && (
       <div className="pt-28 md:py-35 px-4 md:px-16 lg:px-24 xl:px-32 ">
         {/* Room Details */}
         <div className="flex flex-col md:flex-row md:items-center gap-x-3 mb-3">
           <h1 className="font-playfair text-3xl md:text-4xl mb-2 md:mb-0 ">
-            {room.hotel_name}{" "}
-            <span className="font-inter text-sm">({room.type})</span>
+            {room.hotel?.name}{" "}
+            <span className="font-inter text-sm">({room.roomType})</span>
           </h1>
           <p className="bg-orange-400 text-white text-xs font-inter  py-1.5 px-3  w-20 rounded-2xl  text-center">
             20% OFF
@@ -37,7 +123,7 @@ export default function RoomDetails() {
         {/* Room Address*/}
         <div>
           <p className="text-gray-500/90">
-            <i className="fa-solid fa-location-dot"></i> {room.hotel_location}
+            <i className="fa-solid fa-location-dot"></i> {room.hotel?.address}
           </p>
         </div>
         {/* Room Images */}
@@ -50,8 +136,8 @@ export default function RoomDetails() {
             />
           </div>
           <div className="grid grid-cols-2 gap-4 lg:w-1/2 w-full">
-            {room?.image.length > 1 &&
-              room.image.map((image, index) => (
+            {room?.images?.length > 1 &&
+              room.images.map((image, index) => (
                 <img
                   onClick={() => setMainImage(image)}
                   key={index}
@@ -70,28 +156,37 @@ export default function RoomDetails() {
             <h1 className="text-3xl md:text-4xl font-playfair">
               Experience Luxury Like Never Before
             </h1>
-            <div className="flex flex-wrap items-center mt-3 mb-6 gap-4">
-              {room.amenities.map((item, index) => (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100">
-                  <i className={item.icon}></i>
-
-                  <p className="text-xs">{item.name}</p>
+            <div className="flex flex-wrap gap-3 mt-4">
+              {room?.amenities?.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-lg"
+                >
+                  <i
+                    className={`${amenityIcons[item] || "fa-solid fa-circle-check"} text-gray-700`}
+                  />
+                  <span className="text-[12px] text-gray-800">{item}</span>
                 </div>
               ))}
             </div>
           </div>
           {/* Room Price */}
-          <p className="text-2xl font-medium">${room.price}/night</p>
+          <p className="text-2xl font-medium">${room.pricePerNight}/night</p>
         </div>
 
         {/* CheckIn CheckOut Form */}
-        <form className="flex flex-col md:flex-row  items-start md:items-center justify-between bg-white shadow-[0px_0px_20px_rgba(0,0,0,0.15)] p-6 rounded-xl mx-auto mt-16 max-w-6xl">
+        <form
+          onSubmit={onSubmitHandler}
+          className="flex flex-col md:flex-row  items-start md:items-center justify-between bg-white shadow-[0px_0px_20px_rgba(0,0,0,0.15)] p-6 rounded-xl mx-auto mt-16 max-w-6xl"
+        >
           <div className="flex flex-col flex-wrap md:flex-row items-start md:items-center gap-4 md:gap-10 text-gray-500">
             <div className="flex flex-col">
               <label htmlFor="CheckInDate" className="font-medium">
                 Check-In
               </label>
               <input
+                onChange={(e) => setCheckInDate(e.target.value)}
+                min={new Date().toISOString().split("T")[0]}
                 type="date"
                 id="CheckInDate"
                 placeholder="Check-In"
@@ -107,6 +202,9 @@ export default function RoomDetails() {
                 Check-Out
               </label>
               <input
+                onChange={(e) => setCheckOutDate(e.target.value)}
+                min={checkInDate}
+                disabled={!checkInDate}
                 type="date"
                 id="CheckOutDate"
                 placeholder="Check-Out"
@@ -124,7 +222,9 @@ export default function RoomDetails() {
               <input
                 type="number"
                 id="Guests"
-                placeholder="0"
+                placeholder="1"
+                onChange={(e) => setGuests(e.target.value)}
+                value={guests}
                 className="max-w-20 rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none"
                 required
               />
@@ -135,7 +235,7 @@ export default function RoomDetails() {
             type="submit"
             className="bg-primary hover:bg-primary-dull active:scale-95 transition-all text-white rounded-md max-md:w-full max-md:mt-6 md:px-25 py-3 md:py-4 text-base cursor-pointer"
           >
-            Check Availability
+            {isAvailable ? "Book Now" : "Check Availability"}
           </button>
         </form>
 
@@ -173,7 +273,7 @@ export default function RoomDetails() {
               className="h-14 w-14 md:h-18 md:w-18 rounded-full"
             />
             <div>
-              <p className="text-lg md:text-xl">Hosted by {room.hotel_name}</p>
+              <p className="text-lg md:text-xl">Hosted by {room.hotel?.name}</p>
               <div className="flex items-center mt-1">
                 <StarRating />
                 <p className="ml-2">200+ reviews</p>

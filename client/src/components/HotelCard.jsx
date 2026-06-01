@@ -9,8 +9,8 @@ export default function HotelCard({ room, index }) {
       className="max-w-70 w-full rounded-2xl relative shadow mb-10 pb-2 bg-white"
     >
       <img
-        src={room.image[2]}
-        alt={room.hotel_name}
+        src={room.images?.[0]}
+        alt={room.hotel?.name}
         className="w-full h-60 object-cover rounded-t-xl"
       />
 
@@ -19,26 +19,24 @@ export default function HotelCard({ room, index }) {
           Best Seller
         </p>
       )}
+
       <div className="py-1">
         <div className="flex items-center justify-between mt-2 px-2">
           <p className="text-xl font-semibold text-black font-playfair">
-            {room.hotel_name}
-          </p>
-          <p className="text-[15px] font-semibold ">
-            {room.ratings}{" "}
-            <i className="fa-solid fa-star text-amber-300 text-[16px]"></i>
+            {room.hotel?.name}
           </p>
         </div>
 
         <p className="text-gray-500 px-2 mt-2 text-[14px]">
-          <i className="fa-solid fa-location-dot"></i> {room.hotel_location}
+          <i className="fa-solid fa-location-dot"></i> {room.hotel?.city}
         </p>
 
         <div className="flex justify-between px-2 mt-2">
           <p className="text-black mt-1">
-            ${room.price}
+            ${room.pricePerNight}
             <span className="text-gray-500/90">/Night</span>
           </p>
+
           <button className="px-2 py-2 bg-black text-white rounded">
             Book Now
           </button>

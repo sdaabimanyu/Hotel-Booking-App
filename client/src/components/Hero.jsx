@@ -1,7 +1,42 @@
-import React from "react";
+import React, { useState } from "react";
+import { useAppContext } from "../context/appContext";
 
 export default function Hero() {
   const cities = ["New York", "Dubai", "Monaco", "Alaska", "Paris"];
+  const { navigate, getToken, axios, setSearchedCities } = useAppContext();
+  const [destination, setDestination] = useState("");
+
+  const onSearch = async (e) => {
+    e.preventDefault();
+
+    navigate(`/rooms?destination=${destination}`);
+
+    try {
+      await axios.post(
+        "/api/user/store-recent-search",
+        {
+          recentSearchedCity: destination,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${await getToken()}`,
+          },
+        },
+      );
+
+      setSearchedCities((prev) => {
+        const updated = [...prev, destination];
+
+        if (updated.length > 3) {
+          updated.shift();
+        }
+
+        return updated;
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <div className='relative flex flex-col items-start justify-center px-6 md:px-16 lg:px-24 xl:px-32 text-white bg-[url("/src/assets/hero3.jpg")] bg-no-repeat bg-cover bg-center h-screen overflow-hidden'>
@@ -23,7 +58,10 @@ export default function Hero() {
           hotels and resorts. Start your journey today.
         </p>
 
-        <form className="bg-white text-gray-500 rounded-lg px-6 py-4 flex flex-col md:flex-row max-md:items-start gap-4 max-md:mx-auto mt-10">
+        <form
+          onSubmit={onSearch}
+          className="bg-white text-gray-500 rounded-lg px-6 py-4 flex flex-col md:flex-row max-md:items-start gap-4 max-md:mx-auto mt-10"
+        >
           {/* Destination */}
           <div>
             <div className="flex items-center gap-2">
@@ -46,6 +84,8 @@ export default function Hero() {
             </div>
 
             <input
+              onChange={(e) => setDestination(e.target.value)}
+              value={destination}
               list="destinations"
               id="destinationInput"
               type="text"
