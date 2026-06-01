@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAppContext } from "../context/appContext";
+import { useAppContext } from "../context/AppContext";
 
 export default function Hero() {
   const cities = ["New York", "Dubai", "Monaco", "Alaska", "Paris"];

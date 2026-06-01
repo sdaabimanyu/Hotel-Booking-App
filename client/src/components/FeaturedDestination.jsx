@@ -1,6 +1,6 @@
 import React from "react";
 import HotelCard from "./HotelCard";
-import { useAppContext } from "../context/appContext";
+import { useAppContext } from "../context/AppContext";
 
 export default function FeturedDestination() {
   const { rooms, navigate } = useAppContext();

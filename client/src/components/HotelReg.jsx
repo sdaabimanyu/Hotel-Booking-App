@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import regposter from "../assets/regposter1.jpeg";
-import { useAppContext } from "../context/appContext";
+import { useAppContext } from "../context/AppContext";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import toast from "react-hot-toast";

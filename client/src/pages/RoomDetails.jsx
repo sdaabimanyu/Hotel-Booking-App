@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import StarRating from "../components/StarRating";
-import { useAppContext } from "../context/appContext";
+import { useAppContext } from "../context/AppContext";
 import { roomCommonData } from "../assets/assets";
 import toast from "react-hot-toast";
 

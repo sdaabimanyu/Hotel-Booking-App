@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useAppContext } from "../../context/appContext";
+import { useAppContext } from "../../context/AppContext";
 
 export default function Dashboard() {
   const { currency, user, getToken, toast, axios } = useAppContext();

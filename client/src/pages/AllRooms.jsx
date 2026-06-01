@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { rooms } from "../assets/assets";
 import StarRating from "../components/StarRating";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAppContext } from "../context/appContext";
+import { useAppContext } from "../context/AppContext";
 
 const CheckBox = ({ label, selected = false, onChange = () => {} }) => {
   return (
