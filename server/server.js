@@ -1,5 +1,5 @@
 import express from "express";
-import "dotenv/config";
+import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./configs/db.js";
 import { clerkMiddleware } from "@clerk/express";
@@ -13,11 +13,17 @@ import bookingRouter from "./routes/bookingRoutes.js";
 connectDB();
 connectCloudinary();
 
+dotenv.config();
+
+
 const app = express();
 
 app.use(
   cors({
-    origin: "https://hotel-booking-app-nine-rho.vercel.app",
+    origin: [
+      "http://localhost:5173",
+      "https://hotel-booking-app-nine-rho.vercel.app",
+    ],
     credentials: true,
   }),
 ); // Enable Cross-Origin Resource Sharing
