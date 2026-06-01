@@ -15,7 +15,12 @@ connectCloudinary();
 
 const app = express();
 
-app.use(cors()); // Enable Cross-Origin Resource Sharing
+app.use(
+  cors({
+    origin: "https://hotel-booking-app-nine-rho.vercel.app",
+    credentials: true,
+  }),
+); // Enable Cross-Origin Resource Sharing
 
 // Middleware
 app.use(express.json());
