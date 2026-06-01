@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import NavBar from "../../components/hotelOwner/NavBar";
+import NavBar from "../../components/hotelOwner/Navbar";
 import Sidebar from "../../components/hotelOwner/Sidebar";
 import { Outlet } from "react-router-dom";
 import { useAppContext } from "../../context/AppContext";
