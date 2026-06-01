@@ -2,7 +2,7 @@ import { messageInRaw } from "svix";
 import Booking from "../models/Booking.js";
 import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
-import transporter from "../configs/nodeMailer.js";
+import transporter from "../configs/nodemailer.js";
 
 // Function to Check Availability of Room
 const checkAvailability = async (checkInDate, checkOutDate, room) => {
