@@ -148,7 +148,11 @@ export const getUserBookings = async (req, res) => {
 
 export const getHotelBookings = async (req, res) => {
   try {
+    console.log("AUTH USER:", req.auth.userId);
+
     const hotel = await Hotel.findOne({ owner: req.auth.userId });
+
+    console.log("HOTEL:", hotel);
     if (!hotel) {
       return res.json({
         success: false,
