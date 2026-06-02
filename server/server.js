@@ -25,10 +25,12 @@ app.use(
       "http://localhost:5173",
       "https://hotel-booking-app-nine-rho.vercel.app",
     ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
-  })
+  }),
 );
 
+app.options("*", cors());
 app.use(express.json());
 app.use(clerkMiddleware());
 
