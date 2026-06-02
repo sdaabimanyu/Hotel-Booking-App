@@ -15,12 +15,16 @@ export default function Dashboard() {
       const { data } = await axios.get("/api/bookings/hotel", {
         headers: { Authorization: `Bearer ${await getToken()}` },
       });
+
+      console.log("DASHBOARD RESPONSE:", data);
+
       if (data.success) {
         setDashboardData(data.dashboardData);
       } else {
         toast.error(data.message);
       }
     } catch (error) {
+      console.log(error);
       toast.error(error.message);
     }
   };
