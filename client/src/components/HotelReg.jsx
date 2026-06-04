@@ -25,7 +25,6 @@ export default function HotelReg() {
 
       const token = await getToken();
 
-      console.log("TOKEN:", token); // debug
 
       const { data } = await axios.post(
         "/api/hotels",

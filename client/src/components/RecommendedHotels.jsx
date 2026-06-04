@@ -23,9 +23,6 @@ export default function RecommendedHotels() {
     setRecommended(filteredHotels);
   }, [rooms, searchedCities]);
 
-  console.log("ROOMS:", rooms);
-  console.log("SEARCHED CITIES:", searchedCities);
-  console.log("RECOMMENDED:", recommended);
 
   if (recommended.length === 0) return null;
 

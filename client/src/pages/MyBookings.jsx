@@ -12,7 +12,6 @@ export default function MyBookings() {
         headers: { Authorization: `Bearer ${await getToken()}` },
       });
 
-      console.log("BOOKINGS API:", data);
 
       if (data.success) {
         setBookings(data.bookings);

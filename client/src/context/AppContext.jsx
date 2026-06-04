@@ -25,8 +25,6 @@ export const AppProvider = ({ children }) => {
 
       const { data } = await axios.get("/api/rooms");
 
-      console.log("ROOM API RESPONSE:", data);
-
       if (data.success) {
         setRooms(data.rooms);
       }

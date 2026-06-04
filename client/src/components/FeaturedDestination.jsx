@@ -4,8 +4,6 @@ import { useAppContext } from "../context/AppContext";
 
 export default function FeturedDestination() {
   const { rooms, navigate } = useAppContext();
-
-  console.log("ROOMS ARRAY:", rooms);
   return (
     rooms?.length > 0 && (
       <div className="flex flex-col justify-center items-center px-20 py-15 bg-gray-50">

@@ -17,8 +17,6 @@ export const getUserData = async (req, res) => {
 
 export const storeRecentSearchedCities = async (req, res) => {
   try {
-    console.log("BODY:", req.body);
-    console.log("USER:", req.user);
     const { recentSearchedCity } = req.body;
     const user = await req.user;
 

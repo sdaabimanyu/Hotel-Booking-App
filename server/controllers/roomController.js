@@ -8,8 +8,6 @@ export const createRoom = async (req, res) => {
   try {
     const { userId } = getAuth(req);
 
-    console.log("USER ID:", userId);
-
     const hotel = await Hotel.findOne({ owner: userId });
 
     if (!hotel) {
