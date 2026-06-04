@@ -154,8 +154,11 @@ export const getHotelBookings = async (req, res) => {
 
     console.log("ALL HOTELS:", hotels);
 
+    console.log("req.auth =", req.auth);
+    console.log("req.user =", req.user);
+
     const hotel = await Hotel.findOne({
-      owner: req.auth.userId,
+      owner: req.user._id,
     });
 
     console.log("MATCHED HOTEL:", hotel);
