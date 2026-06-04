@@ -150,30 +150,43 @@ export const getHotelBookings = async (req, res) => {
   try {
     console.log("AUTH USER:", req.auth.userId);
 
+    const hotels = await Hotel.find();
+
+    console.log("ALL HOTELS:", hotels);
+
     const hotel = await Hotel.findOne({ owner: req.auth.userId });
 
-    console.log("HOTEL:", hotel);
+    console.log("MATCHED HOTEL:", hotel);
+
     if (!hotel) {
       return res.json({
         success: false,
         message: "No Hotel Found",
       });
     }
+
     const bookings = await Booking.find({ hotel: hotel._id })
       .populate("room hotel user")
       .sort({ createdAt: -1 });
-    // Total Bookings
+
     const totalBookings = bookings.length;
-    // Total revenue
+
     const totalRevenue = bookings.reduce(
       (acc, booking) => acc + booking.totalPrice,
       0,
     );
+
     res.json({
       success: true,
-      dashboardData: { totalBookings, totalRevenue, bookings },
+      dashboardData: {
+        totalBookings,
+        totalRevenue,
+        bookings,
+      },
     });
   } catch (error) {
+    console.log("GET HOTEL BOOKINGS ERROR:", error);
+
     res.json({
       success: false,
       message: "Failed to fetch bookings",

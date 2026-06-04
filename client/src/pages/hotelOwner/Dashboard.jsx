@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
+import toast from "react-hot-toast";
 
 export default function Dashboard() {
-  const { currency, user, getToken, toast, axios } = useAppContext();
+  const { currency, user, getToken, axios } = useAppContext();
 
   const [dashboardData, setDashboardData] = useState({
     bookings: [],
