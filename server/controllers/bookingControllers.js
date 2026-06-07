@@ -203,29 +203,36 @@ export const getHotelBookings = async (req, res) => {
 export const stripePayment = async (req, res) => {
   try {
     const { bookingId } = req.body;
-    const booking = await Booking.findById(booking.room).populate("hotle");
+
+    const booking = await Booking.findById(bookingId);
+
+    console.log("BOOKING:", booking);
+
+    const roomData = await Room.findById(booking.room).populate("hotel");
+
+    console.log("ROOM:", roomData);
+
     const totalPrice = booking.totalPrice;
+
     const { origin } = req.headers;
 
-    const stripeIntance = new stripe(process.env.STRIPE_SECRET_KEY);
+    console.log("ORIGIN:", origin);
 
-    const line_items = [
-      {
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: roomData.hotel.name,
+    const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+    const session = await stripeInstance.checkout.sessions.create({
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: roomData.hotel.name,
+            },
+            unit_amount: totalPrice * 100,
           },
-          unit_amount: totalPrice * 100,
+          quantity: 1,
         },
-        quantity: 1,
-      },
-    ];
-    console.log("CREATING STRIPE SESSION...");
-
-    // Create CheckOut Session
-    const session = await stripeIntance.checkout.sessions.create({
-      line_items,
+      ],
       mode: "payment",
       success_url: `${origin}/loader/my-bookings`,
       cancel_url: `${origin}/my-bookings`,
@@ -233,12 +240,14 @@ export const stripePayment = async (req, res) => {
         bookingId,
       },
     });
-    console.log("SESSION CREATED:", session.id);
+
     res.json({
       success: true,
       url: session.url,
     });
   } catch (error) {
+    console.log("STRIPE ERROR:", error);
+
     res.json({
       success: false,
       message: error.message,
