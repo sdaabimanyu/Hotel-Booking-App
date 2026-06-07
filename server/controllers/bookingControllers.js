@@ -218,7 +218,8 @@ export const stripePayment = async (req, res) => {
 
     console.log("ORIGIN:", origin);
 
-    const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
+    console.log("CREATING STRIPE SESSION...");
 
     const session = await stripeInstance.checkout.sessions.create({
       line_items: [
@@ -240,6 +241,7 @@ export const stripePayment = async (req, res) => {
         bookingId,
       },
     });
+    console.log("SESSION CREATED:", session.id);
 
     res.json({
       success: true,
