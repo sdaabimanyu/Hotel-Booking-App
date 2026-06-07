@@ -11,6 +11,7 @@ import roomRouter from "./routes/roomRoutes.js";
 import bookingRouter from "./routes/bookingRoutes.js";
 
 import connectCloudinary from "./configs/cloudinary.js";
+import { stripeWebHooks } from "./controllers/stripeWebhooks.js";
 
 dotenv.config();
 
@@ -23,7 +24,14 @@ app.use(
       "https://hotel-booking-app-nine-rho.vercel.app",
     ],
     credentials: true,
-  })
+  }),
+);
+
+// API to listen to Stripe Webhooks
+app.post(
+  "/api/stripe",
+  express.raw({ type: "application/json" }),
+  stripeWebHooks,
 );
 
 app.use(express.json());
