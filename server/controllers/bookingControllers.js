@@ -202,26 +202,40 @@ export const getHotelBookings = async (req, res) => {
 
 export const stripePayment = async (req, res) => {
   try {
-    console.log("STRIPE KEY EXISTS:", !!process.env.STRIPE_SECRET_KEY);
-
     const { bookingId } = req.body;
-
-    const booking = await Booking.findById(bookingId);
-
-    console.log("BOOKING:", booking);
-
-    const roomData = await Room.findById(booking.room).populate("hotel");
-
-    console.log("ROOM:", roomData);
-
+    const booking = await Booking.findById(booking.room).populate("hotle");
+    const totalPrice = booking.totalPrice;
     const { origin } = req.headers;
 
-    console.log("ORIGIN:", origin);
+    const stripeIntance = new stripe(process.env.STRIPE_SECRET_KEY);
 
-    // rest of code...
+    const line_items = [
+      {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: roomData.hotel.name,
+          },
+          unit_amount: totalPrice * 100,
+        },
+        quantity: 1,
+      },
+    ];
+    // Create CheckOut Session
+    const session = await stripeIntance.checkout.sessions.create({
+      line_items,
+      mode: "payment",
+      success_url: `${origin}/loader/my-bookings`,
+      cancel_url: `${origin}/my-bookings`,
+      metadata: {
+        bookingId,
+      },
+    });
+    res.json({
+      success: true,
+      url: session.url,
+    });
   } catch (error) {
-    console.log("STRIPE PAYMENT ERROR:", error);
-
     res.json({
       success: false,
       message: error.message,
