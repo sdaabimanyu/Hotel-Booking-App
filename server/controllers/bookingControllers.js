@@ -221,6 +221,8 @@ export const stripePayment = async (req, res) => {
         quantity: 1,
       },
     ];
+    console.log("CREATING STRIPE SESSION...");
+
     // Create CheckOut Session
     const session = await stripeIntance.checkout.sessions.create({
       line_items,
@@ -231,6 +233,7 @@ export const stripePayment = async (req, res) => {
         bookingId,
       },
     });
+    console.log("SESSION CREATED:", session.id);
     res.json({
       success: true,
       url: session.url,
