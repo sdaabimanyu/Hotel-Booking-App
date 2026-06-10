@@ -14,8 +14,6 @@ export const stripeWebHooks = async (req, res) => {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET,
     );
-
-    console.log("EVENT:", event.type);
   } catch (error) {
     console.log("WEBHOOK ERROR:", error.message);
     return res.status(400).send(error.message);
@@ -23,8 +21,6 @@ export const stripeWebHooks = async (req, res) => {
 
   try {
     if (event.type === "payment_intent.succeeded") {
-      console.log("PAYMENT INTENT SUCCEEDED");
-
       const paymentIntent = event.data.object;
 
       const sessions = await stripeInstance.checkout.sessions.list({
@@ -34,20 +30,16 @@ export const stripeWebHooks = async (req, res) => {
       const session = sessions.data[0];
 
       if (!session) {
-        console.log("NO SESSION FOUND");
         return res.json({ received: true });
       }
 
       const bookingId = session.metadata?.bookingId;
 
-      console.log("BOOKING ID:", bookingId);
-
       if (!bookingId) {
-        console.log("NO BOOKING ID FOUND");
         return res.json({ received: true });
       }
 
-      const booking = await Booking.findByIdAndUpdate(
+      await Booking.findByIdAndUpdate(
         bookingId,
         {
           isPaid: true,
@@ -56,15 +48,13 @@ export const stripeWebHooks = async (req, res) => {
         },
         { new: true },
       );
-
-      console.log("BOOKING UPDATED:", booking);
     }
 
-    res.json({ received: true });
+    return res.json({ received: true });
   } catch (error) {
     console.log("DB UPDATE ERROR:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
