@@ -1,55 +1,54 @@
-export const stripeWebHooks = async (req, res) => {
-  console.log("WEBHOOK HIT");
+import Stripe from "stripe";
+import Booking from "../models/Booking.js";
 
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+export const stripeWebHooks = async (req, res) => {
+  const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
   const sig = req.headers["stripe-signature"];
 
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(
+    event = stripeInstance.webhooks.constructEvent(
       req.body,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET
+      process.env.STRIPE_WEBHOOK_SECRET,
     );
 
-    console.log("EVENT TYPE:", event.type);
-  } catch (err) {
-    console.log("SIGNATURE ERROR:", err.message);
+    console.log("EVENT:", event.type);
+  } catch (error) {
+    console.log("WEBHOOK ERROR:", error.message);
 
-    return res.status(400).send(err.message);
+    return res.status(400).send(error.message);
   }
 
   try {
     if (event.type === "checkout.session.completed") {
-      console.log("CHECKOUT COMPLETED");
-
       const session = event.data.object;
 
-      console.log("SESSION:", session);
-
-      console.log("METADATA:", session.metadata);
+      console.log("SESSION:", session.id);
 
       const bookingId = session.metadata.bookingId;
 
       console.log("BOOKING ID:", bookingId);
 
-      const updated = await Booking.findByIdAndUpdate(
+      await Booking.findByIdAndUpdate(
         bookingId,
         {
           isPaid: true,
           paymentMethod: "Stripe",
         },
-        { new: true }
+        { new: true },
       );
 
-      console.log("UPDATED:", updated);
+      console.log("BOOKING UPDATED");
     }
 
-    res.json({ received: true });
+    res.json({
+      received: true,
+    });
   } catch (error) {
-    console.log("WEBHOOK ERROR:", error);
+    console.log("DB UPDATE ERROR:", error);
 
     res.status(500).json({
       success: false,
