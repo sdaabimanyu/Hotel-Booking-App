@@ -24,16 +24,18 @@ export const stripeWebHooks = async (req, res) => {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
 
+      console.log("SESSION:", session);
+
       const bookingId = session.metadata.bookingId;
 
-      console.log("PAYMENT SUCCESS FOR:", bookingId);
+      console.log("BOOKING ID:", bookingId);
 
       await Booking.findByIdAndUpdate(bookingId, {
         isPaid: true,
         paymentMethod: "Stripe",
       });
 
-      console.log("BOOKING UPDATED");
+      console.log("UPDATED BOOKING:", updatedBooking);
     }
 
     res.json({ received: true });
