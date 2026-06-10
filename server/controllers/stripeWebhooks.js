@@ -23,10 +23,14 @@ export const stripeWebHooks = async (req, res) => {
   }
 
   try {
+    console.log("EVENT:", event.type);
+
     if (event.type === "checkout.session.completed") {
+      console.log("INSIDE CHECKOUT SESSION COMPLETED");
+
       const session = event.data.object;
 
-      console.log("SESSION ID:", session.id);
+      console.log("SESSION:", session);
 
       const bookingId = session.metadata.bookingId;
 
