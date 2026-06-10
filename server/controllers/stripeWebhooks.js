@@ -26,27 +26,26 @@ export const stripeWebHooks = async (req, res) => {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
 
-      console.log("SESSION:", session.id);
+      console.log("SESSION ID:", session.id);
 
       const bookingId = session.metadata.bookingId;
 
       console.log("BOOKING ID:", bookingId);
 
-      await Booking.findByIdAndUpdate(
+      const booking = await Booking.findByIdAndUpdate(
         bookingId,
         {
           isPaid: true,
           paymentMethod: "Stripe",
+          status: "confirmed",
         },
         { new: true },
       );
 
-      console.log("BOOKING UPDATED");
+      console.log("BOOKING UPDATED:", booking);
     }
 
-    res.json({
-      received: true,
-    });
+    res.json({ received: true });
   } catch (error) {
     console.log("DB UPDATE ERROR:", error);
 
