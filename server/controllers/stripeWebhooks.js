@@ -19,41 +19,58 @@ export const stripeWebHooks = async (req, res) => {
   } catch (error) {
     console.log("WEBHOOK ERROR:", error.message);
 
-    return res.status(400).send(error.message);
+    return res.status(400).send(`Webhook Error: ${error.message}`);
   }
 
   try {
-    console.log("EVENT:", event.type);
-
+    // Handle successful checkout
     if (event.type === "checkout.session.completed") {
       console.log("INSIDE CHECKOUT SESSION COMPLETED");
 
       const session = event.data.object;
 
-      console.log("SESSION:", session);
+      console.log("SESSION ID:", session.id);
+      console.log("SESSION METADATA:", session.metadata);
 
-      const bookingId = session.metadata.bookingId;
+      const bookingId = session.metadata?.bookingId;
 
       console.log("BOOKING ID:", bookingId);
 
-      const booking = await Booking.findByIdAndUpdate(
+      if (!bookingId) {
+        console.log("BOOKING ID NOT FOUND IN METADATA");
+
+        return res.json({
+          received: true,
+        });
+      }
+
+      const updatedBooking = await Booking.findByIdAndUpdate(
         bookingId,
         {
           isPaid: true,
           paymentMethod: "Stripe",
           status: "confirmed",
         },
-        { new: true },
+        {
+          new: true,
+        },
       );
 
-      console.log("BOOKING UPDATED:", booking);
+      console.log("BOOKING UPDATED:", updatedBooking);
     }
 
-    res.json({ received: true });
+    // Optional backup handler
+    if (event.type === "payment_intent.succeeded") {
+      console.log("PAYMENT INTENT SUCCEEDED");
+    }
+
+    return res.json({
+      received: true,
+    });
   } catch (error) {
     console.log("DB UPDATE ERROR:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
