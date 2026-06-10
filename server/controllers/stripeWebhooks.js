@@ -18,59 +18,53 @@ export const stripeWebHooks = async (req, res) => {
     console.log("EVENT:", event.type);
   } catch (error) {
     console.log("WEBHOOK ERROR:", error.message);
-
-    return res.status(400).send(`Webhook Error: ${error.message}`);
+    return res.status(400).send(error.message);
   }
 
   try {
-    // Handle successful checkout
-    if (event.type === "checkout.session.completed") {
-      console.log("INSIDE CHECKOUT SESSION COMPLETED");
+    if (event.type === "payment_intent.succeeded") {
+      console.log("PAYMENT INTENT SUCCEEDED");
 
-      const session = event.data.object;
+      const paymentIntent = event.data.object;
 
-      console.log("SESSION ID:", session.id);
-      console.log("SESSION METADATA:", session.metadata);
+      const sessions = await stripeInstance.checkout.sessions.list({
+        payment_intent: paymentIntent.id,
+      });
+
+      const session = sessions.data[0];
+
+      if (!session) {
+        console.log("NO SESSION FOUND");
+        return res.json({ received: true });
+      }
 
       const bookingId = session.metadata?.bookingId;
 
       console.log("BOOKING ID:", bookingId);
 
       if (!bookingId) {
-        console.log("BOOKING ID NOT FOUND IN METADATA");
-
-        return res.json({
-          received: true,
-        });
+        console.log("NO BOOKING ID FOUND");
+        return res.json({ received: true });
       }
 
-      const updatedBooking = await Booking.findByIdAndUpdate(
+      const booking = await Booking.findByIdAndUpdate(
         bookingId,
         {
           isPaid: true,
           paymentMethod: "Stripe",
           status: "confirmed",
         },
-        {
-          new: true,
-        },
+        { new: true },
       );
 
-      console.log("BOOKING UPDATED:", updatedBooking);
+      console.log("BOOKING UPDATED:", booking);
     }
 
-    // Optional backup handler
-    if (event.type === "payment_intent.succeeded") {
-      console.log("PAYMENT INTENT SUCCEEDED");
-    }
-
-    return res.json({
-      received: true,
-    });
+    res.json({ received: true });
   } catch (error) {
     console.log("DB UPDATE ERROR:", error);
 
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: error.message,
     });
