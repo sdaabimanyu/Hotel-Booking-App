@@ -1,40 +1,48 @@
 import Stripe from "stripe";
 import Booking from "../models/Booking.js";
 
-// API to handle Stripe WebHooks
+export const stripeWebHooks = async (req, res) => {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-export const stripeWebHooks = async (request, response) => {
-  // Stripe GateWay Initialize
-  const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
-  const sig = request.headers["stripe-signature"];
+  const sig = req.headers["stripe-signature"];
+
   let event;
 
   try {
-    ((event = stripeInstance.webhooks.constructEvent(request.body)),
+    event = stripe.webhooks.constructEvent(
+      req.body,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET);
+      process.env.STRIPE_WEBHOOK_SECRET,
+    );
+  } catch (err) {
+    console.log("Webhook Signature Error:", err.message);
+
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  try {
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object;
+
+      const bookingId = session.metadata.bookingId;
+
+      console.log("PAYMENT SUCCESS FOR:", bookingId);
+
+      await Booking.findByIdAndUpdate(bookingId, {
+        isPaid: true,
+        paymentMethod: "Stripe",
+      });
+
+      console.log("BOOKING UPDATED");
+    }
+
+    res.json({ received: true });
   } catch (error) {
-    response.status(400).send(`WebHook Error: ${error.message}`);
-  }
+    console.log("WEBHOOK ERROR:", error);
 
-  // Handle The Event
-  if (event.type === "payment_intent.succeeded") {
-    const paymentIntent = event.data.object;
-    const paymentIntentId = paymentIntent.id;
-
-    // Getting Session MetaData
-    const session = await stripeInstance.checkout.sessions.list({
-      payment_intent: paymentIntentId,
+    res.status(500).json({
+      success: false,
+      message: error.message,
     });
-
-    const { bookingId } = session.data[0].metadata;
-    // Mark Payment as paid
-    await Booking.findByIdAndUpdate(bookingId, {
-      isPaid: true,
-      paymentMethod: "Stripe",
-    });
-  } else {
-    console("Unhandled event type :", event.type);
   }
-  response.json({ received: true });
 };
