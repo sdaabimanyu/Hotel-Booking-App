@@ -9,7 +9,7 @@ const Navbar = () => {
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Hotels", path: "/rooms" },
-    { name: "Experince", path: "/" },
+    { name: "Offers", path: "/offers" },
     { name: "About", path: "/" },
   ];
 
@@ -58,7 +58,7 @@ const Navbar = () => {
       {/* Desktop Nav */}
       <div className="hidden md:flex items-center gap-4 lg:gap-8">
         {navLinks.map((link, i) => (
-          <a
+          <Link
             key={i}
             href={link.path}
             className={`group flex flex-col gap-0.5 ${isScrolled ? "text-gray-700" : "text-white"}`}
@@ -67,7 +67,7 @@ const Navbar = () => {
             <div
               className={`${isScrolled ? "bg-gray-700" : "bg-white"} h-0.5 w-0 group-hover:w-full transition-all duration-300`}
             />
-          </a>
+          </Link>
         ))}
         {user && (
           <button
@@ -173,7 +173,7 @@ const Navbar = () => {
             }
             className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all"
           >
-            {isOwner ? "Dashboard" : "List Your Hotel"} 
+            {isOwner ? "Dashboard" : "List Your Hotel"}
           </button>
         )}
         {!user && (
