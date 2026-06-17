@@ -14,8 +14,15 @@ export const addReview = async (req, res) => {
       });
     }
 
-    // Only booking owner can review
+    // Review only after stay is completed
+    if (new Date() < new Date(booking.checkOutDate)) {
+      return res.json({
+        success: false,
+        message: "You can review only after your stay is completed",
+      });
+    }
 
+    // Only booking owner can review
     if (booking.user.toString() !== req.user._id.toString()) {
       return res.json({
         success: false,
@@ -24,7 +31,6 @@ export const addReview = async (req, res) => {
     }
 
     // Only paid bookings
-
     if (!booking.isPaid) {
       return res.json({
         success: false,
@@ -42,9 +48,6 @@ export const addReview = async (req, res) => {
         message: "Review already submitted",
       });
     }
-
-    console.log("REQ USER:", req.user);
-    console.log("USER ID TYPE:", typeof req.user._id);
 
     await Review.create({
       user: booking.user,
@@ -66,7 +69,6 @@ export const addReview = async (req, res) => {
     });
   }
 };
-
 export const getRoomReviews = async (req, res) => {
   try {
     const reviews = await Review.find({

@@ -4,6 +4,7 @@ import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
 import transporter from "../configs/nodemailer.js";
 import stripe from "stripe";
+import Review from "../models/Review.js";
 
 // Function to Check Availability of Room
 const checkAvailability = async (checkInDate, checkOutDate, room) => {
@@ -133,13 +134,24 @@ export const getUserBookings = async (req, res) => {
       .populate("hotel")
       .sort({ createdAt: -1 });
 
+    const bookingsWithReviews = await Promise.all(
+      bookings.map(async (booking) => {
+        const review = await Review.findOne({
+          booking: booking._id,
+        });
+
+        return {
+          ...booking.toObject(),
+          reviewSubmitted: !!review,
+        };
+      }),
+    );
+
     res.json({
       success: true,
-      bookings,
+      bookings: bookingsWithReviews,
     });
   } catch (error) {
-    console.log("GET USER BOOKINGS ERROR:", error);
-
     res.json({
       success: false,
       message: error.message,

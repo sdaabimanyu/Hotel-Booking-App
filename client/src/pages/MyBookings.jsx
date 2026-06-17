@@ -69,6 +69,14 @@ export default function MyBookings() {
       if (data.success) {
         toast.success("Review Added");
 
+        setBookings((prev) =>
+          prev.map((booking) =>
+            booking._id === selectedBooking._id
+              ? { ...booking, hasReviewed: true }
+              : booking,
+          ),
+        );
+
         setShowReviewModal(false);
         setComment("");
         setRating(5);
@@ -158,6 +166,7 @@ export default function MyBookings() {
               </div>
 
               {/* Payment */}
+              {/* Payment */}
               <div className="flex flex-col items-start justify-center pt-3">
                 <div className="flex items-center gap-2">
                   <div
@@ -175,22 +184,28 @@ export default function MyBookings() {
                   </p>
                 </div>
 
-                {!booking.isPaid && (
+                {/* Review Already Submitted */}
+                {booking.reviewSubmitted ? (
+                  <div className="mt-3">
+                    <p className="text-green-600 font-medium">
+                      Review Submitted
+                    </p>
+                  </div>
+                ) : !booking.isPaid ? (
                   <button
                     onClick={() => handlePayment(booking._id)}
-                    className="px-4 py-1.5 mt-4 text-xs border border-gray-400 rounded-full hover:bg-gray-50 transition-all cursor-pointer"
+                    className="mt-3 px-5 py-2 bg-blue-600 text-white rounded-lg"
                   >
                     Pay Now
                   </button>
-                )}
-
-                {booking.isPaid && (
+                ) : new Date(booking.checkOutDate) > new Date() ? (
+                  <p className="mt-3 text-gray-500 text-sm">
+                    Review available after checkout
+                  </p>
+                ) : (
                   <button
-                    onClick={() => {
-                      setSelectedBooking(booking);
-                      setShowReviewModal(true);
-                    }}
-                    className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg"
+                    onClick={() => openReviewModal(booking)}
+                    className="mt-3 px-5 py-2 bg-blue-600 text-white rounded-lg"
                   >
                     Write Review
                   </button>
