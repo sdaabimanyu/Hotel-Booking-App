@@ -46,8 +46,12 @@ export default function MyBookings() {
   };
   const submitReview = async () => {
     try {
+      console.log("SUBMIT REVIEW CLICKED");
       const token = await getToken();
-
+      console.log("SELECTED BOOKING:", selectedBooking);
+      console.log("RATING:", rating);
+      console.log("COMMENT:", comment);
+      console.log("SENDING REQUEST...");
       const { data } = await axios.post(
         "/api/reviews",
         {

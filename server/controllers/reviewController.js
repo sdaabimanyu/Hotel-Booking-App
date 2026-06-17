@@ -44,7 +44,7 @@ export const addReview = async (req, res) => {
     }
 
     console.log("REQ USER:", req.user);
-    console.log("BOOKING USER:", booking.user);
+    console.log("USER ID TYPE:", typeof req.user._id);
 
     await Review.create({
       user: booking.user,

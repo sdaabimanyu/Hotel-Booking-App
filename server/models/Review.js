@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const reviewSchema = new mongoose.Schema(
   {
     user: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: "User",
       required: true,
     },
@@ -38,9 +38,7 @@ const reviewSchema = new mongoose.Schema(
       required: true,
     },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true },
 );
 
 export default mongoose.model("Review", reviewSchema);
