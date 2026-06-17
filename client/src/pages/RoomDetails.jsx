@@ -58,24 +58,9 @@ export default function RoomDetails() {
       if (!isAvailable) {
         return checkAvailability();
       } else {
-        const { data } = await axios.post(
-          "/api/bookings/book",
-          {
-            room: id,
-            checkInDate,
-            checkOutDate,
-            guests,
-            paymentMethod: "Pay At Hotel",
-          },
-          { headers: { Authorization: `Bearer ${await getToken()}` } },
+        navigate(
+          `/booking/${id}?checkIn=${checkInDate}&checkOut=${checkOutDate}&guests=${guests}`,
         );
-        if (data.success) {
-          toast.success(data.message);
-          navigate("/my-bookings");
-          scrollTo(0, 0);
-        } else {
-          toast.error(data.message);
-        }
       }
     } catch (error) {
       toast.error(error.message);

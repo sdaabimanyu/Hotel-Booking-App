@@ -60,12 +60,16 @@ const Navbar = () => {
         {navLinks.map((link, i) => (
           <Link
             key={i}
-            href={link.path}
-            className={`group flex flex-col gap-0.5 ${isScrolled ? "text-gray-700" : "text-white"}`}
+            to={link.path}
+            className={`group flex flex-col gap-0.5 ${
+              isScrolled ? "text-gray-700" : "text-white"
+            }`}
           >
             {link.name}
             <div
-              className={`${isScrolled ? "bg-gray-700" : "bg-white"} h-0.5 w-0 group-hover:w-full transition-all duration-300`}
+              className={`${
+                isScrolled ? "bg-gray-700" : "bg-white"
+              } h-0.5 w-0 group-hover:w-full transition-all duration-300`}
             />
           </Link>
         ))}
