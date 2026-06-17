@@ -43,8 +43,11 @@ export const addReview = async (req, res) => {
       });
     }
 
+    console.log("REQ USER:", req.user);
+    console.log("BOOKING USER:", booking.user);
+
     await Review.create({
-      user: req.user._id,
+      user: booking.user,
       hotel: booking.hotel,
       room: booking.room,
       booking: bookingId,
