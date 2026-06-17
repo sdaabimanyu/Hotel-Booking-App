@@ -15,7 +15,7 @@ import { Toaster } from "react-hot-toast";
 import { useAppContext } from "./context/AppContext";
 import Loader from "./components/Loader";
 import Offers from "./pages/Offers";
-import BookingWizard from "./pages/BookingWizard";
+import BookingWizard from "./pages/booking/BookingWizard";
 
 function App() {
   const isOwnerPath = useLocation().pathname.includes("owner");
