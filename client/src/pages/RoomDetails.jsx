@@ -289,7 +289,7 @@ export default function RoomDetails() {
           {reviews.length === 0 ? (
             <p className="text-gray-500">No reviews yet</p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4 mb-10">
               {reviews.map((review) => (
                 <div
                   key={review._id}
@@ -298,7 +298,7 @@ export default function RoomDetails() {
                   <div className="flex justify-between items-start">
                     <div>
                       <h4 className="font-semibold text-lg">
-                        {review.userName || "Guest"}
+                        {review.userName}
                       </h4>
 
                       <p className="text-sm text-gray-400">
@@ -321,7 +321,11 @@ export default function RoomDetails() {
         {/* Hosted By */}
         <div className="flex flex-col items-start gap-4">
           <div className="flex gap-4">
-            <img src={logo1} alt="Host" />
+            <img
+              src={logo1}
+              alt="Host"
+              className="h-14 w-14 md:h-18 md:w-18 rounded-full"
+            />
             <div>
               <p className="text-lg md:text-xl">Hosted by {room.hotel?.name}</p>
               <div className="flex items-center mt-1">
