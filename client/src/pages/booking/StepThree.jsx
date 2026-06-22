@@ -6,7 +6,7 @@ export default function StepThree({ room, bookingData, setStep }) {
   const { axios, getToken } = useAppContext();
 
   const [paymentMethod, setPaymentMethod] = useState("hotel");
-  
+
   const handlePayment = async () => {
     try {
       const token = await getToken();
@@ -36,19 +36,12 @@ export default function StepThree({ room, bookingData, setStep }) {
         return (window.location.href = "/my-bookings");
       }
 
-      // Get newly created booking
-      const userBookings = await axios.get("/api/bookings/user", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const latestBooking = userBookings.data.bookings[0];
+      console.log("NEW BOOKING ID:", bookingRes.data.bookingId);
 
       const stripeRes = await axios.post(
         "/api/bookings/stripe-payment",
         {
-          bookingId: latestBooking._id,
+          bookingId: bookingRes.data.bookingId,
         },
         {
           headers: {
