@@ -44,6 +44,12 @@ export default function MyBookings() {
       toast.error(error.message);
     }
   };
+
+  const openReviewModal = (booking) => {
+    setSelectedBooking(booking);
+    setShowReviewModal(true);
+  };
+
   const submitReview = async () => {
     try {
       console.log("SUBMIT REVIEW CLICKED");
@@ -69,15 +75,10 @@ export default function MyBookings() {
       if (data.success) {
         toast.success("Review Added");
 
-        setBookings((prev) =>
-          prev.map((booking) =>
-            booking._id === selectedBooking._id
-              ? { ...booking, hasReviewed: true }
-              : booking,
-          ),
-        );
+        await fetchUserBookings();
 
         setShowReviewModal(false);
+        setSelectedBooking(null);
         setComment("");
         setRating(5);
       } else {

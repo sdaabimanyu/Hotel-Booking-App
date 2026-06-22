@@ -6,6 +6,10 @@ const reviewRouter = express.Router();
 
 reviewRouter.post("/", protect, addReview);
 
-reviewRouter.get("/:roomId", getRoomReviews);
+reviewRouter.get("/room/:roomId", getRoomReviews);
+
+reviewRouter.get("/test", (req, res) => {
+  res.send("Review Route Working");
+});
 
 export default reviewRouter;

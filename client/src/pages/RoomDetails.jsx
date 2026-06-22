@@ -13,6 +13,8 @@ export default function RoomDetails() {
   const [checkInDate, setCheckInDate] = useState(null);
   const [checkOutDate, setCheckOutDate] = useState(null);
   const [guests, setGuests] = useState(1);
+  const [reviews, setReviews] = useState([]);
+  const [averageRating, setAverageRating] = useState(0);
 
   const [isAvailable, setIsAvailable] = useState(false);
 
@@ -67,6 +69,23 @@ export default function RoomDetails() {
     }
   };
 
+  const fetchReviews = async () => {
+    try {
+      console.log("ROOM ID:", room._id);
+
+      const { data } = await axios.get(`/api/reviews/room/${room._id}`);
+
+      console.log("REVIEWS RESPONSE:", data);
+
+      if (data.success) {
+        setReviews(data.reviews);
+        setAverageRating(data.averageRating);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     if (!rooms.length) return;
 
@@ -77,6 +96,12 @@ export default function RoomDetails() {
       setMainImage(foundRoom.images?.[0]);
     }
   }, [id, rooms]);
+
+  useEffect(() => {
+    if (room) {
+      fetchReviews();
+    }
+  }, [room]);
 
   const amenityIcons = {
     "Free WiFi": "fa-solid fa-wifi",
@@ -247,6 +272,42 @@ export default function RoomDetails() {
             You get the comfortable two bedroom apartment that has a true city
             feeling.
           </p>
+        </div>
+
+        <div className="mt-12">
+          <h2 className="text-3xl font-playfair mb-6">Guest Reviews</h2>
+
+          <div className="mb-6">
+            <p className="text-xl font-semibold">
+              ⭐ {averageRating.toFixed(1)} / 5
+            </p>
+
+            <p className="text-gray-500">{reviews.length} Reviews</p>
+          </div>
+
+          {reviews.length === 0 ? (
+            <p className="text-gray-500">No reviews yet</p>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map((review) => (
+                <div key={review._id} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-semibold">{review.user?.username}</h3>
+
+                    <p className="text-yellow-500">
+                      {"⭐".repeat(review.rating)}
+                    </p>
+                  </div>
+
+                  <p className="text-gray-600 mt-2">{review.comment}</p>
+
+                  <p className="text-sm text-gray-400 mt-2">
+                    {new Date(review.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Hosted By */}
