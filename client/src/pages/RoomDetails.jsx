@@ -292,7 +292,9 @@ export default function RoomDetails() {
               {reviews.map((review) => (
                 <div key={review._id} className="border rounded-lg p-4">
                   <div className="flex justify-between items-center">
-                    <h3 className="font-semibold">{review.user?.username}</h3>
+                    <p className="font-semibold">
+                      {review.userName || "Guest"}
+                    </p>
 
                     <p className="text-yellow-500">
                       {"⭐".repeat(review.rating)}

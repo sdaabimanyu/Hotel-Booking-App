@@ -51,6 +51,12 @@ export const addReview = async (req, res) => {
 
     await Review.create({
       user: booking.user,
+      userName:
+        req.user.firstName ||
+        req.user.username ||
+        req.user.emailAddresses?.[0]?.emailAddress ||
+        "Guest",
+
       hotel: booking.hotel,
       room: booking.room,
       booking: bookingId,
