@@ -4,6 +4,7 @@ import StarRating from "../components/StarRating";
 import { useAppContext } from "../context/AppContext";
 import { roomCommonData } from "../assets/assets";
 import toast from "react-hot-toast";
+import logo1 from "../assets/logo1.png";
 
 export default function RoomDetails() {
   const { id } = useParams();
@@ -290,22 +291,27 @@ export default function RoomDetails() {
           ) : (
             <div className="space-y-4">
               {reviews.map((review) => (
-                <div key={review._id} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-center">
-                    <p className="font-semibold">
-                      {review.userName || "Guest"}
-                    </p>
+                <div
+                  key={review._id}
+                  className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-semibold text-lg">
+                        {review.userName || "Guest"}
+                      </h4>
 
-                    <p className="text-yellow-500">
+                      <p className="text-sm text-gray-400">
+                        {new Date(review.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+
+                    <div className="text-yellow-500 text-lg">
                       {"⭐".repeat(review.rating)}
-                    </p>
+                    </div>
                   </div>
 
-                  <p className="text-gray-600 mt-2">{review.comment}</p>
-
-                  <p className="text-sm text-gray-400 mt-2">
-                    {new Date(review.createdAt).toLocaleDateString()}
-                  </p>
+                  <p className="mt-3 text-gray-600">{review.comment}</p>
                 </div>
               ))}
             </div>
@@ -315,11 +321,7 @@ export default function RoomDetails() {
         {/* Hosted By */}
         <div className="flex flex-col items-start gap-4">
           <div className="flex gap-4">
-            <img
-              src="/src/assets/logo1.png"
-              alt="Host"
-              className="h-14 w-14 md:h-18 md:w-18 rounded-full"
-            />
+            <img src={logo1} alt="Host" />
             <div>
               <p className="text-lg md:text-xl">Hosted by {room.hotel?.name}</p>
               <div className="flex items-center mt-1">
