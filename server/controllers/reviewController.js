@@ -1,4 +1,5 @@
 import Booking from "../models/Booking.js";
+import Hotel from "../models/Hotel.js";
 import Review from "../models/Review.js";
 
 export const addReview = async (req, res) => {
@@ -92,6 +93,35 @@ export const getRoomReviews = async (req, res) => {
       success: true,
       reviews,
       averageRating,
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getHotelReviews = async (req, res) => {
+  try {
+    const hotel = await Hotel.findOne({
+      owner: req.user._id,
+    });
+
+    if (!hotel) {
+      return res.json({
+        success: false,
+        message: "Hotel not found",
+      });
+    }
+
+    const reviews = await Review.find({
+      hotel: hotel._id,
+    }).sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      reviews,
     });
   } catch (error) {
     res.json({
