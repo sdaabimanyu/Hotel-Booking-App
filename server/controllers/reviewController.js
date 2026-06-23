@@ -132,3 +132,21 @@ export const getHotelReviews = async (req, res) => {
     });
   }
 };
+
+export const getAllReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find()
+      .populate("room", "roomType images")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      reviews,
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

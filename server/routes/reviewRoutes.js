@@ -1,6 +1,7 @@
 import express from "express";
 import {
   addReview,
+  getAllReviews,
   getHotelReviews,
   getRoomReviews,
 } from "../controllers/reviewController.js";
@@ -13,6 +14,8 @@ reviewRouter.post("/", protect, addReview);
 reviewRouter.get("/room/:roomId", getRoomReviews);
 
 reviewRouter.get("/hotel", protect, getHotelReviews);
+
+reviewRouter.get("/", getAllReviews);
 
 reviewRouter.get("/test", (req, res) => {
   res.send("Review Route Working");

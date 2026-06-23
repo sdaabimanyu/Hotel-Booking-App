@@ -16,8 +16,9 @@ import { useAppContext } from "./context/AppContext";
 import Loader from "./components/Loader";
 import Offers from "./pages/Offers";
 import BookingWizard from "./pages/booking/BookingWizard";
-import Reviews from "./pages/hotelOwner/Reviews";
+import OwnerReviews from "./pages/hotelOwner/Reviews";
 import Bookings from "./pages/hotelOwner/Bookings";
+import Reviews from "./pages/Reviews";
 
 function App() {
   const isOwnerPath = useLocation().pathname.includes("owner");
@@ -39,13 +40,14 @@ function App() {
           <Route path="/loader/:nextUrl" element={<Loader />} />
           <Route path="/offers" element={<Offers />} />
           <Route path="/booking/:roomId" element={<BookingWizard />} />
+          <Route path="/reviews" element={<Reviews />} />
 
           <Route path="/owner" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="add-room" element={<AddRoom />} />
             <Route path="list-room" element={<ListRoom />} />
             <Route path="bookings" element={<Bookings />} />
-            <Route path="reviews" element={<Reviews />} />
+            <Route path="reviews" element={<OwnerReviews />} />
           </Route>
         </Routes>
       </div>
