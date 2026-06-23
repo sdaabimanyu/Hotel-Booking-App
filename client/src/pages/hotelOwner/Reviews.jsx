@@ -34,12 +34,32 @@ export default function Reviews() {
         {reviews.map((review) => (
           <div key={review._id} className="bg-white border rounded-xl p-5">
             <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-semibold text-lg">{review.userName}</h3>
+              <div className="flex gap-4">
+                {/* Room Image */}
+                <img
+                  src={review.room?.images?.[0]}
+                  alt="room"
+                  className="w-20 h-20 rounded-lg object-cover"
+                />
 
-                <p className="text-sm text-gray-500">
-                  Room: {review.room?.roomType}
-                </p>
+                <div>
+                  {/* User */}
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold">
+                      {review.userName?.charAt(0).toUpperCase()}
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold text-lg">
+                        {review.userName}
+                      </h3>
+
+                      <p className="text-sm text-gray-500">
+                        {review.room?.roomType}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="text-yellow-500 text-xl">

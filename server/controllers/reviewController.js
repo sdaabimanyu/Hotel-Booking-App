@@ -118,7 +118,7 @@ export const getHotelReviews = async (req, res) => {
     const reviews = await Review.find({
       hotel: hotel._id,
     })
-      .populate("room")
+      .populate("room", "roomType images")
       .sort({ createdAt: -1 });
 
     res.json({
