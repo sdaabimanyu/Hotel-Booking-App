@@ -33,10 +33,16 @@ export default function Reviews() {
       <div className="space-y-5">
         {reviews.map((review) => (
           <div key={review._id} className="bg-white border rounded-xl p-5">
-            <div className="flex justify-between">
-              <h3 className="font-semibold text-lg">{review.userName}</h3>
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-semibold text-lg">{review.userName}</h3>
 
-              <div className="text-yellow-500">
+                <p className="text-sm text-gray-500">
+                  Room: {review.room?.roomType}
+                </p>
+              </div>
+
+              <div className="text-yellow-500 text-xl">
                 {"⭐".repeat(review.rating)}
               </div>
             </div>
