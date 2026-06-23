@@ -20,6 +20,11 @@ export default function Sidebar() {
       icon: <i className="fa-solid fa-list"></i>,
     },
     {
+      name: "Bookings",
+      path: "/owner/bookings",
+      icon: <i className="fa-solid fa-calendar-check"></i>,
+    },
+    {
       name: "Reviews",
       path: "/owner/reviews",
       icon: <i className="fa-solid fa-star"></i>,

@@ -167,7 +167,6 @@ export default function MyBookings() {
               </div>
 
               {/* Payment */}
-              {/* Payment */}
               <div className="flex flex-col items-start justify-center pt-3">
                 <div className="flex items-center gap-2">
                   <div
@@ -184,6 +183,22 @@ export default function MyBookings() {
                     {booking.isPaid ? "Paid" : "Unpaid"}
                   </p>
                 </div>
+
+                <p
+                  className={`font-medium ${
+                    booking.status === "pending"
+                      ? "text-yellow-500"
+                      : booking.status === "confirmed"
+                        ? "text-blue-500"
+                        : booking.status === "checked-in"
+                          ? "text-green-500"
+                          : booking.status === "checked-out"
+                            ? "text-emerald-600"
+                            : "text-red-500"
+                  }`}
+                >
+                  Status: {booking.status}
+                </p>
 
                 {/* Review Already Submitted */}
                 {booking.reviewSubmitted ? (

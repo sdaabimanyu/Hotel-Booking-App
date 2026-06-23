@@ -269,3 +269,25 @@ export const stripePayment = async (req, res) => {
     });
   }
 };
+
+export const updateBookingStatus = async (req, res) => {
+  try {
+    const { bookingId, status } = req.body;
+
+    const booking = await Booking.findByIdAndUpdate(
+      bookingId,
+      { status },
+      { new: true },
+    );
+
+    res.json({
+      success: true,
+      booking,
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
