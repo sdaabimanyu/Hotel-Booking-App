@@ -89,6 +89,30 @@ export default function MyBookings() {
     }
   };
 
+  const cancelBooking = async (bookingId) => {
+    try {
+      const { data } = await axios.post(
+        "/api/bookings/cancel",
+        { bookingId },
+        {
+          headers: {
+            Authorization: `Bearer ${await getToken()}`,
+          },
+        },
+      );
+
+      if (data.success) {
+        toast.success(data.message);
+
+        fetchUserBookings();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchUserBookings();
@@ -199,6 +223,16 @@ export default function MyBookings() {
                 >
                   Status: {booking.status}
                 </p>
+
+                {booking.status !== "cancelled" &&
+                  new Date(booking.checkInDate) > new Date() && (
+                    <button
+                      onClick={() => cancelBooking(booking._id)}
+                      className="mt-3 px-5 py-2 bg-red-500 text-white rounded-lg"
+                    >
+                      Cancel Booking
+                    </button>
+                  )}
 
                 {/* Review Already Submitted */}
                 {booking.reviewSubmitted ? (

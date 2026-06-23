@@ -291,3 +291,48 @@ export const updateBookingStatus = async (req, res) => {
     });
   }
 };
+
+export const cancelBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    // Only booking owner can cancel
+    if (booking.user.toString() !== req.user._id.toString()) {
+      return res.json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    // Cannot cancel after check-in date
+    if (new Date() >= new Date(booking.checkInDate)) {
+      return res.json({
+        success: false,
+        message: "Booking can no longer be cancelled",
+      });
+    }
+
+    booking.status = "cancelled";
+
+    await booking.save();
+
+    res.json({
+      success: true,
+      message: "Booking cancelled successfully",
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
