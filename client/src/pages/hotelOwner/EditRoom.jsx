@@ -14,9 +14,11 @@ export default function EditRoom() {
 
   const fetchRoom = async () => {
     try {
-      console.log("ROOM ID:", id);
-
-      const { data } = await axios.get(`/api/rooms/${id}`);
+      const { data } = await axios.get(`/api/rooms/${id}`, {
+        headers: {
+          Authorization: `Bearer ${await getToken()}`,
+        },
+      });
 
       console.log("ROOM DATA:", data);
 
@@ -24,9 +26,11 @@ export default function EditRoom() {
         setRoomType(data.room.roomType);
         setPricePerNight(data.room.pricePerNight);
         setAmenities(data.room.amenities.join(", "));
+      } else {
+        toast.error(data.message);
       }
     } catch (error) {
-      console.log("FETCH ROOM ERROR:", error);
+      console.log(error);
       toast.error(error.message);
     }
   };
