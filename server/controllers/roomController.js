@@ -63,7 +63,10 @@ export const createRoom = async (req, res) => {
 // GET ALL ROOMS
 export const getRooms = async (req, res) => {
   try {
-    const rooms = await Room.find({ isAvailable: true })
+    const rooms = await Room.find({
+      isAvailable: true,
+      isDeleted: false,
+    })
       .populate("hotel")
       .sort({ createdAt: -1 });
 
@@ -88,6 +91,7 @@ export const getOwnerRooms = async (req, res) => {
 
     const rooms = await Room.find({
       hotel: hotel._id,
+      isDeleted: false,
     }).populate("hotel");
 
     res.json({
@@ -172,11 +176,14 @@ export const updateRoom = async (req, res) => {
 
 export const deleteRoom = async (req, res) => {
   try {
-    await Room.findByIdAndDelete(req.params.id);
+    await Room.findByIdAndUpdate(req.params.id, {
+      isDeleted: true,
+      isAvailable: false,
+    });
 
     res.json({
       success: true,
-      message: "Room deleted successfully",
+      message: "Room archived successfully",
     });
   } catch (error) {
     res.json({

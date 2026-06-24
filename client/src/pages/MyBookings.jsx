@@ -145,7 +145,7 @@ export default function MyBookings() {
               {/* Hotel Details */}
               <div className="flex flex-col md:flex-row">
                 <img
-                  src={booking.room.images[0]}
+                  src={booking.room?.images?.[0] || "/placeholder-room.jpg"}
                   alt="hotel-img"
                   className="md:w-44 rounded shadow object-cover"
                 />
