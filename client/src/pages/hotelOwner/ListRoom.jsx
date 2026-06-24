@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 
 export default function ListRoom() {
   const [rooms, setRooms] = useState();
-  const { axios, getToken, user, currency } = useAppContext();
-  const navigate = useNavigate();
+  const { axios, getToken, user, currency, navigate } = useAppContext();
+  // const navigate = useNavigate();
 
   // Fetch Rooms of the Hotel Owner
   const fetchRooms = async () => {
@@ -89,7 +89,7 @@ export default function ListRoom() {
                       Edit
                     </button>
 
-                    <label className="relative inline-flex items-center cursor-pointer text-gray-900 gap-3">
+                    <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         onChange={() => toggleAvailability(room._id)}
                         type="checkbox"
@@ -97,9 +97,9 @@ export default function ListRoom() {
                         checked={room.isAvailable}
                       />
 
-                      <div className="w-12 h-7 bg-slate-300 rounded-full peer peer-checked:bg-blue-600 transition-colors duration-200"></div>
+                      <div className="w-12 h-7 bg-slate-300 rounded-full peer peer-checked:bg-blue-600"></div>
 
-                      <span className="absolute left-1 top-1 w-5 h-5 bg-white rounded-full transition-transform duration-200 ease-in-out peer-checked:translate-x-5"></span>
+                      <span className="absolute left-1 top-1 w-5 h-5 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></span>
                     </label>
                   </div>
                 </td>
