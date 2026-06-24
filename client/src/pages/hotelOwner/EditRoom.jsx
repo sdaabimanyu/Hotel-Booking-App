@@ -14,7 +14,11 @@ export default function EditRoom() {
 
   const fetchRoom = async () => {
     try {
+      console.log("ROOM ID:", id);
+
       const { data } = await axios.get(`/api/rooms/${id}`);
+
+      console.log("ROOM DATA:", data);
 
       if (data.success) {
         setRoomType(data.room.roomType);
@@ -22,6 +26,7 @@ export default function EditRoom() {
         setAmenities(data.room.amenities.join(", "));
       }
     } catch (error) {
+      console.log("FETCH ROOM ERROR:", error);
       toast.error(error.message);
     }
   };
