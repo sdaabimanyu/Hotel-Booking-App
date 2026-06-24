@@ -124,3 +124,48 @@ export const toggleRoomAvailability = async (req, res) => {
     });
   }
 };
+
+// GET SINGLE ROOM
+export const getRoomById = async (req, res) => {
+  try {
+    const room = await Room.findById(req.params.id);
+
+    res.json({
+      success: true,
+      room,
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// UPDATE ROOM
+export const updateRoom = async (req, res) => {
+  try {
+    const { roomType, pricePerNight, amenities } = req.body;
+
+    const room = await Room.findByIdAndUpdate(
+      req.params.id,
+      {
+        roomType,
+        pricePerNight,
+        amenities,
+      },
+      { new: true },
+    );
+
+    res.json({
+      success: true,
+      room,
+      message: "Room Updated Successfully",
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
