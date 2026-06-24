@@ -169,3 +169,19 @@ export const updateRoom = async (req, res) => {
     });
   }
 };
+
+export const deleteRoom = async (req, res) => {
+  try {
+    await Room.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: "Room deleted successfully",
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

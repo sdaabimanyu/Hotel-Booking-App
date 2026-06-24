@@ -3,6 +3,7 @@ import upload from "../middleware/uploadMiddleware.js";
 import { protect } from "../middleware/authMiddleware.js";
 import {
   createRoom,
+  deleteRoom,
   getOwnerRooms,
   getRoomById,
   getRooms,
@@ -18,5 +19,6 @@ roomRouter.get("/owner", protect, getOwnerRooms);
 roomRouter.post("/toggle-availability", protect, toggleRoomAvailability);
 roomRouter.get("/:id", protect, getRoomById);
 roomRouter.put("/:id", protect, updateRoom);
+roomRouter.delete("/:id", protect, deleteRoom);
 
 export default roomRouter;

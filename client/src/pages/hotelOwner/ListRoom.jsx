@@ -38,6 +38,31 @@ export default function ListRoom() {
     }
   };
 
+  const deleteRoomHandler = async (roomId) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this room?",
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      const { data } = await axios.delete(`/api/rooms/${roomId}`, {
+        headers: {
+          Authorization: `Bearer ${await getToken()}`,
+        },
+      });
+
+      if (data.success) {
+        toast.success(data.message);
+        fetchRooms();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchRooms();
@@ -81,12 +106,19 @@ export default function ListRoom() {
                   {room.pricePerNight}
                 </td>
                 <td className="py-3 px-4 border-t border-gray-300">
-                  <div className="flex items-center justify-center gap-3">
+                  <div className="flex items-center gap-3">
                     <button
                       onClick={() => navigate(`/owner/edit-room/${room._id}`)}
                       className="bg-blue-600 text-white px-3 py-1 rounded"
                     >
                       Edit
+                    </button>
+
+                    <button
+                      onClick={() => deleteRoomHandler(room._id)}
+                      className="bg-red-600 text-white px-3 py-1 rounded"
+                    >
+                      Delete
                     </button>
 
                     <label className="relative inline-flex items-center cursor-pointer">
