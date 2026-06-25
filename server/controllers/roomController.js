@@ -68,9 +68,12 @@ export const getRooms = async (req, res) => {
     console.log("ALL ROOMS:", await Room.find({}));
     const rooms = await Room.find({
       isAvailable: true,
+      isDeleted: false,
     })
       .populate("hotel")
       .sort({ createdAt: -1 });
+
+    console.log(rooms);
 
     res.json({
       success: true,
