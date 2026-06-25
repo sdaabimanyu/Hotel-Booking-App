@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
+import BookingChart from "../../components/BookingChart";
 
 export default function Dashboard() {
   const { currency, user, getToken, axios } = useAppContext();
@@ -140,6 +141,9 @@ export default function Dashboard() {
             ))}
           </tbody>
         </table>
+      </div>
+      <div className="mt-10">
+        <BookingChart bookings={dashboardData.bookings} />
       </div>
     </div>
   );
