@@ -9,6 +9,11 @@ export default function Dashboard() {
     bookings: [],
     totalBookings: 0,
     totalRevenue: 0,
+    totalRooms: 0,
+    availableRooms: 0,
+    archivedRooms: 0,
+    totalReviews: 0,
+    averageRating: 0,
   });
 
   const fetchDashboardData = async () => {
@@ -43,25 +48,48 @@ export default function Dashboard() {
         one place. Stay updated with real-time insights to ensure smooth
         operations.
       </p>
-      <div className="flex gap-4 my-8">
-        {/* My Bookings */}
-        <div className="bg-primary/3 border border-primary/10 rounded flex p-4 pr-8">
-          <i className="fa-solid fa-hotel  max-sm:hidden text-3xl text-blue-500"></i>
-          <div className="flex flex-col sm:ml-4 font-medium">
-            <p className="text-blue-500 text-lg">Total Bookings</p>
-            <p className="text-neutral-400 text-base">
-              {dashboardData.totalBookings}
-            </p>
-          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 my-8">
+        <div className="bg-white border rounded-xl p-5 shadow-sm">
+          <p className="text-gray-500 text-sm">Total Bookings</p>
+          <h2 className="text-3xl font-bold text-blue-600">
+            {dashboardData.totalBookings}
+          </h2>
         </div>
-        <div className="bg-primary/3 border border-primary/10 rounded flex p-4 pr-8">
-          <i class="fa-solid fa-file-invoice-dollar text-3xl text-blue-500"></i>
-          <div className="flex flex-col sm:ml-4 font-medium">
-            <p className="text-blue-500 text-lg">Total Revenue</p>
-            <p className="text-neutral-400 text-base">
-              {currency} {dashboardData.totalRevenue}
-            </p>
-          </div>
+
+        <div className="bg-white border rounded-xl p-5 shadow-sm">
+          <p className="text-gray-500 text-sm">Revenue</p>
+          <h2 className="text-3xl font-bold text-green-600">
+            {currency}
+            {dashboardData.totalRevenue}
+          </h2>
+        </div>
+
+        <div className="bg-white border rounded-xl p-5 shadow-sm">
+          <p className="text-gray-500 text-sm">Rooms</p>
+          <h2 className="text-3xl font-bold text-purple-600">
+            {dashboardData.totalRooms}
+          </h2>
+        </div>
+
+        <div className="bg-white border rounded-xl p-5 shadow-sm">
+          <p className="text-gray-500 text-sm">Available</p>
+          <h2 className="text-3xl font-bold text-emerald-600">
+            {dashboardData.availableRooms}
+          </h2>
+        </div>
+
+        <div className="bg-white border rounded-xl p-5 shadow-sm">
+          <p className="text-gray-500 text-sm">Reviews</p>
+          <h2 className="text-3xl font-bold text-amber-600">
+            {dashboardData.totalReviews}
+          </h2>
+        </div>
+
+        <div className="bg-white border rounded-xl p-5 shadow-sm">
+          <p className="text-gray-500 text-sm">Average Rating</p>
+          <h2 className="text-3xl font-bold text-orange-500">
+            ⭐ {dashboardData.averageRating}
+          </h2>
         </div>
       </div>
       {/**----------- Recent Bookings --------------- */}

@@ -187,6 +187,36 @@ export const getHotelBookings = async (req, res) => {
     const bookings = await Booking.find({ hotel: hotel._id })
       .populate("room hotel user")
       .sort({ createdAt: -1 });
+    const totalRooms = await Room.countDocuments({
+      hotel: hotel._id,
+    });
+
+    const availableRooms = await Room.countDocuments({
+      hotel: hotel._id,
+      isAvailable: true,
+      isDeleted: false,
+    });
+
+    const archivedRooms = await Room.countDocuments({
+      hotel: hotel._id,
+      isDeleted: true,
+    });
+
+    const totalReviews = await Review.countDocuments({
+      hotel: hotel._id,
+    });
+
+    const reviews = await Review.find({
+      hotel: hotel._id,
+    });
+
+    const averageRating =
+      reviews.length > 0
+        ? (
+            reviews.reduce((sum, review) => sum + review.rating, 0) /
+            reviews.length
+          ).toFixed(1)
+        : 0;
 
     const totalBookings = bookings.length;
 
@@ -200,6 +230,11 @@ export const getHotelBookings = async (req, res) => {
       dashboardData: {
         totalBookings,
         totalRevenue,
+        totalRooms,
+        availableRooms,
+        archivedRooms,
+        totalReviews,
+        averageRating,
         bookings,
       },
     });
