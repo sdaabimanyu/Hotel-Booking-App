@@ -162,6 +162,7 @@ export const getUserBookings = async (req, res) => {
 
 export const getHotelBookings = async (req, res) => {
   try {
+    console.log("===== GET HOTEL BOOKINGS CONTROLLER HIT =====");
     console.log("AUTH USER:", req.auth.userId);
 
     const hotels = await Hotel.find();
@@ -188,7 +189,14 @@ export const getHotelBookings = async (req, res) => {
     });
 
     console.log("ROOMS FOUND:", allRooms.length);
-    console.log(allRooms);
+    console.log(
+      allRooms.map((room) => ({
+        id: room._id,
+        roomType: room.roomType,
+        isDeleted: room.isDeleted,
+        isAvailable: room.isAvailable,
+      })),
+    );
     const bookings = await Booking.find({ hotel: hotel._id })
       .populate("room hotel user")
       .sort({ createdAt: -1 });
