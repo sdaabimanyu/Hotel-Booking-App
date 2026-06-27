@@ -27,7 +27,7 @@ export default function BookingChart({ bookings }) {
   const chartData = months.map((month, index) => ({
     month,
     bookings: bookings.filter(
-      (booking) => new Date(booking.createdAt).getMonth() === index,
+      (booking) => new Date(booking.checkInDate).getMonth() === index,
     ).length,
   }));
 

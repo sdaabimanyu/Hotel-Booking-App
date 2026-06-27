@@ -15,6 +15,7 @@ export default function Dashboard() {
     archivedRooms: 0,
     totalReviews: 0,
     averageRating: 0,
+    occupancyRate: 0,
   });
 
   const fetchDashboardData = async () => {
@@ -22,8 +23,6 @@ export default function Dashboard() {
       const { data } = await axios.get("/api/bookings/hotel", {
         headers: { Authorization: `Bearer ${await getToken()}` },
       });
-
-      console.log("DASHBOARD RESPONSE:", data);
 
       if (data.success) {
         setDashboardData(data.dashboardData);
@@ -41,6 +40,7 @@ export default function Dashboard() {
       fetchDashboardData();
     }
   }, [user]);
+
   return (
     <div>
       <h1 className=" text-[40px]">Dashboard</h1>
@@ -144,6 +144,13 @@ export default function Dashboard() {
       </div>
       <div className="mt-10">
         <BookingChart bookings={dashboardData.bookings} />
+      </div>
+      <div className="bg-white border rounded-xl p-5 shadow-sm">
+        <p className="text-gray-500 text-sm">Occupancy</p>
+
+        <h2 className="text-3xl font-bold text-red-500">
+          {dashboardData.occupancyRate}%
+        </h2>
       </div>
     </div>
   );

@@ -224,6 +224,10 @@ export const getHotelBookings = async (req, res) => {
       (acc, booking) => acc + booking.totalPrice,
       0,
     );
+    const occupancyRate =
+      totalRooms > 0
+        ? (((totalRooms - availableRooms) / totalRooms) * 100).toFixed(0)
+        : 0;
 
     res.json({
       success: true,
@@ -235,6 +239,7 @@ export const getHotelBookings = async (req, res) => {
         archivedRooms,
         totalReviews,
         averageRating,
+        occupancyRate,
         bookings,
       },
     });
