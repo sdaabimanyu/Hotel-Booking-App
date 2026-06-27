@@ -183,7 +183,12 @@ export const getHotelBookings = async (req, res) => {
         message: "No Hotel Found",
       });
     }
+    const allRooms = await Room.find({
+      hotel: hotel._id,
+    });
 
+    console.log("ROOMS FOUND:", allRooms.length);
+    console.log(allRooms);
     const bookings = await Booking.find({ hotel: hotel._id })
       .populate("room hotel user")
       .sort({ createdAt: -1 });

@@ -40,6 +40,7 @@ export default function Dashboard() {
       fetchDashboardData();
     }
   }, [user]);
+  console.log(dashboardData.occupancyRate);
 
   return (
     <div>
