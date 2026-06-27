@@ -163,13 +163,13 @@ export const getUserBookings = async (req, res) => {
 export const getHotelBookings = async (req, res) => {
   try {
     console.log("===== GET HOTEL BOOKINGS CONTROLLER HIT =====");
-    console.log("AUTH USER:", req.auth.userId);
+    
 
     const hotels = await Hotel.find();
 
     console.log("ALL HOTELS:", hotels);
 
-    console.log("req.auth =", req.auth);
+    
     console.log("req.user =", req.user);
 
     const hotel = await Hotel.findOne({
@@ -202,6 +202,7 @@ export const getHotelBookings = async (req, res) => {
       .sort({ createdAt: -1 });
     const totalRooms = await Room.countDocuments({
       hotel: hotel._id,
+      isDeleted: false,
     });
 
     const availableRooms = await Room.countDocuments({
