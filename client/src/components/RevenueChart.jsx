@@ -2,6 +2,7 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
@@ -52,13 +53,24 @@ export default function RevenueChart({ bookings }) {
 
           <YAxis />
 
-          <Tooltip />
+          <Tooltip formatter={(value) => [`$${value}`, "Revenue"]} />
+
+          <Area
+            type="monotone"
+            dataKey="revenue"
+            stroke="none"
+            fill="#3b82f6"
+            fillOpacity={0.15}
+          />
 
           <Line
             type="monotone"
             dataKey="revenue"
             stroke="#2563eb"
             strokeWidth={3}
+            animationDuration={1200}
+            dot={{ r: 4 }}
+            activeDot={{ r: 7 }}
           />
         </LineChart>
       </ResponsiveContainer>

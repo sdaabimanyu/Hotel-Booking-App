@@ -43,9 +43,20 @@ export default function BookingChart({ bookings }) {
 
           <YAxis allowDecimals={false} />
 
-          <Tooltip />
+          <Tooltip
+            contentStyle={{
+              borderRadius: "10px",
+              border: "1px solid #ddd",
+            }}
+          />
 
-          <Bar dataKey="bookings" fill="#2563eb" radius={[6, 6, 0, 0]} />
+          <Bar
+            dataKey="bookings"
+            fill="#2563eb"
+            radius={[8, 8, 0, 0]}
+            barSize={30}
+            animationDuration={1200}
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>
