@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
 import BookingChart from "../../components/BookingChart";
+import { LogIn, LogOut } from "lucide-react";
 
 export default function Dashboard() {
   const { currency, user, getToken, axios } = useAppContext();
@@ -42,7 +43,6 @@ export default function Dashboard() {
       fetchDashboardData();
     }
   }, [user]);
-  
 
   return (
     <div className="pb-10">
@@ -100,20 +100,34 @@ export default function Dashboard() {
 
       {/* Today's Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-        <div className="bg-white rounded-xl border p-5 shadow-sm">
-          <p className="text-gray-500">Today's Check-ins</p>
+        {/* Check-ins */}
+        <div className="bg-white rounded-xl border p-5 shadow-sm flex justify-between items-center">
+          <div>
+            <p className="text-gray-500 text-sm">Today's Check-ins</p>
 
-          <h2 className="text-3xl font-bold text-blue-600">
-            {dashboardData.todayCheckIns}
-          </h2>
+            <h2 className="text-4xl font-bold text-blue-600 mt-2">
+              {dashboardData.todayCheckIns}
+            </h2>
+          </div>
+
+          <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center">
+            <LogIn className="w-7 h-7 text-blue-600" />
+          </div>
         </div>
 
-        <div className="bg-white rounded-xl border p-5 shadow-sm">
-          <p className="text-gray-500">Today's Check-outs</p>
+        {/* Check-outs */}
+        <div className="bg-white rounded-xl border p-5 shadow-sm flex justify-between items-center">
+          <div>
+            <p className="text-gray-500 text-sm">Today's Check-outs</p>
 
-          <h2 className="text-3xl font-bold text-red-500">
-            {dashboardData.todayCheckOuts}
-          </h2>
+            <h2 className="text-4xl font-bold text-red-500 mt-2">
+              {dashboardData.todayCheckOuts}
+            </h2>
+          </div>
+
+          <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
+            <LogOut className="w-7 h-7 text-red-500" />
+          </div>
         </div>
       </div>
 
