@@ -43,7 +43,7 @@ export default function Dashboard() {
   console.log(dashboardData.occupancyRate);
 
   return (
-    <div>
+    <div className="pb-10">
       <h1 className=" text-[40px]">Dashboard</h1>
       <p className="text-gray-500/90 text-[16px] max-w-2xl ">
         Monitor your room listings, track bookings and analyze revenue—all in
@@ -143,7 +143,7 @@ export default function Dashboard() {
           </tbody>
         </table>
       </div>
-      <div className="mt-10">
+      <div className="mt-10 mb-10">
         <BookingChart bookings={dashboardData.bookings} />
       </div>
       <div className="bg-white border rounded-xl p-5 shadow-sm">

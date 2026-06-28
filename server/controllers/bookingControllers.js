@@ -163,13 +163,11 @@ export const getUserBookings = async (req, res) => {
 export const getHotelBookings = async (req, res) => {
   try {
     console.log("===== GET HOTEL BOOKINGS CONTROLLER HIT =====");
-    
 
     const hotels = await Hotel.find();
 
     console.log("ALL HOTELS:", hotels);
 
-    
     console.log("req.user =", req.user);
 
     const hotel = await Hotel.findOne({
@@ -243,6 +241,28 @@ export const getHotelBookings = async (req, res) => {
         ? (((totalRooms - availableRooms) / totalRooms) * 100).toFixed(0)
         : 0;
 
+    const rooms = await Room.find({
+      hotel: hotel._id,
+      isDeleted: false,
+    });
+
+    const roomOccupancy = rooms.map((room) => {
+      const roomBookings = bookings.filter(
+        (booking) => booking.room._id.toString() === room._id.toString(),
+      );
+
+      const occupied = roomBookings.length;
+
+      const occupancy =
+        roomBookings.length > 0 ? Math.min(roomBookings.length * 20, 100) : 0;
+
+      return {
+        roomType: room.roomType,
+        occupancy,
+        bookings: occupied,
+      };
+    });
+
     res.json({
       success: true,
       dashboardData: {
@@ -255,6 +275,7 @@ export const getHotelBookings = async (req, res) => {
         averageRating,
         occupancyRate,
         bookings,
+        roomOccupancy,
       },
     });
   } catch (error) {

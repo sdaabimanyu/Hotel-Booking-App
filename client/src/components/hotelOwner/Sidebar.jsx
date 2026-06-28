@@ -29,6 +29,11 @@ export default function Sidebar() {
       path: "/owner/reviews",
       icon: <i className="fa-solid fa-star"></i>,
     },
+    {
+      name: "Analytics",
+      path: "/owner/analytics",
+      icon: <i className="fa-solid fa-chart-line"></i>,
+    },
   ];
   return (
     <div className="md:w-64 w-16 border-r h-full text-base border-gray-300 pt-4 flex flex-col transition-all duration-300">
