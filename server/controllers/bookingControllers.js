@@ -230,6 +230,26 @@ export const getHotelBookings = async (req, res) => {
           ).toFixed(1)
         : 0;
 
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+
+    const todayCheckIns = bookings.filter((booking) => {
+      const checkIn = new Date(booking.checkInDate);
+
+      checkIn.setHours(0, 0, 0, 0);
+
+      return checkIn.getTime() === today.getTime();
+    }).length;
+
+    const todayCheckOuts = bookings.filter((booking) => {
+      const checkOut = new Date(booking.checkOutDate);
+
+      checkOut.setHours(0, 0, 0, 0);
+
+      return checkOut.getTime() === today.getTime();
+    }).length;
+
     const totalBookings = bookings.length;
 
     const totalRevenue = bookings.reduce(
@@ -263,6 +283,9 @@ export const getHotelBookings = async (req, res) => {
       };
     });
 
+    console.log("todayCheckIns:", todayCheckIns);
+    console.log("todayCheckOuts:", todayCheckOuts);
+
     res.json({
       success: true,
       dashboardData: {
@@ -274,6 +297,10 @@ export const getHotelBookings = async (req, res) => {
         totalReviews,
         averageRating,
         occupancyRate,
+
+        todayCheckIns,
+        todayCheckOuts,
+
         bookings,
         roomOccupancy,
       },

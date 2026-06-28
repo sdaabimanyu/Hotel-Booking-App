@@ -16,6 +16,8 @@ export default function Dashboard() {
     totalReviews: 0,
     averageRating: 0,
     occupancyRate: 0,
+    todayCheckIns: 0,
+    todayCheckOuts: 0,
   });
 
   const fetchDashboardData = async () => {
@@ -40,7 +42,7 @@ export default function Dashboard() {
       fetchDashboardData();
     }
   }, [user]);
-  console.log(dashboardData.occupancyRate);
+  
 
   return (
     <div className="pb-10">
@@ -50,6 +52,7 @@ export default function Dashboard() {
         one place. Stay updated with real-time insights to ensure smooth
         operations.
       </p>
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 my-8">
         <div className="bg-white border rounded-xl p-5 shadow-sm">
           <p className="text-gray-500 text-sm">Total Bookings</p>
@@ -94,6 +97,26 @@ export default function Dashboard() {
           </h2>
         </div>
       </div>
+
+      {/* Today's Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+        <div className="bg-white rounded-xl border p-5 shadow-sm">
+          <p className="text-gray-500">Today's Check-ins</p>
+
+          <h2 className="text-3xl font-bold text-blue-600">
+            {dashboardData.todayCheckIns}
+          </h2>
+        </div>
+
+        <div className="bg-white rounded-xl border p-5 shadow-sm">
+          <p className="text-gray-500">Today's Check-outs</p>
+
+          <h2 className="text-3xl font-bold text-red-500">
+            {dashboardData.todayCheckOuts}
+          </h2>
+        </div>
+      </div>
+
       {/**----------- Recent Bookings --------------- */}
       <h2 className="text-xl text-blue-950/70 font-medium mb-5">
         Recent Bookings
