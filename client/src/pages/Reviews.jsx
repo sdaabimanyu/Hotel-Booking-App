@@ -2,13 +2,19 @@ import { useEffect, useState } from "react";
 import { useAppContext } from "../context/AppContext";
 
 export default function Reviews() {
-  const { axios } = useAppContext();
+  const { axios, getToken, user } = useAppContext();
 
   const [reviews, setReviews] = useState([]);
 
   const fetchReviews = async () => {
     try {
-      const { data } = await axios.get("/api/reviews");
+      const { data } = await axios.get("/api/reviews/hotel", {
+        headers: {
+          Authorization: `Bearer ${await getToken()}`,
+        },
+      });
+
+      console.log(data);
 
       if (data.success) {
         setReviews(data.reviews);
@@ -19,8 +25,10 @@ export default function Reviews() {
   };
 
   useEffect(() => {
-    fetchReviews();
-  }, []);
+    if (user) {
+      fetchReviews();
+    }
+  }, [user]);
 
   return (
     <div className="pt-32 pb-20 px-4 md:px-16 lg:px-24 xl:px-32">
@@ -78,6 +86,14 @@ export default function Reviews() {
           </div>
         ))}
       </div>
+      {reviews.map((review) => (
+        <div key={review._id}>
+          <p>{review.user.username}</p>
+          <p>{review.room.roomType}</p>
+          <p>{review.rating}</p>
+          <p>{review.comment}</p>
+        </div>
+      ))}
     </div>
   );
 }

@@ -118,7 +118,8 @@ export const getHotelReviews = async (req, res) => {
     const reviews = await Review.find({
       hotel: hotel._id,
     })
-      .populate("room", "roomType images")
+      .populate("user", "username")
+      .populate("room", "roomType")
       .sort({ createdAt: -1 });
 
     res.json({
@@ -126,6 +127,8 @@ export const getHotelReviews = async (req, res) => {
       reviews,
     });
   } catch (error) {
+    console.log(error);
+
     res.json({
       success: false,
       message: error.message,
