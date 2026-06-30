@@ -119,7 +119,7 @@ export const getHotelReviews = async (req, res) => {
       hotel: hotel._id,
     })
       .populate("user", "username")
-      .populate("room", "roomType")
+      .populate("room", "roomType images")
       .sort({ createdAt: -1 });
 
     res.json({
