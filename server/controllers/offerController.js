@@ -116,21 +116,37 @@ export const createOffer = async (req, res) => {
 
 export const getOffers = async (req, res) => {
   try {
-    const offers = await Offer.find({
-      isActive: true,
-    })
+    const offers = await Offer.find()
       .populate("hotel", "name")
-      .sort({
-        createdAt: -1,
-      });
+      .sort({ createdAt: -1 });
 
     res.json({
       success: true,
       offers,
     });
   } catch (error) {
-    console.log(error);
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
+export const getOwnerOffers = async (req, res) => {
+  try {
+    const hotel = await Hotel.findOne({
+      owner: req.user._id,
+    });
+
+    const offers = await Offer.find({
+      hotel: hotel._id,
+    }).sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      offers,
+    });
+  } catch (error) {
     res.json({
       success: false,
       message: error.message,

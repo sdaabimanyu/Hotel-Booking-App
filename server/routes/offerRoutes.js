@@ -8,6 +8,7 @@ import {
   deleteOffer,
   toggleOfferStatus,
   applyOfferCode,
+  getOwnerOffers,
 } from "../controllers/offerController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -18,6 +19,9 @@ const offerRouter = express.Router();
 // Public
 offerRouter.get("/", getOffers);
 offerRouter.get("/:id", getOfferById);
+
+// Owner
+offerRouter.get("/owner", protect, getOwnerOffers);
 
 // User
 offerRouter.post("/apply", protect, applyOfferCode);

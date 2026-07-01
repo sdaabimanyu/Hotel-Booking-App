@@ -40,7 +40,7 @@ export default function Offers() {
     try {
       setLoading(true);
 
-      const { data } = await axios.get("/api/offers", {
+      const { data } = await axios.get("/api/offers/owner", {
         headers: {
           Authorization: `Bearer ${await getToken()}`,
         },
