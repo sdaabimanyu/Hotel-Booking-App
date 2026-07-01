@@ -9,7 +9,7 @@ export default function BookingWizard() {
   const { roomId } = useParams();
   const [searchParams] = useSearchParams();
 
-  const { rooms } = useAppContext();
+  const { rooms, user } = useAppContext();
 
   const [room, setRoom] = useState(null);
   const [step, setStep] = useState(1);
@@ -25,6 +25,16 @@ export default function BookingWizard() {
     specialRequest: "",
     selectedOffer: null,
   });
+
+  useEffect(() => {
+    if (!user) return;
+
+    setBookingData((prev) => ({
+      ...prev,
+      name: user.fullName || "",
+      email: user.primaryEmailAddress?.emailAddress || "",
+    }));
+  }, [user]);
 
   useEffect(() => {
     if (!rooms.length) return;

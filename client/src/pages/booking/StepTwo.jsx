@@ -1,4 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useAppContext } from "../../context/AppContext";
+import toast from "react-hot-toast";
 
 export default function StepTwo({
   room,
@@ -6,29 +8,27 @@ export default function StepTwo({
   setBookingData,
   setStep,
 }) {
-  const offers = [
-    {
-      id: 1,
-      title: "Early Bird Discount",
-      discount: 25,
-      code: "EARLY25",
-      description: "Save 25% when booking 30 days in advance.",
-    },
-    {
-      id: 2,
-      title: "Weekend Getaway",
-      discount: 20,
-      code: "WKND20",
-      description: "Enjoy 20% off weekend stays.",
-    },
-    {
-      id: 3,
-      title: "Suite Privilege",
-      discount: 15,
-      code: "SUITE15",
-      description: "Special discount for suite bookings.",
-    },
-  ];
+  const { axios, getToken } = useAppContext();
+
+  const [promoCode, setPromoCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [offers, setOffers] = useState([]);
+
+  const fetchOffers = async () => {
+    try {
+      const { data } = await axios.get("/api/offers");
+
+      if (data.success) {
+        setOffers(data.offers.filter((offer) => offer.isActive));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchOffers();
+  }, []);
 
   const nights = useMemo(() => {
     if (!bookingData.checkInDate || !bookingData.checkOutDate) return 1;
@@ -44,7 +44,9 @@ export default function StepTwo({
   const subtotal = room.pricePerNight * nights;
 
   const discountAmount = bookingData.selectedOffer
-    ? (subtotal * bookingData.selectedOffer.discount) / 100
+    ? bookingData.selectedOffer.discountType === "percentage"
+      ? (subtotal * bookingData.selectedOffer.discount) / 100
+      : bookingData.selectedOffer.discount
     : 0;
 
   const discountedPrice = subtotal - discountAmount;
@@ -52,6 +54,39 @@ export default function StepTwo({
   const taxes = Math.round(discountedPrice * 0.12);
 
   const total = discountedPrice + taxes;
+
+  const applyOffer = async () => {
+    try {
+      setLoading(true);
+
+      const { data } = await axios.post(
+        "/api/offers/apply",
+        {
+          code: promoCode,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${await getToken()}`,
+          },
+        },
+      );
+
+      if (data.success) {
+        toast.success("Offer Applied");
+
+        setBookingData({
+          ...bookingData,
+          selectedOffer: data.offer,
+        });
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message);
+    }
+
+    setLoading(false);
+  };
 
   return (
     <div className="grid lg:grid-cols-[2fr_1.1fr] gap-8">
@@ -61,6 +96,28 @@ export default function StepTwo({
         <h2 className="text-4xl font-semibold text-center mb-10">
           Offers & Pricing
         </h2>
+
+        <div className="mb-8">
+          <label className="block font-semibold mb-2">Have a Promo Code?</label>
+
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={promoCode}
+              placeholder="Enter promo code"
+              onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+              className="flex-1 border rounded-xl px-4 py-3"
+            />
+
+            <button
+              onClick={applyOffer}
+              disabled={loading}
+              className="bg-[#0f2f5f] text-white px-6 rounded-xl"
+            >
+              {loading ? "Applying..." : "Apply"}
+            </button>
+          </div>
+        </div>
 
         <div className="space-y-6">
           {offers.map((offer) => (

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import toast from "react-hot-toast";
 
 export default function StepOne({
   room,
@@ -28,6 +29,40 @@ export default function StepOne({
     }));
   };
 
+  const handleContinue = () => {
+    if (!bookingData.name.trim()) {
+      return toast.error("Full Name is required");
+    }
+
+    if (!bookingData.email.trim()) {
+      return toast.error("Email is required");
+    }
+
+    if (!bookingData.phone.trim()) {
+      return toast.error("Phone Number is required");
+    }
+
+    if (!bookingData.guests) {
+      return toast.error("Please select guests");
+    }
+
+    if (!bookingData.checkInDate) {
+      return toast.error("Check In Date is required");
+    }
+
+    if (!bookingData.checkOutDate) {
+      return toast.error("Check Out Date is required");
+    }
+
+    if (
+      new Date(bookingData.checkOutDate) <= new Date(bookingData.checkInDate)
+    ) {
+      return toast.error("Check Out must be after Check In");
+    }
+
+    setStep(2);
+  };
+
   return (
     <div className="grid lg:grid-cols-[2fr_1.1fr] gap-8">
       {/* LEFT */}
@@ -48,6 +83,7 @@ export default function StepOne({
             <input
               type="text"
               value={bookingData.name}
+              readOnly
               onChange={(e) => updateField("name", e.target.value)}
               className="w-full border rounded-2xl px-4 py-4 outline-none"
               placeholder="Alex Johnson"
@@ -64,6 +100,7 @@ export default function StepOne({
             <input
               type="email"
               value={bookingData.email}
+              readOnly
               onChange={(e) => updateField("email", e.target.value)}
               className="w-full border rounded-2xl px-4 py-4 outline-none"
               placeholder="alex@example.com"
@@ -168,7 +205,7 @@ export default function StepOne({
 
         <div className="flex justify-end mt-8">
           <button
-            onClick={() => setStep(2)}
+            onClick={handleContinue}
             className="bg-[#c9a74d] hover:bg-[#b89434] text-white px-10 py-4 rounded-2xl"
           >
             Continue →
