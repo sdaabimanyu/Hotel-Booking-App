@@ -21,6 +21,7 @@ import Bookings from "./pages/hotelOwner/Bookings";
 import Reviews from "./pages/Reviews";
 import EditRoom from "./pages/hotelOwner/EditRoom";
 import Analytics from "./pages/hotelOwner/Analytics";
+import OwnerOffers from "./pages/hotelOwner/Offers";
 
 function App() {
   const isOwnerPath = useLocation().pathname.includes("owner");
@@ -52,6 +53,7 @@ function App() {
             <Route path="reviews" element={<OwnerReviews />} />
             <Route path="edit-room/:id" element={<EditRoom />} />
             <Route path="analytics" element={<Analytics />} />
+            <Route path="offers" element={<OwnerOffers />} />
           </Route>
         </Routes>
       </div>

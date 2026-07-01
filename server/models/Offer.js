@@ -17,7 +17,6 @@ const offerSchema = new mongoose.Schema(
     code: {
       type: String,
       required: true,
-      unique: true,
       uppercase: true,
       trim: true,
     },
@@ -45,7 +44,7 @@ const offerSchema = new mongoose.Schema(
 
     image: {
       type: String,
-      default: "",
+      required: true,
     },
 
     isActive: {

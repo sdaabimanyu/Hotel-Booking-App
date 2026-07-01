@@ -1,3 +1,4 @@
+import { cloudinary } from "../configs/cloudinary.js";
 import Hotel from "../models/Hotel.js";
 import Offer from "../models/Offer.js";
 
@@ -17,8 +18,14 @@ export const createOffer = async (req, res) => {
       discountType,
       minimumStay,
       validTill,
-      image,
     } = req.body;
+
+    if (!title || !description || !code || !discount || !validTill) {
+      return res.json({
+        success: false,
+        message: "Please fill all required fields",
+      });
+    }
 
     const hotel = await Hotel.findOne({
       owner: req.user._id,
@@ -43,19 +50,33 @@ export const createOffer = async (req, res) => {
       });
     }
 
-    if (new Date(validTill) <= new Date()) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const expiry = new Date(validTill);
+    expiry.setHours(0, 0, 0, 0);
+
+    if (expiry <= today) {
       return res.json({
         success: false,
         message: "Expiry date must be in the future",
       });
     }
 
-    if (!title || !description || !code || !discount || !validTill) {
+    if (!req.file) {
       return res.json({
         success: false,
-        message: "Please fill all required fields",
+        message: "Offer image is required",
       });
     }
+
+    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+      folder: "hotel-offers",
+      resource_type: "auto",
+      use_filename: true,
+    });
+
+    const image = uploadResult.secure_url;
 
     const offer = await Offer.create({
       title,
