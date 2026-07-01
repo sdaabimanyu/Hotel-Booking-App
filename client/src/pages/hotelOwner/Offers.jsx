@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
+import Swal from "sweetalert2";
 
 import {
   Search,
@@ -140,11 +141,17 @@ export default function Offers() {
   };
 
   const deleteOffer = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this offer?",
-    );
+    const result = await Swal.fire({
+      title: "Delete Offer?",
+      text: "This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#2563eb",
+      cancelButtonColor: "#ef4444",
+      confirmButtonText: "Delete",
+    });
 
-    if (!confirmDelete) return;
+    if (!result.isConfirmed) return;
 
     try {
       const { data } = await axios.delete(`/api/offers/${id}`, {
@@ -155,7 +162,6 @@ export default function Offers() {
 
       if (data.success) {
         toast.success(data.message);
-
         fetchOffers();
       } else {
         toast.error(data.message);
