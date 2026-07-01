@@ -4,6 +4,8 @@ import Offer from "../models/Offer.js";
 
 export const createOffer = async (req, res) => {
   try {
+    console.log(req.body);
+    console.log(req.file);
     if (req.user.role !== "hotelOwner") {
       return res.json({
         success: false,
