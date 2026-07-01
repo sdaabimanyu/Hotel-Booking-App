@@ -80,6 +80,12 @@ export const createOffer = async (req, res) => {
 
     const image = uploadResult.secure_url;
 
+    console.log("Hotel:", hotel);
+    console.log("User:", req.user);
+    console.log("Body:", req.body);
+    console.log("File:", req.file);
+    console.log("Image:", image);
+
     const offer = await Offer.create({
       title,
       description,
@@ -99,7 +105,7 @@ export const createOffer = async (req, res) => {
       offer,
     });
   } catch (error) {
-    console.log(error);
+    console.log(JSON.stringify(error, null, 2));
 
     res.json({
       success: false,
