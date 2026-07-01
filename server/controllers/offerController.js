@@ -184,10 +184,32 @@ export const updateOffer = async (req, res) => {
       });
     }
 
-    Object.assign(offer, req.body);
+    const {
+      title,
+      description,
+      code,
+      discount,
+      discountType,
+      minimumStay,
+      validTill,
+    } = req.body;
 
-    if (offer.code) {
-      offer.code = offer.code.toUpperCase();
+    offer.title = title;
+    offer.description = description;
+    offer.code = code.trim().toUpperCase();
+    offer.discount = discount;
+    offer.discountType = discountType;
+    offer.minimumStay = minimumStay;
+    offer.validTill = validTill;
+
+    // Upload new image if selected
+    if (req.file) {
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "hotel-offers",
+        resource_type: "auto",
+      });
+
+      offer.image = uploadResult.secure_url;
     }
 
     await offer.save();

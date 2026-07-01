@@ -24,7 +24,7 @@ offerRouter.post("/apply", protect, applyOfferCode);
 
 // Hotel Owner
 offerRouter.post("/", protect, upload.single("image"), createOffer);
-offerRouter.put("/:id", protect, updateOffer);
+offerRouter.put("/:id", protect, upload.single("image"), updateOffer);
 offerRouter.delete("/:id", protect, deleteOffer);
 offerRouter.patch("/:id/toggle", protect, toggleOfferStatus);
 
