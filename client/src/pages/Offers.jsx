@@ -1,147 +1,151 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAppContext } from "../context/AppContext";
 
 export default function Offers() {
   const navigate = useNavigate();
+  const { axios } = useAppContext();
 
-  const offers = [
-    {
-      id: 1,
-      title: "Early Bird Discount",
-      discount: "25%",
-      code: "EARLY25",
-      description:
-        "Book 30 days in advance and save 25% across all room types. Plan ahead and enjoy your reward.",
-      minStay: "2 nights",
-      validTill: "May 31, 2026",
-      used: 145,
-      active: true,
-    },
-    {
-      id: 2,
-      title: "Weekend Getaway",
-      discount: "20%",
-      code: "WKND20",
-      description:
-        "Enjoy 20% off on Friday–Sunday stays. The perfect excuse for a spontaneous city escape.",
-      minStay: "2 nights",
-      validTill: "Jun 30, 2026",
-      used: 89,
-      active: true,
-    },
-    {
-      id: 3,
-      title: "Long Stay Bonus",
-      discount: "$100",
-      code: "STAY100",
-      description:
-        "Stay 7 nights or more and receive $100 off your total booking. The longer the stay, the greater the reward.",
-      minStay: "7 nights",
-      validTill: "Dec 31, 2026",
-      used: 34,
-      active: true,
-    },
-    {
-      id: 4,
-      title: "Suite Privilege",
-      discount: "15%",
-      code: "SUITE15",
-      description:
-        "Reserve any suite and enjoy 15% off. Subject to limited availability — book now.",
-      minStay: "1 night",
-      validTill: "Apr 30, 2026",
-      used: 23,
-      active: true,
-    },
-    {
-      id: 5,
-      title: "Summer Escape",
-      discount: "30%",
-      code: "SUMMER30",
-      description:
-        "Special summer offer available for selected destinations and room categories.",
-      minStay: "3 nights",
-      validTill: "Aug 31, 2026",
-      used: 12,
-      active: false,
-    },
-  ];
+  const [offers, setOffers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchOffers = async () => {
+    try {
+      const { data } = await axios.get("/api/offers");
+
+      if (data.success) {
+        setOffers(data.offers);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOffers();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="pt-40 text-center text-2xl font-semibold">
+        Loading Offers...
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-[#f7f6f3] min-h-screen pt-32 pb-20 px-6 md:px-12">
+    <div className="bg-[#faf9f7] min-h-screen pt-32 pb-20 px-6 md:px-12 lg:px-20">
       <div className="max-w-7xl mx-auto">
+        {/* Heading */}
+
         <div className="text-center mb-14">
           <p className="uppercase tracking-[6px] text-[#c9a74d] text-sm">
             Exclusive Deals
           </p>
 
-          <h1 className="text-4xl md:text-5xl font-bold text-[#0f2f5f] mt-4">
+          <h1 className="text-5xl font-bold text-[#0f2f5f] mt-4">
             Special Offers
           </h1>
+
+          <p className="text-gray-500 mt-5 max-w-2xl mx-auto">
+            Unlock exclusive savings and enjoy unforgettable stays with our
+            carefully curated hotel offers.
+          </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        {/* Cards */}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {offers.map((offer) => (
             <div
-              key={offer.id}
-              className={`rounded-3xl overflow-hidden border shadow-sm bg-white ${
-                !offer.active ? "opacity-60" : ""
-              }`}
+              key={offer._id}
+              className="rounded-3xl overflow-hidden bg-white shadow-lg hover:shadow-2xl transition duration-300"
             >
-              {/* Top Section */}
-              <div className="bg-[#0f2f5f] text-white p-8 flex justify-between items-start">
-                <div>
-                  <p className="uppercase text-[#d4af37] tracking-[4px] text-sm">
-                    Save
-                  </p>
+              {/* Image */}
 
-                  <h2 className="text-6xl font-bold mt-3">{offer.discount}</h2>
+              <div className="relative h-60">
+                <img
+                  src={offer.image}
+                  alt={offer.title}
+                  className="w-full h-full object-cover"
+                />
+
+                <div className="absolute inset-0 bg-black/35"></div>
+
+                <div className="absolute top-5 left-5 bg-white text-[#0f2f5f] px-2 py-1 rounded-xl font-semibold text-[14px]">
+                  {offer.discount}
+                  {offer.discountType === "percentage" ? "%" : "$"} OFF
                 </div>
 
-                <div className="text-right">
-                  <p className="uppercase text-gray-300 text-sm">Promo Code</p>
-
-                  <h3 className="text-[#d4af37] text-3xl font-bold mt-3 tracking-widest">
-                    {offer.code}
-                  </h3>
+                <div className="absolute top-5 right-5">
+                  {offer.isActive ? (
+                    <span className="bg-green-500 text-white px-2 py-1 rounded-xl text-[14px]">
+                      ACTIVE
+                    </span>
+                  ) : (
+                    <span className="bg-red-500 text-white px-2 py-1 rounded-xl text-[14px]">
+                      EXPIRED
+                    </span>
+                  )}
                 </div>
               </div>
 
               {/* Content */}
-              <div className="p-8">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-3xl font-semibold text-[#0f2f5f]">
-                    {offer.title}
-                  </h3>
 
-                  {!offer.active && (
-                    <span className="bg-red-100 text-red-500 px-4 py-2 rounded-xl text-sm">
-                      Inactive
-                    </span>
-                  )}
-                </div>
+              <div className="p-7">
+                <h2 className="text-3xl font-bold text-[#0f2f5f] ">
+                  {offer.title}
+                </h2>
 
-                <p className="text-gray-600 text-lg leading-relaxed mb-8">
+                <p className="text-gray-600 mt-4 leading-7 min-h-[85px]">
                   {offer.description}
                 </p>
 
-                <div className="flex flex-wrap gap-6 text-gray-500 text-sm mb-8">
-                  <span>Min stay: {offer.minStay}</span>
+                <div className="space-y-3 mt-6">
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-500">
+                      Promo Code
+                    </span>
 
-                  <span>Valid till: {offer.validTill}</span>
+                    <span className="font-bold text-[#c9a74d]">
+                      {offer.code}
+                    </span>
+                  </div>
 
-                  <span>Used: {offer.used}×</span>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-500">
+                      Minimum Stay
+                    </span>
+
+                    <span>
+                      {offer.minimumStay} Night
+                      {offer.minimumStay > 1 && "s"}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-500">
+                      Valid Till
+                    </span>
+
+                    <span>
+                      {new Date(offer.validTill).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
 
                 <button
-                  disabled={!offer.active}
+                  disabled={!offer.isActive}
                   onClick={() => navigate("/rooms")}
-                  className={`w-full py-4 rounded-2xl text-lg font-medium transition ${
-                    offer.active
-                      ? "bg-[#c9a74d] text-white hover:bg-[#b89637]"
+                  className={`w-full mt-8 py-4 rounded-2xl font-semibold transition ${
+                    offer.isActive
+                      ? "bg-[#c9a74d] hover:bg-[#b8932f] text-white"
                       : "bg-gray-300 text-gray-600 cursor-not-allowed"
                   }`}
                 >
-                  Book With This Offer
+                  Book With This Offer →
                 </button>
               </div>
             </div>
