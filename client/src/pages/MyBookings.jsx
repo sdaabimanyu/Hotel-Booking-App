@@ -169,7 +169,15 @@ export default function MyBookings() {
                     <span>Guests: {booking.guests}</span>
                   </div>
 
-                  <p className="text-base">Total: ${booking.totalPrice}</p>
+                  <p className="text-base font-semibold">
+                    Total: ${booking.totalPrice}
+                  </p>
+
+                  {booking.selectedOffer && (
+                    <p className="text-green-600 text-sm mt-1">
+                      Offer Applied: {booking.selectedOffer.code}
+                    </p>
+                  )}
                 </div>
               </div>
 

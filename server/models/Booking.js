@@ -33,6 +33,33 @@ const bookingSchema = mongoose.Schema(
       type: Number,
       required: true,
     },
+
+    name: {
+      type: String,
+      required: true,
+    },
+
+    email: {
+      type: String,
+      required: true,
+    },
+
+    phone: {
+      type: String,
+      required: true,
+    },
+
+    specialRequest: {
+      type: String,
+      default: "",
+    },
+
+    selectedOffer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Offer",
+      default: null,
+    },
+
     status: {
       type: String,
       enum: ["pending", "confirmed", "checked-in", "checked-out", "cancelled"],
@@ -48,7 +75,7 @@ const bookingSchema = mongoose.Schema(
       default: false,
     },
   },
-  { timeStamps: true },
+  { timestamps: true },
 );
 
 const Booking = mongoose.model("Booking", bookingSchema);

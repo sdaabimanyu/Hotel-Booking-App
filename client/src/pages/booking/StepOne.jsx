@@ -30,16 +30,12 @@ export default function StepOne({
   };
 
   const handleContinue = () => {
-    if (!bookingData.name.trim()) {
-      return toast.error("Full Name is required");
-    }
-
-    if (!bookingData.email.trim()) {
-      return toast.error("Email is required");
-    }
-
     if (!bookingData.phone.trim()) {
       return toast.error("Phone Number is required");
+    }
+
+    if (bookingData.phone.trim().length < 10) {
+      return toast.error("Enter a valid phone number");
     }
 
     if (!bookingData.guests) {
@@ -84,9 +80,7 @@ export default function StepOne({
               type="text"
               value={bookingData.name}
               readOnly
-              onChange={(e) => updateField("name", e.target.value)}
-              className="w-full border rounded-2xl px-4 py-4 outline-none"
-              placeholder="Alex Johnson"
+              className="w-full border rounded-2xl px-4 py-4 bg-gray-100 cursor-not-allowed"
             />
           </div>
 
@@ -101,9 +95,7 @@ export default function StepOne({
               type="email"
               value={bookingData.email}
               readOnly
-              onChange={(e) => updateField("email", e.target.value)}
-              className="w-full border rounded-2xl px-4 py-4 outline-none"
-              placeholder="alex@example.com"
+              className="w-full border rounded-2xl px-4 py-4 bg-gray-100 cursor-not-allowed"
             />
           </div>
 
@@ -132,7 +124,7 @@ export default function StepOne({
 
             <select
               value={bookingData.guests}
-              onChange={(e) => updateField("guests", e.target.value)}
+              onChange={(e) => updateField("guests", Number(e.target.value))}
               className="w-full border rounded-2xl px-4 py-4 outline-none"
             >
               <option value="1">1 Guest</option>

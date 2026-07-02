@@ -13,7 +13,6 @@ export default function BookingWizard() {
 
   const [room, setRoom] = useState(null);
   const [step, setStep] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState("hotel");
 
   const [bookingData, setBookingData] = useState({
     name: "",

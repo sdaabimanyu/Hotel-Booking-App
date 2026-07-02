@@ -5,6 +5,7 @@ import Room from "../models/Room.js";
 import transporter from "../configs/nodemailer.js";
 import stripe from "stripe";
 import Review from "../models/Review.js";
+import Offer from "../models/Offer.js";
 
 // Function to Check Availability of Room
 const checkAvailability = async (checkInDate, checkOutDate, room) => {
@@ -49,7 +50,17 @@ export const checkAvailabilityAPI = async (req, res) => {
 
 export const createBooking = async (req, res) => {
   try {
-    const { room, checkInDate, checkOutDate, guests } = req.body;
+    const {
+      room,
+      checkInDate,
+      checkOutDate,
+      guests,
+      name,
+      email,
+      phone,
+      specialRequest,
+      selectedOffer,
+    } = req.body;
     const user = req.user._id;
 
     //Before Booking check Availability
@@ -77,6 +88,25 @@ export const createBooking = async (req, res) => {
     const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
     totalPrice *= nights;
+
+    // Apply offer discount
+    if (selectedOffer) {
+      const offer = await Offer.findById(selectedOffer);
+
+      if (offer && offer.isActive && new Date(offer.validTill) >= new Date()) {
+        if (offer.discountType === "percentage") {
+          totalPrice -= (totalPrice * offer.discount) / 100;
+        } else {
+          totalPrice -= offer.discount;
+        }
+
+        totalPrice = Math.max(totalPrice, 0);
+
+        offer.usedCount += 1;
+
+        await offer.save();
+      }
+    }
     const booking = await Booking.create({
       user,
       room,
@@ -85,6 +115,12 @@ export const createBooking = async (req, res) => {
       checkInDate,
       checkOutDate,
       totalPrice,
+
+      name,
+      email,
+      phone,
+      specialRequest,
+      selectedOffer,
     });
 
     const mailOptions = {
@@ -133,6 +169,7 @@ export const getUserBookings = async (req, res) => {
     const bookings = await Booking.find({ user })
       .populate("room")
       .populate("hotel")
+      .populate("selectedOffer")
       .sort({ createdAt: -1 });
 
     const bookingsWithReviews = await Promise.all(
@@ -196,7 +233,7 @@ export const getHotelBookings = async (req, res) => {
       })),
     );
     const bookings = await Booking.find({ hotel: hotel._id })
-      .populate("room hotel user")
+      .populate("room hotel user selectedOffer")
       .sort({ createdAt: -1 });
     const totalRooms = await Room.countDocuments({
       hotel: hotel._id,

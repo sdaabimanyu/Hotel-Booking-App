@@ -49,7 +49,7 @@ export default function StepTwo({
       : bookingData.selectedOffer.discount
     : 0;
 
-  const discountedPrice = subtotal - discountAmount;
+  const discountedPrice = Math.max(subtotal - discountAmount, 0);
 
   const taxes = Math.round(discountedPrice * 0.12);
 
@@ -122,7 +122,7 @@ export default function StepTwo({
         <div className="space-y-6">
           {offers.map((offer) => (
             <div
-              key={offer.id}
+              key={offer._id}
               onClick={() =>
                 setBookingData((prev) => ({
                   ...prev,
@@ -130,7 +130,7 @@ export default function StepTwo({
                 }))
               }
               className={`border-2 rounded-3xl cursor-pointer transition overflow-hidden ${
-                bookingData.selectedOffer?.id === offer.id
+                bookingData.selectedOffer?._id === offer._id
                   ? "border-[#0f2f5f]"
                   : "border-gray-200"
               }`}
@@ -139,7 +139,10 @@ export default function StepTwo({
                 <div>
                   <p className="uppercase text-[#d4af37]">Save</p>
 
-                  <h2 className="text-5xl font-bold">{offer.discount}%</h2>
+                  <h2 className="text-5xl font-bold">
+                    {offer.discount}
+                    {offer.discountType === "percentage" ? "%" : "$"}
+                  </h2>
                 </div>
 
                 <div className="text-right">
@@ -201,7 +204,10 @@ export default function StepTwo({
               <div className="flex justify-between text-green-600">
                 <span>
                   Discount ({bookingData.selectedOffer.discount}
-                  %)
+                  {bookingData.selectedOffer.discountType === "percentage"
+                    ? "%"
+                    : "$"}
+                  )
                 </span>
 
                 <span>-${discountAmount}</span>

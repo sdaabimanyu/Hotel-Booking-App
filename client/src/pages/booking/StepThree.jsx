@@ -6,9 +6,24 @@ export default function StepThree({ room, bookingData, setStep }) {
   const { axios, getToken } = useAppContext();
 
   const [paymentMethod, setPaymentMethod] = useState("hotel");
+  const [loading, setLoading] = useState(false);
+  const nights =
+    (new Date(bookingData.checkOutDate) - new Date(bookingData.checkInDate)) /
+    (1000 * 60 * 60 * 24);
+
+  const subtotal = room.pricePerNight * nights;
+
+  const discount = bookingData.selectedOffer
+    ? bookingData.selectedOffer.discountType === "percentage"
+      ? (subtotal * bookingData.selectedOffer.discount) / 100
+      : bookingData.selectedOffer.discount
+    : 0;
+
+  const total = subtotal - discount;
 
   const handlePayment = async () => {
     try {
+      setLoading(true);
       const token = await getToken();
 
       // Create booking first
@@ -19,6 +34,12 @@ export default function StepThree({ room, bookingData, setStep }) {
           guests: bookingData.guests,
           checkInDate: bookingData.checkInDate,
           checkOutDate: bookingData.checkOutDate,
+
+          name: bookingData.name,
+          email: bookingData.email,
+          phone: bookingData.phone,
+          specialRequest: bookingData.specialRequest,
+          selectedOffer: bookingData.selectedOffer?._id,
         },
         {
           headers: {
@@ -33,6 +54,7 @@ export default function StepThree({ room, bookingData, setStep }) {
 
       if (paymentMethod === "hotel") {
         toast.success("Booking Created");
+        setLoading(false);
         return (window.location.href = "/my-bookings");
       }
 
@@ -51,10 +73,13 @@ export default function StepThree({ room, bookingData, setStep }) {
       );
 
       if (stripeRes.data.success) {
+        setLoading(false);
         window.location.href = stripeRes.data.url;
       }
     } catch (error) {
       console.log(error);
+
+      setLoading(false);
 
       toast.error(error.response?.data?.message || "Something went wrong");
     }
@@ -103,9 +128,10 @@ export default function StepThree({ room, bookingData, setStep }) {
 
           <button
             onClick={handlePayment}
-            className="bg-[#c9a74d] text-white px-10 py-4 rounded-2xl hover:bg-[#b89434]"
+            disabled={loading}
+            className="bg-[#c9a74d] text-white px-10 py-4 rounded-2xl hover:bg-[#b89434] disabled:opacity-60"
           >
-            Confirm Booking
+            {loading ? "Processing..." : "Confirm Booking"}
           </button>
         </div>
       </div>
@@ -120,26 +146,50 @@ export default function StepThree({ room, bookingData, setStep }) {
         <div className="space-y-4">
           <div className="flex justify-between">
             <span>Room</span>
-
             <span>{room.roomType}</span>
           </div>
 
           <div className="flex justify-between">
             <span>Guests</span>
-
             <span>{bookingData.guests}</span>
           </div>
 
           <div className="flex justify-between">
             <span>Check In</span>
-
             <span>{bookingData.checkInDate}</span>
           </div>
 
           <div className="flex justify-between">
             <span>Check Out</span>
-
             <span>{bookingData.checkOutDate}</span>
+          </div>
+
+          <hr />
+
+          <div className="flex justify-between">
+            <span>Subtotal</span>
+            <span>${subtotal}</span>
+          </div>
+
+          {bookingData.selectedOffer && (
+            <>
+              <div className="flex justify-between text-green-600">
+                <span>Offer</span>
+                <span>{bookingData.selectedOffer.code}</span>
+              </div>
+
+              <div className="flex justify-between text-green-600">
+                <span>Discount</span>
+                <span>-${discount}</span>
+              </div>
+            </>
+          )}
+
+          <hr />
+
+          <div className="flex justify-between text-xl font-bold">
+            <span>Total</span>
+            <span>${total}</span>
           </div>
         </div>
       </div>
