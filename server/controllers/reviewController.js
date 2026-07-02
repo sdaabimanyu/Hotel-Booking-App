@@ -104,9 +104,12 @@ export const getRoomReviews = async (req, res) => {
 
 export const getHotelReviews = async (req, res) => {
   try {
+    console.log("Logged In User:", req.user);
+
     const hotel = await Hotel.findOne({
       owner: req.user._id,
     });
+    console.log("Hotel Found:", hotel);
 
     if (!hotel) {
       return res.json({
@@ -120,7 +123,10 @@ export const getHotelReviews = async (req, res) => {
     })
       .populate("user", "username")
       .populate("room", "roomType images")
+      .populate("hotel", "name")
       .sort({ createdAt: -1 });
+
+    console.log("Reviews:", reviews);
 
     res.json({
       success: true,
@@ -140,7 +146,9 @@ export const getAllReviews = async (req, res) => {
   try {
     const reviews = await Review.find()
       .populate("room", "roomType images")
-      .sort({ createdAt: -1 });
+      .populate("hotel", "name city address image")
+      .sort({ createdAt: -1 })
+      .limit(100);
 
     res.json({
       success: true,

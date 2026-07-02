@@ -8,13 +8,10 @@ export default function Reviews() {
 
   const fetchReviews = async () => {
     try {
-      const { data } = await axios.get("/api/reviews/hotel", {
-        headers: {
-          Authorization: `Bearer ${await getToken()}`,
-        },
-      });
+      const { data } = await axios.get("/api/reviews");
 
-      console.log(data.reviews);
+      console.log("FULL RESPONSE:", data);
+      console.log("REVIEWS:", data.reviews);
 
       if (data.success) {
         setReviews(data.reviews);
@@ -93,8 +90,8 @@ export default function Reviews() {
                   {/* Room Image */}
                   {review.room?.images?.[0] ? (
                     <img
-                      src={review.room.images[0]}
-                      alt={review.room.roomType}
+                      src={review.hotel?.image || review.room?.images?.[0]}
+                      alt={review.hotel?.name}
                       className="w-32 h-32 rounded-2xl object-cover shadow"
                     />
                   ) : (
@@ -117,13 +114,19 @@ export default function Reviews() {
                           {review.userName || review.user?.username || "Guest"}
                         </h3>
 
-                        <span className="inline-block mt-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-medium">
-                          {review.room?.roomType || "Room Deleted"}
-                        </span>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold">
+                            🏨 {review.hotel?.name}
+                          </span>
 
-                        <span className="px-4 py-1 rounded-full bg-green-100 text-green-700 text-sm font-semibold">
-                          ✔ Verified Stay
-                        </span>
+                          <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-sm font-semibold">
+                            🛏 {review.room?.roomType}
+                          </span>
+
+                          <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-semibold">
+                            ✔ Verified Stay
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -131,9 +134,11 @@ export default function Reviews() {
 
                 {/* Rating */}
                 <div className="flex items-center gap-2">
-                  <div className="flex text-yellow-400 text-3xl">
-                    {[...Array(review.rating)].map((_, i) => (
-                      <span key={i}>★</span>
+                  <div className="flex text-yellow-400 text-2xl">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span key={star}>
+                        {star <= review.rating ? "★" : "☆"}
+                      </span>
                     ))}
                   </div>
 
