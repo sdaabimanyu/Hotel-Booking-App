@@ -43,17 +43,29 @@ export default function StepTwo({
 
   const subtotal = room.pricePerNight * nights;
 
-  const discountAmount = bookingData.selectedOffer
-    ? bookingData.selectedOffer.discountType === "percentage"
-      ? (subtotal * bookingData.selectedOffer.discount) / 100
-      : bookingData.selectedOffer.discount
-    : 0;
+  let discountAmount = 0;
 
-  const discountedPrice = Math.max(subtotal - discountAmount, 0);
+  if (
+    bookingData.selectedOffer &&
+    nights >= bookingData.selectedOffer.minimumStay &&
+    new Date(bookingData.selectedOffer.validTill) >= new Date()
+  ) {
+    if (bookingData.selectedOffer.discountType === "percentage") {
+      discountAmount = Number(
+        ((subtotal * bookingData.selectedOffer.discount) / 100).toFixed(2),
+      );
+    } else {
+      discountAmount = Number(bookingData.selectedOffer.discount.toFixed(2));
+    }
+  }
 
-  const taxes = Math.round(discountedPrice * 0.12);
+  const discountedPrice = Number(
+    Math.max(subtotal - discountAmount, 0).toFixed(2),
+  );
 
-  const total = discountedPrice + taxes;
+  const taxes = Number((discountedPrice * 0.12).toFixed(2));
+
+  const total = Number((discountedPrice + taxes).toFixed(2));
 
   const applyOffer = async () => {
     try {
@@ -196,21 +208,15 @@ export default function StepTwo({
         <div className="space-y-4 mt-8">
           <div className="flex justify-between">
             <span>Room Cost</span>
-            <span>${subtotal}</span>
+            <span>${subtotal.toFixed(2)}</span>
           </div>
 
-          {bookingData.selectedOffer && (
+          {discountAmount > 0 && (
             <>
               <div className="flex justify-between text-green-600">
-                <span>
-                  Discount ({bookingData.selectedOffer.discount}
-                  {bookingData.selectedOffer.discountType === "percentage"
-                    ? "%"
-                    : "$"}
-                  )
-                </span>
+                <span>Discount</span>
 
-                <span>-${discountAmount}</span>
+                <span>-${discountAmount.toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between">
@@ -224,7 +230,7 @@ export default function StepTwo({
           <div className="flex justify-between">
             <span>Taxes (12%)</span>
 
-            <span>${taxes}</span>
+            <span>${taxes.toFixed(2)}</span>
           </div>
 
           <hr />
@@ -232,7 +238,7 @@ export default function StepTwo({
           <div className="flex justify-between text-2xl font-bold text-[#0f2f5f]">
             <span>Total Due</span>
 
-            <span>${total}</span>
+            <span>${total.toFixed(2)}</span>
           </div>
         </div>
       </div>

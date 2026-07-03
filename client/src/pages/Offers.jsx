@@ -61,96 +61,100 @@ export default function Offers() {
           {offers.map((offer) => {
             const expired =
               new Date(offer.validTill) < new Date() || !offer.isActive;
-            <div
-              key={offer._id}
-              className="rounded-3xl overflow-hidden bg-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
-            >
-              {/* Image */}
+            return (
+              <div
+                key={offer._id}
+                className="rounded-3xl overflow-hidden bg-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
+              >
+                {/* Image */}
 
-              <div className="relative h-60">
-                <img
-                  src={offer.image}
-                  alt={offer.title}
-                  className="w-full h-full object-cover"
-                />
+                <div className="relative h-60">
+                  <img
+                    src={offer.image}
+                    alt={offer.title}
+                    className="w-full h-full object-cover"
+                  />
 
-                <div className="absolute inset-0 bg-black/20"></div>
+                  <div className="absolute inset-0 bg-black/20"></div>
 
-                <div className="absolute top-5 left-5 bg-white text-[#0f2f5f] px-2 py-1 rounded-xl font-semibold text-[14px]">
-                  {offer.discount}
-                  {offer.discountType === "percentage" ? "%" : "$"} OFF
+                  <div className="absolute top-5 left-5 bg-white text-[#0f2f5f] px-2 py-1 rounded-xl font-semibold text-[14px]">
+                    {offer.discount}
+                    {offer.discountType === "percentage" ? "%" : "$"} OFF
+                  </div>
+
+                  <div className="absolute top-5 right-5">
+                    {expired ? (
+                      <span className="flex items-center gap-2 bg-red-50 text-red-600 border border-red-200 px-3 py-1 rounded-full text-sm font-semibold shadow">
+                        <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                        Expired
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-sm font-semibold shadow">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Available
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="absolute top-5 right-5">
-                  {expired ? (
-                    <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                      EXPIRED
-                    </span>
-                  ) : (
-                    <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                      ACTIVE
-                    </span>
-                  )}
+                {/* Content */}
+
+                <div className="p-7">
+                  <h2 className="text-3xl font-bold text-[#0f2f5f] ">
+                    {offer.title}
+                  </h2>
+
+                  <p className="text-gray-600 mt-4 leading-7 min-h-[85px]">
+                    {offer.description}
+                  </p>
+
+                  <div className="space-y-3 mt-6">
+                    <div className="flex justify-between">
+                      <span className="font-medium text-gray-500">
+                        Promo Code
+                      </span>
+
+                      <span className="font-bold text-[#c9a74d]">
+                        {offer.code}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="font-medium text-gray-500">
+                        Minimum Stay
+                      </span>
+
+                      <span>
+                        {offer.minimumStay} Night
+                        {offer.minimumStay > 1 && "s"}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="font-medium text-gray-500">
+                        Valid Till
+                      </span>
+
+                      <span>
+                        {new Date(offer.validTill).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    disabled={expired}
+                    onClick={() => navigate("/rooms")}
+                    className={`w-full mt-8 py-4 rounded-2xl font-semibold transition ${
+                      !expired
+                        ? "bg-[#c9a74d] hover:bg-[#b8932f] text-white"
+                        : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                    }`}
+                  >
+                    Book With This Offer →
+                  </button>
                 </div>
               </div>
-
-              {/* Content */}
-
-              <div className="p-7">
-                <h2 className="text-3xl font-bold text-[#0f2f5f] ">
-                  {offer.title}
-                </h2>
-
-                <p className="text-gray-600 mt-4 leading-7 min-h-[85px]">
-                  {offer.description}
-                </p>
-
-                <div className="space-y-3 mt-6">
-                  <div className="flex justify-between">
-                    <span className="font-medium text-gray-500">
-                      Promo Code
-                    </span>
-
-                    <span className="font-bold text-[#c9a74d]">
-                      {offer.code}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="font-medium text-gray-500">
-                      Minimum Stay
-                    </span>
-
-                    <span>
-                      {offer.minimumStay} Night
-                      {offer.minimumStay > 1 && "s"}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="font-medium text-gray-500">
-                      Valid Till
-                    </span>
-
-                    <span>
-                      {new Date(offer.validTill).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  disabled={!offer.isActive}
-                  onClick={() => navigate("/rooms")}
-                  className={`w-full mt-8 py-4 rounded-2xl font-semibold transition ${
-                    offer.isActive
-                      ? "bg-[#c9a74d] hover:bg-[#b8932f] text-white"
-                      : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                  }`}
-                >
-                  Book With This Offer →
-                </button>
-              </div>
-            </div>;
+            );
           })}
         </div>
       </div>

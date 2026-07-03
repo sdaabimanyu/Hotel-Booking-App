@@ -231,19 +231,19 @@ export default function StepOne({
             <span>
               ${room.pricePerNight} × {nights}
             </span>
-            <span>${subtotal}</span>
+            <span>${subtotal.toFixed(2)}</span>
           </div>
 
           <div className="flex justify-between">
             <span>Taxes (12%)</span>
-            <span>${taxes}</span>
+            <span>${taxes.toFixed(2)}</span>
           </div>
 
           <hr className="my-4" />
 
           <div className="flex justify-between text-2xl font-bold text-[#0f2f5f]">
             <span>Total Due</span>
-            <span>${total}</span>
+            <span>${total.toFixed(2)}</span>
           </div>
         </div>
       </div>

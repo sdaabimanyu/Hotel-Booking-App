@@ -89,24 +89,34 @@ export const createBooking = async (req, res) => {
 
     totalPrice *= nights;
 
-    // Apply offer discount
+    // Apply Offer
+    let discount = 0;
+
     if (selectedOffer) {
       const offer = await Offer.findById(selectedOffer);
 
-      if (offer && offer.isActive && new Date(offer.validTill) >= new Date()) {
+      if (
+        offer &&
+        offer.isActive &&
+        new Date(offer.validTill) >= new Date() &&
+        nights >= offer.minimumStay
+      ) {
         if (offer.discountType === "percentage") {
-          totalPrice -= (totalPrice * offer.discount) / 100;
+          discount = Number(((totalPrice * offer.discount) / 100).toFixed(2));
         } else {
-          totalPrice -= offer.discount;
+          discount = Number(offer.discount.toFixed(2));
         }
 
-        totalPrice = Math.max(totalPrice, 0);
-
         offer.usedCount += 1;
-
         await offer.save();
       }
     }
+
+    totalPrice = Number(Math.max(totalPrice - discount, 0).toFixed(2));
+
+    const tax = Number((totalPrice * 0.12).toFixed(2));
+
+    totalPrice = Number((totalPrice + tax).toFixed(2));
     const booking = await Booking.create({
       user,
       room,
@@ -136,7 +146,9 @@ export const createBooking = async (req, res) => {
       <li><strong>Hotel Name:</strong> ${roomData.hotel.name}</li>
       <li><strong>Location:</strong> ${roomData.hotel.address}</li> 
       <li><strong>Date:</strong> ${booking.checkInDate.toDateString()}</li>
-      <li><strong>Booking Amount:</strong> ${process.env.CURRENCY || "$"} ${booking.totalPrice} /night</li>
+      <li><strong>Total Amount:</strong>
+      ${process.env.CURRENCY || "$"} ${booking.totalPrice.toFixed(2)}
+      </li>
       </ul>
       <p>We look forward to welcoming you!</p>
       <p>If you need to make any changes, feel free to contact us.</p>
@@ -381,7 +393,7 @@ export const stripePayment = async (req, res) => {
             product_data: {
               name: roomData.hotel.name,
             },
-            unit_amount: totalPrice * 100,
+            unit_amount: Math.round(totalPrice * 100),
           },
           quantity: 1,
         },

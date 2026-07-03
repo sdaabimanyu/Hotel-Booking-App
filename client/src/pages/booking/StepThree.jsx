@@ -15,11 +15,17 @@ export default function StepThree({ room, bookingData, setStep }) {
 
   const discount = bookingData.selectedOffer
     ? bookingData.selectedOffer.discountType === "percentage"
-      ? (subtotal * bookingData.selectedOffer.discount) / 100
-      : bookingData.selectedOffer.discount
+      ? Number(
+          ((subtotal * bookingData.selectedOffer.discount) / 100).toFixed(2),
+        )
+      : Number(bookingData.selectedOffer.discount.toFixed(2))
     : 0;
 
-  const total = subtotal - discount;
+  const discountedPrice = Number((subtotal - discount).toFixed(2));
+
+  const taxes = Number((discountedPrice * 0.12).toFixed(2));
+
+  const total = Number((discountedPrice + taxes).toFixed(2));
 
   const handlePayment = async () => {
     try {
@@ -168,7 +174,7 @@ export default function StepThree({ room, bookingData, setStep }) {
 
           <div className="flex justify-between">
             <span>Subtotal</span>
-            <span>${subtotal}</span>
+            <span>${subtotal.toFixed(2)}</span>
           </div>
 
           {bookingData.selectedOffer && (
@@ -180,16 +186,21 @@ export default function StepThree({ room, bookingData, setStep }) {
 
               <div className="flex justify-between text-green-600">
                 <span>Discount</span>
-                <span>-${discount}</span>
+                <span>-${discount.toFixed(2)}</span>
               </div>
             </>
           )}
+
+          <div className="flex justify-between">
+            <span>Taxes (12%)</span>
+            <span>${taxes.toFixed(2)}</span>
+          </div>
 
           <hr />
 
           <div className="flex justify-between text-xl font-bold">
             <span>Total</span>
-            <span>${total}</span>
+            <span>${total.toFixed(2)}</span>
           </div>
         </div>
       </div>
