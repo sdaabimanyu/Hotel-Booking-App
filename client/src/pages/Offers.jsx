@@ -58,10 +58,12 @@ export default function Offers() {
         {/* Cards */}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {offers.map((offer) => (
+          {offers.map((offer) => {
+            const expired =
+              new Date(offer.validTill) < new Date() || !offer.isActive;
             <div
               key={offer._id}
-              className="rounded-3xl overflow-hidden bg-white shadow-lg hover:shadow-2xl transition duration-300"
+              className="rounded-3xl overflow-hidden bg-white shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
             >
               {/* Image */}
 
@@ -72,7 +74,7 @@ export default function Offers() {
                   className="w-full h-full object-cover"
                 />
 
-                <div className="absolute inset-0 bg-black/35"></div>
+                <div className="absolute inset-0 bg-black/20"></div>
 
                 <div className="absolute top-5 left-5 bg-white text-[#0f2f5f] px-2 py-1 rounded-xl font-semibold text-[14px]">
                   {offer.discount}
@@ -80,13 +82,13 @@ export default function Offers() {
                 </div>
 
                 <div className="absolute top-5 right-5">
-                  {offer.isActive ? (
-                    <span className="bg-green-500 text-white px-2 py-1 rounded-xl text-[14px]">
-                      ACTIVE
+                  {expired ? (
+                    <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                      EXPIRED
                     </span>
                   ) : (
-                    <span className="bg-red-500 text-white px-2 py-1 rounded-xl text-[14px]">
-                      EXPIRED
+                    <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                      ACTIVE
                     </span>
                   )}
                 </div>
@@ -148,8 +150,8 @@ export default function Offers() {
                   Book With This Offer →
                 </button>
               </div>
-            </div>
-          ))}
+            </div>;
+          })}
         </div>
       </div>
     </div>
