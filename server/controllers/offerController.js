@@ -105,9 +105,12 @@ export const createOffer = async (req, res) => {
       offer,
     });
   } catch (error) {
-    console.log(JSON.stringify(error, null, 2));
+    console.log("========== CREATE OFFER ERROR ==========");
+    console.log(error);
+    console.log(error.message);
+    console.log(error.stack);
 
-    res.json({
+    res.status(500).json({
       success: false,
       message: error.message,
     });
