@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
-// import { useNavigate } from "react-router-dom";
 
 export default function ListRoom() {
-  const [rooms, setRooms] = useState();
+  const [rooms, setRooms] = useState([]);
   const { axios, getToken, user, currency, navigate } = useAppContext();
-  // const navigate = useNavigate();
 
   // Fetch Rooms of the Hotel Owner
   const fetchRooms = async () => {
@@ -23,17 +21,22 @@ export default function ListRoom() {
       toast.error(error.message);
     }
   };
+
   // Toggle Availability of the Room
   const toggleAvailability = async (roomId) => {
-    const { data } = await axios.post(
-      "/api/rooms/toggle-availability",
-      { roomId },
-      { headers: { Authorization: `Bearer ${await getToken()} ` } },
-    );
-    if (data.success) {
-      toast.success(data.message);
-      fetchRooms();
-    } else {
+    try {
+      const { data } = await axios.post(
+        "/api/rooms/toggle-availability",
+        { roomId },
+        { headers: { Authorization: `Bearer ${await getToken()}` } },
+      );
+      if (data.success) {
+        toast.success(data.message);
+        fetchRooms();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
       toast.error(error.message);
     }
   };
@@ -70,75 +73,77 @@ export default function ListRoom() {
   }, [user]);
 
   return (
-    <div>
-      <h1 className=" text-[40px] ">List Room</h1>
-      <p className="text-gray-500/90 text-[16px] max-w-2xl ">
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+        List Room
+      </h1>
+      <p className="text-gray-500 text-sm mt-2 max-w-2xl leading-relaxed">
         View, edit, or manage all listed rooms. Keep the information up-to-date
         to provide the best experience for users.
       </p>
-      <div className="w-full max-w-3xl text-left border border-gray-300 rounded-lg max-h-80 overflow-y-auto mt-8">
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="py-3 px-4 text-gray-800 font-medium">Name</th>
-              <th className="py-3 px-4 text-gray-800 font-medium max-sm:hidden">
-                Facility
-              </th>
-              <th className="py-3 px-4 text-gray-800 font-medium ">
-                Price / night
-              </th>
-              <th className="py-3 px-4 text-gray-800 font-medium text-center">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="text-sm">
-            {rooms?.map((room, index) => (
-              <tr key={index}>
-                <td className="py-3 px-4 text-gray-700 border-t border-gray-300">
+
+      {/* Styled Grid Table Layout Container */}
+      <div className="w-full bg-white border border-gray-100 shadow-sm rounded-xl overflow-hidden mt-8 flex flex-col">
+        {/* Table Headings Wrapper */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 bg-gray-50/70 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider py-4 px-6 text-left">
+          <div>Name</div>
+          <div className="max-sm:hidden sm:col-span-1">Facility</div>
+          <div className="text-left">Price / night</div>
+          <div className="text-center">Actions</div>
+        </div>
+
+        {/* Scrollable Container Area */}
+        <div className="max-h-96 overflow-y-auto divide-y divide-gray-100">
+          {!rooms || rooms.length === 0 ? (
+            <div className="text-center py-12 text-gray-400 text-sm">
+              No rooms listed yet.
+            </div>
+          ) : (
+            rooms.map((room, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-3 sm:grid-cols-4 items-center py-4 px-6 hover:bg-gray-50/50 transition-colors text-sm text-gray-700"
+              >
+                <div className="font-medium text-gray-800 pr-2 truncate">
                   {room.roomType}
-                </td>
-                <td className="py-3 px-4 text-gray-700 border-t border-gray-300 max-sm:hidden">
-                  {room.amenities.join(",")}{" "}
-                </td>
-                <td className="py-3 px-4 text-gray-700 border-t border-gray-300">
+                </div>
+                <div className="text-gray-500 max-sm:hidden pr-4 truncate">
+                  {room.amenities ? room.amenities.join(", ") : "None"}
+                </div>
+                <div className="font-semibold text-gray-800">
                   {currency}
                   {room.pricePerNight}
-                </td>
-                <td className="py-3 px-4 border-t border-gray-300">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => navigate(`/owner/edit-room/${room._id}`)}
-                      className="bg-blue-600 text-white px-3 py-1 rounded"
-                    >
-                      Edit
-                    </button>
+                </div>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    onClick={() => navigate(`/owner/edit-room/${room._id}`)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors cursor-pointer"
+                  >
+                    Edit
+                  </button>
 
-                    <button
-                      onClick={() => deleteRoomHandler(room._id)}
-                      className="bg-red-600 text-white px-3 py-1 rounded"
-                    >
-                      Delete
-                    </button>
+                  <button
+                    onClick={() => deleteRoomHandler(room._id)}
+                    className="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors cursor-pointer"
+                  >
+                    Delete
+                  </button>
 
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        onChange={() => toggleAvailability(room._id)}
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={room.isAvailable}
-                      />
-
-                      <div className="w-12 h-7 bg-slate-300 rounded-full peer peer-checked:bg-blue-600"></div>
-
-                      <span className="absolute left-1 top-1 w-5 h-5 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></span>
-                    </label>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  {/* Switch Toggle Input Control */}
+                  <label className="relative inline-flex items-center cursor-pointer select-none">
+                    <input
+                      onChange={() => toggleAvailability(room._id)}
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={room.isAvailable}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-100 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

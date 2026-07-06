@@ -10,7 +10,7 @@ const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
   const currency = import.meta.env.VITE_CURRENCY || "$";
 
@@ -38,14 +38,11 @@ export const AppProvider = ({ children }) => {
     try {
       setUserLoading(true);
 
-      if (!user) {
-        setIsowner(false);
-        return;
-      }
+      const token = await getToken();
 
       const { data } = await axios.get("/api/user", {
         headers: {
-          Authorization: `Bearer ${await getToken()}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -68,13 +65,21 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (user) {
-      fetchUser();
-    } else {
+    // Clerk has not finished checking authentication yet
+    if (!isLoaded) {
+      return;
+    }
+
+    // Clerk finished, and there is no logged-in user
+    if (!user) {
       setIsowner(false);
       setUserLoading(false);
+      return;
     }
-  }, [user]);
+
+    // Clerk finished, and user exists
+    fetchUser();
+  }, [user, isLoaded]);
 
   const value = {
     currency,

@@ -5,6 +5,14 @@ import RevenueChart from "../../components/RevenueChart";
 import OccupancyChart from "../../components/OccupancyChart";
 import BookingChart from "../../components/BookingChart";
 import PaymentStatusChart from "../../components/paymentStatusChart";
+import {
+  DollarSign,
+  CalendarCheck,
+  Percent,
+  Star,
+  BarChart3,
+  TrendingUp,
+} from "lucide-react";
 
 export default function Analytics() {
   const { axios, getToken, user, currency } = useAppContext();
@@ -18,7 +26,7 @@ export default function Analytics() {
     availableRooms: 0,
     roomOccupancy: [],
   });
-  console.log(analyticsData.roomOccupancy);
+
   const fetchAnalytics = async () => {
     try {
       const { data } = await axios.get("/api/bookings/hotel", {
@@ -26,8 +34,6 @@ export default function Analytics() {
           Authorization: `Bearer ${await getToken()}`,
         },
       });
-
-      console.log(data);
 
       if (data.success) {
         setAnalyticsData(data.dashboardData);
@@ -47,74 +53,136 @@ export default function Analytics() {
   }, [user]);
 
   return (
-    <div className="pb-10">
-      {/* Heading */}
-      <h1 className="text-[40px]">Analytics</h1>
-
-      <p className="text-gray-500 max-w-2xl mt-2">
-        Monitor your hotel's performance using real-time booking, revenue,
-        occupancy and review analytics.
-      </p>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mt-10">
-        <div className="bg-white rounded-xl border shadow-sm p-6">
-          <p className="text-gray-500">Revenue</p>
-
-          <h2 className="text-3xl font-bold text-green-600">
-            {currency}
-            {analyticsData.totalRevenue.toLocaleString()}
-          </h2>
-
-          <p className="text-sm text-green-600 mt-2">Total revenue generated</p>
-        </div>
-
-        <div className="bg-white rounded-xl border shadow-sm p-6">
-          <p className="text-gray-500">Bookings</p>
-
-          <h2 className="text-3xl font-bold text-blue-600">
-            {analyticsData.totalBookings}
-          </h2>
-
-          <p className="text-sm text-blue-600 mt-2">Confirmed reservations</p>
-        </div>
-
-        <div className="bg-white rounded-xl border shadow-sm p-6">
-          <p className="text-gray-500">Occupancy</p>
-
-          <h2 className="text-3xl font-bold text-purple-600">
-            {analyticsData.occupancyRate}%
-          </h2>
-
-          <p className="text-sm text-purple-600 mt-2">
-            Available vs total rooms
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10">
+      {/* Top Heading Module */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+            Analytics Dashboard
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Monitor your hotel's performance using real-time booking, revenue,
+            occupancy, and review analytics.
           </p>
         </div>
-
-        <div className="bg-white rounded-xl border shadow-sm p-6">
-          <p className="text-gray-500">Average Rating</p>
-
-          <h2 className="text-3xl font-bold text-orange-500">
-            ⭐ {analyticsData.averageRating}
-          </h2>
-
-          <p className="text-sm text-orange-500 mt-2">
-            Based on customer reviews
-          </p>
+        <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg self-start md:self-auto">
+          <TrendingUp className="w-4 h-4" />
+          Live Metrics Updated
         </div>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-10">
-        <RevenueChart bookings={analyticsData.bookings} />
+      {/* 2x2 Grid Layout (Two Cards Top, Two Cards Bottom) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {/* Row 1, Left: Revenue Card */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-7 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between min-h-[125px] gap-x-4">
+          <div className="space-y-1.5 min-w-0">
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider truncate">
+              Total Revenue
+            </p>
+            <h2 className="text-2xl font-bold text-gray-900 tracking-tight truncate">
+              {currency || "$"}
+              {analyticsData.totalRevenue.toLocaleString()}
+            </h2>
+          </div>
+          <div className="p-3 bg-emerald-50 text-emerald-500 rounded-2xl shrink-0">
+            <DollarSign className="w-6 h-6" />
+          </div>
+        </div>
 
-        <OccupancyChart data={analyticsData.roomOccupancy} />
+        {/* Row 1, Right: Bookings Card */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-7 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between min-h-[125px] gap-x-4">
+          <div className="space-y-1.5 min-w-0">
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider truncate">
+              Total Bookings
+            </p>
+            <h2 className="text-2xl font-bold text-gray-900 tracking-tight truncate">
+              {analyticsData.totalBookings}
+            </h2>
+          </div>
+          <div className="p-3 bg-blue-50 text-blue-500 rounded-2xl shrink-0">
+            <CalendarCheck className="w-6 h-6" />
+          </div>
+        </div>
+
+        {/* Row 2, Left: Occupancy Card */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-7 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between min-h-[125px] gap-x-4">
+          <div className="space-y-1.5 min-w-0">
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider truncate">
+              Occupancy Rate
+            </p>
+            <h2 className="text-2xl font-bold text-gray-900 tracking-tight truncate">
+              {analyticsData.occupancyRate}%
+            </h2>
+          </div>
+          <div className="p-3 bg-purple-50 text-purple-500 rounded-2xl shrink-0">
+            <Percent className="w-5 h-5" />
+          </div>
+        </div>
+
+        {/* Row 2, Right: Rating Card */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-7 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between min-h-[125px] gap-x-4">
+          <div className="space-y-1.5 min-w-0">
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider truncate">
+              Average Rating
+            </p>
+            <h2 className="text-2xl font-bold text-gray-900 tracking-tight flex items-baseline gap-1 truncate">
+              {analyticsData.averageRating || "0.0"}
+              <span className="text-xs font-semibold text-gray-400">/ 5.0</span>
+            </h2>
+          </div>
+          <div className="p-3 bg-amber-50 text-amber-500 rounded-2xl shrink-0">
+            <Star className="w-5 h-5 fill-amber-500 text-amber-500" />
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-8">
-        <BookingChart bookings={analyticsData.bookings} />
+      {/* Main Charts Matrix */}
+      <div className="space-y-6">
+        {/* Row 1: Core Financials & Occupancy */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white p-6 border border-gray-100 shadow-sm rounded-2xl hover:shadow-md transition-all duration-200">
+            <div className="flex items-center gap-2 mb-4 border-b border-gray-50 pb-3">
+              <BarChart3 className="w-4 h-4 text-gray-400" />
+              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                Revenue Stream Timeline
+              </h3>
+            </div>
+            <RevenueChart bookings={analyticsData.bookings} />
+          </div>
 
-        <PaymentStatusChart bookings={analyticsData.bookings} />
+          <div className="bg-white p-6 border border-gray-100 shadow-sm rounded-2xl hover:shadow-md transition-all duration-200">
+            <div className="flex items-center gap-2 mb-4 border-b border-gray-50 pb-3">
+              <BarChart3 className="w-4 h-4 text-gray-400" />
+              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                Occupancy Performance By Room
+              </h3>
+            </div>
+            <OccupancyChart data={analyticsData.roomOccupancy} />
+          </div>
+        </div>
+
+        {/* Row 2: Booking Volumes & Payment Metrics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white p-6 border border-gray-100 shadow-sm rounded-2xl hover:shadow-md transition-all duration-200">
+            <div className="flex items-center gap-2 mb-4 border-b border-gray-50 pb-3">
+              <BarChart3 className="w-4 h-4 text-gray-400" />
+              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                Bookings Volume Per Month
+              </h3>
+            </div>
+            <BookingChart bookings={analyticsData.bookings} />
+          </div>
+
+          <div className="bg-white p-6 border border-gray-100 shadow-sm rounded-2xl hover:shadow-md transition-all duration-200">
+            <div className="flex items-center gap-2 mb-4 border-b border-gray-50 pb-3">
+              <BarChart3 className="w-4 h-4 text-gray-400" />
+              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                Payment Status Categorization
+              </h3>
+            </div>
+            <PaymentStatusChart bookings={analyticsData.bookings} />
+          </div>
+        </div>
       </div>
     </div>
   );

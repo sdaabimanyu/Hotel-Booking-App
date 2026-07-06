@@ -12,19 +12,20 @@ import {
   Power,
   ImagePlus,
   X,
+  Tag,
+  CheckCircle,
+  AlertTriangle,
+  Clock,
+  Calendar,
+  Layers,
 } from "lucide-react";
 
 export default function Offers() {
   const { axios, getToken, user } = useAppContext();
-
   const [offers, setOffers] = useState([]);
-
   const [loading, setLoading] = useState(true);
-
   const [search, setSearch] = useState("");
-
   const [showModal, setShowModal] = useState(false);
-
   const [editingOffer, setEditingOffer] = useState(null);
 
   const [offerData, setOfferData] = useState({
@@ -41,7 +42,6 @@ export default function Offers() {
   const fetchOffers = async () => {
     try {
       setLoading(true);
-
       const { data } = await axios.get("/api/offers/owner", {
         headers: {
           Authorization: `Bearer ${await getToken()}`,
@@ -71,11 +71,7 @@ export default function Offers() {
       if (!offerData.image) {
         return toast.error("Please select an offer image");
       }
-
-      // STEP 1: Upload image directly from browser to Cloudinary
       const imageUrl = await uploadToCloudinary(offerData.image);
-
-      // STEP 2: Send only offer data + Cloudinary URL to backend
       const { data } = await axios.post(
         "/api/offers",
         {
@@ -97,16 +93,12 @@ export default function Offers() {
 
       if (data.success) {
         toast.success(data.message);
-
         await fetchOffers();
-
         closeModal();
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      console.log("CREATE OFFER ERROR:", error);
-
       toast.error(
         error.response?.data?.message ||
           error.message ||
@@ -118,14 +110,10 @@ export default function Offers() {
   const updateOffer = async () => {
     try {
       let imageUrl = editingOffer.image;
-
-      // If the user selected a NEW image,
-      // upload that image directly to Cloudinary.
       if (offerData.image instanceof File) {
         imageUrl = await uploadToCloudinary(offerData.image);
       }
 
-      // Send only JSON data + Cloudinary image URL to backend
       const { data } = await axios.put(
         `/api/offers/${editingOffer._id}`,
         {
@@ -147,16 +135,12 @@ export default function Offers() {
 
       if (data.success) {
         toast.success(data.message);
-
         await fetchOffers();
-
         closeModal();
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      console.log("UPDATE OFFER ERROR:", error);
-
       toast.error(
         error.response?.data?.message ||
           error.message ||
@@ -210,7 +194,6 @@ export default function Offers() {
 
       if (data.success) {
         toast.success(data.message);
-
         fetchOffers();
       } else {
         toast.error(data.message);
@@ -222,7 +205,6 @@ export default function Offers() {
 
   const editOffer = (offer) => {
     setEditingOffer(offer);
-
     setOfferData({
       title: offer.title,
       description: offer.description,
@@ -233,15 +215,12 @@ export default function Offers() {
       validTill: offer.validTill.split("T")[0],
       image: offer.image,
     });
-
     setShowModal(true);
   };
 
   const closeModal = () => {
     setShowModal(false);
-
     setEditingOffer(null);
-
     setOfferData({
       title: "",
       description: "",
@@ -264,348 +243,398 @@ export default function Offers() {
   }, [offers, search]);
 
   const totalOffers = offers.length;
-
   const activeOffers = offers.filter((o) => o.isActive).length;
-
   const inactiveOffers = offers.filter((o) => !o.isActive).length;
-
   const expiredOffers = offers.filter(
     (o) => new Date(o.validTill) < new Date(),
   ).length;
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between md:items-center gap-5">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10">
+      {/* Top Heading Module */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-6">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900">
+          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
             Offers Management
           </h1>
-
-          <p className="text-gray-500 mt-2">
+          <p className="text-gray-500 text-sm mt-1">
             Create, update and manage promotional offers for your hotel.
           </p>
         </div>
-
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow-lg transition"
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-sm transition-all duration-200 self-start md:self-auto"
         >
-          <Plus size={20} />
+          <Plus size={18} />
           Create Offer
         </button>
       </div>
 
-      {/* Dashboard Cards */}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-        <div className="bg-white rounded-2xl border p-6 shadow-sm">
-          <p className="text-gray-500">Total Offers</p>
-
-          <h2 className="text-4xl font-bold mt-3">{totalOffers}</h2>
+      {/* Premium Multi-state KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Total Card */}
+        <div className="bg-white rounded-2xl border border-gray-100 border-l-4 border-l-blue-500 p-6 shadow-sm flex items-center justify-between min-h-[110px]">
+          <div className="space-y-1">
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+              Total Offers
+            </p>
+            <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+              {totalOffers}
+            </h2>
+          </div>
+          <div className="p-3 bg-blue-50 text-blue-500 rounded-xl shrink-0">
+            <Layers className="w-5 h-5" />
+          </div>
         </div>
 
-        <div className="bg-green-50 rounded-2xl border border-green-200 p-6">
-          <p className="text-green-700">Active</p>
-
-          <h2 className="text-4xl font-bold mt-3 text-green-700">
-            {activeOffers}
-          </h2>
+        {/* Active Card */}
+        <div className="bg-white rounded-2xl border border-gray-100 border-l-4 border-l-emerald-500 p-6 shadow-sm flex items-center justify-between min-h-[110px]">
+          <div className="space-y-1">
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+              Active Offers
+            </p>
+            <h2 className="text-3xl font-extrabold text-emerald-600 tracking-tight">
+              {activeOffers}
+            </h2>
+          </div>
+          <div className="p-3 bg-emerald-50 text-emerald-500 rounded-xl shrink-0">
+            <CheckCircle className="w-5 h-5" />
+          </div>
         </div>
 
-        <div className="bg-red-50 rounded-2xl border border-red-200 p-6">
-          <p className="text-red-700">Inactive</p>
-
-          <h2 className="text-4xl font-bold mt-3 text-red-700">
-            {inactiveOffers}
-          </h2>
+        {/* Inactive Card */}
+        <div className="bg-white rounded-2xl border border-gray-100 border-l-4 border-l-rose-500 p-6 shadow-sm flex items-center justify-between min-h-[110px]">
+          <div className="space-y-1">
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+              Inactive Offers
+            </p>
+            <h2 className="text-3xl font-extrabold text-rose-600 tracking-tight">
+              {inactiveOffers}
+            </h2>
+          </div>
+          <div className="p-3 bg-rose-50 text-rose-500 rounded-xl shrink-0">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
         </div>
 
-        <div className="bg-yellow-50 rounded-2xl border border-yellow-200 p-6">
-          <p className="text-yellow-700">Expired</p>
-
-          <h2 className="text-4xl font-bold mt-3 text-yellow-700">
-            {expiredOffers}
-          </h2>
+        {/* Expired Card */}
+        <div className="bg-white rounded-2xl border border-gray-100 border-l-4 border-l-amber-500 p-6 shadow-sm flex items-center justify-between min-h-[110px]">
+          <div className="space-y-1">
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+              Expired Offers
+            </p>
+            <h2 className="text-3xl font-extrabold text-amber-600 tracking-tight">
+              {expiredOffers}
+            </h2>
+          </div>
+          <div className="p-3 bg-amber-50 text-amber-500 rounded-xl shrink-0">
+            <Clock className="w-5 h-5" />
+          </div>
         </div>
       </div>
 
-      {/* Search */}
-
-      <div className="bg-white rounded-2xl border p-5 shadow-sm">
-        <div className="relative">
+      {/* Filter / Search Bar Wrapper */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex items-center">
+        <div className="relative w-full">
           <Search
             size={18}
             className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
           />
-
           <input
             type="text"
             placeholder="Search offers by title or promo code..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-12 pr-5 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-12 pr-4 py-2.5 bg-gray-50 rounded-xl border border-gray-100 outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm text-gray-800"
           />
         </div>
       </div>
 
-      {/* Offer Counter */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">All Offers</h2>
-
-        <p className="text-gray-500">{filteredOffers.length} Offers</p>
+      {/* Structured Modern Grid Header */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-bold text-gray-800 tracking-tight">
+          Active Portfolio
+        </h2>
+        <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-md">
+          {filteredOffers.length} Live Items
+        </span>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+      {/* Modern High-End Table Component */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
-          <div className="py-32 text-center">
-            <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-
-            <p className="mt-5 text-gray-500">Loading offers...</p>
+          <div className="py-24 text-center">
+            <div className="w-9 h-9 border-3 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <p className="mt-4 text-xs font-medium text-gray-400">
+              Synchronizing records...
+            </p>
           </div>
         ) : filteredOffers.length === 0 ? (
-          <div className="py-28 text-center">
-            <ImagePlus size={60} className="mx-auto text-gray-300" />
-
-            <h2 className="text-2xl font-semibold mt-5">No Offers Found</h2>
-
-            <p className="text-gray-500 mt-2">
-              Start by creating your first promotional offer.
+          <div className="py-20 text-center">
+            <ImagePlus
+              size={44}
+              className="mx-auto text-gray-300 stroke-[1.5]"
+            />
+            <h3 className="text-base font-bold text-gray-700 mt-4">
+              No Offers Found
+            </h3>
+            <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">
+              Start by creating your first global promotional strategy config
+              files.
             </p>
           </div>
         ) : (
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="p-5 text-left">Image</th>
-
-                <th className="p-5 text-left">Title</th>
-
-                <th className="p-5 text-left">Promo Code</th>
-
-                <th className="p-5 text-left">Discount</th>
-
-                <th className="p-5 text-left">Expiry</th>
-
-                <th className="p-5 text-left">Status</th>
-
-                <th className="p-5 text-center">Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredOffers.map((offer) => (
-                <tr
-                  key={offer._id}
-                  className="border-b hover:bg-blue-50 transition-all duration-300"
-                >
-                  <td className="p-5">
-                    <img
-                      src={offer.image}
-                      alt={offer.title}
-                      className="w-24 h-16 object-cover rounded-xl shadow"
-                    />
-                  </td>
-
-                  <td className="p-5 font-semibold">{offer.title}</td>
-
-                  <td className="p-5">
-                    <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
-                      {offer.code}
-                    </span>
-                  </td>
-
-                  <td className="p-5">
-                    <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-semibold">
-                      {offer.discount}
-
-                      {offer.discountType === "percentage" ? "%" : "$"}
-                    </span>
-                  </td>
-
-                  <td className="p-5">
-                    {new Date(offer.validTill).toLocaleDateString()}
-                  </td>
-
-                  <td className="p-5">
-                    {offer.isActive ? (
-                      <span className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
-                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                        Active
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-2 bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">
-                        <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                        Inactive
-                      </span>
-                    )}
-                  </td>
-
-                  <td className="p-5">
-                    <div className="flex justify-center gap-2">
-                      <button
-                        onClick={() => editOffer(offer)}
-                        className="w-10 h-10 rounded-full hover:bg-blue-100 text-blue-600 flex items-center justify-center transition"
-                      >
-                        <Pencil size={18} />
-                      </button>
-
-                      <button
-                        onClick={() => deleteOffer(offer._id)}
-                        className="w-10 h-10 rounded-full hover:bg-red-100 text-red-600 flex items-center justify-center transition"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-
-                      <button
-                        onClick={() => toggleStatus(offer._id)}
-                        className={`w-10 h-10 rounded-full flex items-center justify-center transition ${
-                          offer.isActive
-                            ? "bg-green-100 text-green-600 hover:bg-green-200"
-                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                        }`}
-                      >
-                        <Power size={18} />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  <th className="p-5 text-left font-semibold">Image</th>
+                  <th className="p-5 text-left font-semibold">Title</th>
+                  <th className="p-5 text-left font-semibold">Promo Code</th>
+                  <th className="p-5 text-left font-semibold">Discount</th>
+                  <th className="p-5 text-left font-semibold">Expiry Date</th>
+                  <th className="p-5 text-left font-semibold">Status Matrix</th>
+                  <th className="p-5 text-center font-semibold">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filteredOffers.map((offer) => (
+                  <tr
+                    key={offer._id}
+                    className="hover:bg-slate-50/50 transition-all duration-150"
+                  >
+                    <td className="p-5">
+                      <img
+                        src={offer.image}
+                        alt={offer.title}
+                        className="w-20 h-12 object-cover rounded-xl shadow-sm border border-gray-100"
+                      />
+                    </td>
+                    <td className="p-5 font-semibold text-gray-800 text-sm">
+                      {offer.title}
+                    </td>
+                    <td className="p-5">
+                      <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold tracking-wide">
+                        <Tag className="w-3 h-3" />
+                        {offer.code}
+                      </span>
+                    </td>
+                    <td className="p-5">
+                      <span className="inline-block whitespace-nowrap bg-purple-50 text-purple-600 px-2.5 py-1 rounded-lg text-xs font-bold">
+                        {offer.discount}
+                        {offer.discountType === "percentage" ? "% Off" : " $"}
+                      </span>
+                    </td>
+                    <td className="p-5 text-gray-500 text-xs font-medium">
+                      <span className="inline-flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-gray-400" />
+                        {new Date(offer.validTill).toLocaleDateString()}
+                      </span>
+                    </td>
+                    <td className="p-5">
+                      {offer.isActive ? (
+                        <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg text-xs font-semibold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                          Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-500 px-2.5 py-1 rounded-lg text-xs font-semibold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                          Inactive
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-5">
+                      <div className="flex justify-center items-center gap-1.5">
+                        <button
+                          onClick={() => editOffer(offer)}
+                          className="w-8 h-8 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 flex items-center justify-center transition-all duration-150"
+                        >
+                          <Pencil size={15} />
+                        </button>
+                        <button
+                          onClick={() => deleteOffer(offer._id)}
+                          className="w-8 h-8 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 flex items-center justify-center transition-all duration-150"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                        <button
+                          onClick={() => toggleStatus(offer._id)}
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 ${
+                            offer.isActive
+                              ? "text-emerald-500 hover:bg-emerald-50"
+                              : "text-gray-400 hover:bg-gray-100"
+                          }`}
+                        >
+                          <Power size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
+
+      {/* Ultra-Premium Unified Dialog / Modal Window */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl p-10 max-h-[92vh] overflow-y-auto">
-            <h2 className="text-3xl font-bold mb-8">Create Offer</h2>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col border border-gray-100">
+            {/* Modal Sticky Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white sticky top-0 z-10">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+                  {editingOffer
+                    ? "Modify Dynamic Offer"
+                    : "Architect New Offer"}
+                </h2>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Fill out parameters below to dispatch rule.
+                </p>
+              </div>
+              <button
+                onClick={closeModal}
+                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-700 transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-            <div className="grid md:grid-cols-2 gap-8 mt-8">
-              {/* Left Column */}
-              <div className="space-y-5">
-                <label className="block text-sm font-semibold mb-2">
-                  Offer Title
-                </label>
-                <input
-                  type="text"
-                  placeholder="Offer Title"
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                  value={offerData.title}
-                  onChange={(e) =>
-                    setOfferData({
-                      ...offerData,
-                      title: e.target.value,
-                    })
-                  }
-                />
-                <label className="block text-sm font-semibold mb-2">
-                  Description
-                </label>
-                <textarea
-                  rows={5}
-                  placeholder="Description"
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 h-44 resize-none outline-none focus:ring-2 focus:ring-blue-500"
-                  value={offerData.description}
-                  onChange={(e) =>
-                    setOfferData({
-                      ...offerData,
-                      description: e.target.value,
-                    })
-                  }
-                />
-                <label className="block text-sm font-semibold mb-2">
-                  Promo Code
-                </label>
-                <input
-                  type="text"
-                  placeholder="Promo Code"
-                  className="w-full w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                  value={offerData.code}
-                  onChange={(e) =>
-                    setOfferData({
-                      ...offerData,
-                      code: e.target.value,
-                    })
-                  }
-                />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <label className="block text-sm font-semibold mb-2">
-                    Discount
+            {/* Form Columns Container */}
+            <div className="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Form Wing */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                    Offer Title
                   </label>
                   <input
-                    type="number"
-                    placeholder="Discount"
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={offerData.discount}
+                    type="text"
+                    placeholder="e.g., Summer Escape Package"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm text-gray-800"
+                    value={offerData.title}
+                    onChange={(e) =>
+                      setOfferData({ ...offerData, title: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                    Strategic Description
+                  </label>
+                  <textarea
+                    rows={4}
+                    placeholder="Provide a comprehensive narrative overview detailing campaign values..."
+                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 h-[115px] resize-none outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm text-gray-800"
+                    value={offerData.description}
                     onChange={(e) =>
                       setOfferData({
                         ...offerData,
-                        discount: e.target.value,
+                        description: e.target.value,
                       })
                     }
                   />
-                  <label className="block text-sm font-semibold mb-2">
-                    Discount Type
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                    Promo Token Code
                   </label>
-                  <select
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={offerData.discountType}
+                  <input
+                    type="text"
+                    placeholder="e.g., ESCAPE35"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-mono tracking-wider uppercase text-gray-800"
+                    value={offerData.code}
                     onChange={(e) =>
                       setOfferData({
                         ...offerData,
-                        discountType: e.target.value,
+                        code: e.target.value.toUpperCase(),
                       })
                     }
-                  >
-                    <option value="percentage">Percentage</option>
-                    <option value="fixed">Fixed Amount</option>
-                  </select>
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                      Discount Value
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="Amount"
+                      className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm text-gray-800"
+                      value={offerData.discount}
+                      onChange={(e) =>
+                        setOfferData({ ...offerData, discount: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                      Discount Architecture
+                    </label>
+                    <select
+                      className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm text-gray-700 bg-white"
+                      value={offerData.discountType}
+                      onChange={(e) =>
+                        setOfferData({
+                          ...offerData,
+                          discountType: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="percentage">Percentage (%)</option>
+                      <option value="fixed">Fixed Currency ($)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              {/* Right Column */}
-              <div className="space-y-5">
-                <label className="block text-sm font-semibold mb-2">
-                  Minimum Stay (nights)
-                </label>
-                <input
-                  type="number"
-                  placeholder="Minimum Stay"
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                  value={offerData.minimumStay}
-                  onChange={(e) =>
-                    setOfferData({
-                      ...offerData,
-                      minimumStay: e.target.value,
-                    })
-                  }
-                />
-
-                <label className="block text-sm font-semibold mb-2">
-                  Valid Till
-                </label>
-                <input
-                  type="date"
-                  className="w-full w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                  value={offerData.validTill}
-                  onChange={(e) =>
-                    setOfferData({
-                      ...offerData,
-                      validTill: e.target.value,
-                    })
-                  }
-                />
+              {/* Right Form Wing */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                    Minimum Stay Requirements (Nights)
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="1"
+                    min={1}
+                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm text-gray-800"
+                    value={offerData.minimumStay}
+                    onChange={(e) =>
+                      setOfferData({
+                        ...offerData,
+                        minimumStay: e.target.value,
+                      })
+                    }
+                  />
+                </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Offer Image
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                    Campaign Lifespan Expiry Date
                   </label>
+                  <input
+                    type="date"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm text-gray-700"
+                    value={offerData.validTill}
+                    onChange={(e) =>
+                      setOfferData({ ...offerData, validTill: e.target.value })
+                    }
+                  />
+                </div>
 
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                    Offer Identity Image
+                  </label>
                   <label
                     htmlFor="offer-image"
-                    className="border-2 border-dashed border-blue-300 rounded-2xl h-56 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 transition"
+                    className="border border-dashed border-gray-300 bg-gray-50/50 rounded-2xl h-[175px] flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50/20 hover:border-blue-300 transition-all duration-200 overflow-hidden group"
                   >
                     {offerData.image ? (
                       <img
@@ -615,66 +644,49 @@ export default function Offers() {
                             : offerData.image
                         }
                         alt="Preview"
-                        className="w-full h-full object-cover rounded-2xl"
+                        className="w-full h-full object-cover"
                       />
                     ) : (
-                      <>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-12 h-12 text-blue-500"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={1.5}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M3 16.5V19a2 2 0 002 2h14a2 2 0 002-2v-2.5M16 8l-4-4m0 0L8 8m4-4v12"
-                          />
-                        </svg>
-
-                        <p className="mt-3 font-medium text-gray-700">
-                          Click to upload image
+                      <div className="text-center p-4">
+                        <ImagePlus
+                          size={28}
+                          className="mx-auto text-gray-400 group-hover:text-blue-500 transition"
+                        />
+                        <p className="mt-2 text-xs font-semibold text-gray-700">
+                          Upload asset image
                         </p>
-
-                        <span className="text-sm text-gray-400">
-                          JPG, PNG (Max 5MB)
+                        <span className="text-[11px] text-gray-400 mt-0.5 block">
+                          JPG, PNG format maxing 5MB
                         </span>
-                      </>
+                      </div>
                     )}
                   </label>
-
                   <input
                     id="offer-image"
                     type="file"
                     accept="image/*"
                     hidden
                     onChange={(e) =>
-                      setOfferData({
-                        ...offerData,
-                        image: e.target.files[0],
-                      })
+                      setOfferData({ ...offerData, image: e.target.files[0] })
                     }
                   />
                 </div>
               </div>
             </div>
 
-            {/* Buttons */}
-            <div className="flex justify-end gap-4 mt-10">
+            {/* Modal Sticky Footer Actions */}
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
               <button
-                onClick={() => setShowModal(false)}
-                className="px-6 py-3 border rounded-xl hover:bg-gray-100"
+                onClick={closeModal}
+                className="px-4 py-2 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-100 transition text-sm font-semibold"
               >
                 Cancel
               </button>
-
               <button
                 onClick={editingOffer ? updateOffer : createOffer}
-                className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+                className="px-5 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm transition text-sm font-semibold"
               >
-                {editingOffer ? "Edit Offer" : "Create Offer"}
+                {editingOffer ? "Commit Changes" : "Deploy Config"}
               </button>
             </div>
           </div>
