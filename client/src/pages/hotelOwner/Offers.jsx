@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
+import { uploadToCloudinary } from "../../utils/cloudinaryUpload";
 
 import {
   Search,
@@ -67,61 +68,29 @@ export default function Offers() {
 
   const createOffer = async () => {
     try {
-      const formData = new FormData();
+      if (!offerData.image) {
+        return toast.error("Please select an offer image");
+      }
 
-      formData.append("title", offerData.title);
-      formData.append("description", offerData.description);
-      formData.append("code", offerData.code);
-      formData.append("discount", offerData.discount);
-      formData.append("discountType", offerData.discountType);
-      formData.append("minimumStay", offerData.minimumStay);
-      formData.append("validTill", offerData.validTill);
-      formData.append("image", offerData.image);
+      // STEP 1: Upload image directly from browser to Cloudinary
+      const imageUrl = await uploadToCloudinary(offerData.image);
 
-      const { data } = await axios.post("/api/offers", formData, {
-        headers: {
-          Authorization: `Bearer ${await getToken()}`,
-          "Content-Type": "multipart/form-data",
+      // STEP 2: Send only offer data + Cloudinary URL to backend
+      const { data } = await axios.post(
+        "/api/offers",
+        {
+          title: offerData.title,
+          description: offerData.description,
+          code: offerData.code,
+          discount: offerData.discount,
+          discountType: offerData.discountType,
+          minimumStay: offerData.minimumStay,
+          validTill: offerData.validTill,
+          image: imageUrl,
         },
-      });
-
-      if (data.success) {
-        toast.success(data.message);
-
-        fetchOffers();
-
-        closeModal();
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
-
-  const updateOffer = async () => {
-    try {
-      const formData = new FormData();
-
-      formData.append("title", offerData.title);
-      formData.append("description", offerData.description);
-      formData.append("code", offerData.code);
-      formData.append("discount", offerData.discount);
-      formData.append("discountType", offerData.discountType);
-      formData.append("minimumStay", offerData.minimumStay);
-      formData.append("validTill", offerData.validTill);
-
-      if (offerData.image) {
-        formData.append("image", offerData.image);
-      }
-
-      const { data } = await axios.put(
-        `/api/offers/${editingOffer._id}`,
-        formData,
         {
           headers: {
             Authorization: `Bearer ${await getToken()}`,
-            "Content-Type": "multipart/form-data",
           },
         },
       );
@@ -129,14 +98,70 @@ export default function Offers() {
       if (data.success) {
         toast.success(data.message);
 
-        fetchOffers();
+        await fetchOffers();
 
         closeModal();
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      console.log("CREATE OFFER ERROR:", error);
+
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to create offer",
+      );
+    }
+  };
+
+  const updateOffer = async () => {
+    try {
+      let imageUrl = editingOffer.image;
+
+      // If the user selected a NEW image,
+      // upload that image directly to Cloudinary.
+      if (offerData.image instanceof File) {
+        imageUrl = await uploadToCloudinary(offerData.image);
+      }
+
+      // Send only JSON data + Cloudinary image URL to backend
+      const { data } = await axios.put(
+        `/api/offers/${editingOffer._id}`,
+        {
+          title: offerData.title,
+          description: offerData.description,
+          code: offerData.code,
+          discount: offerData.discount,
+          discountType: offerData.discountType,
+          minimumStay: offerData.minimumStay,
+          validTill: offerData.validTill,
+          image: imageUrl,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${await getToken()}`,
+          },
+        },
+      );
+
+      if (data.success) {
+        toast.success(data.message);
+
+        await fetchOffers();
+
+        closeModal();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.log("UPDATE OFFER ERROR:", error);
+
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to update offer",
+      );
     }
   };
 

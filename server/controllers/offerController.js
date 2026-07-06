@@ -1,11 +1,8 @@
-import { cloudinary } from "../configs/cloudinary.js";
 import Hotel from "../models/Hotel.js";
 import Offer from "../models/Offer.js";
 
 export const createOffer = async (req, res) => {
   try {
-    console.log(req.body);
-    console.log(req.file);
     if (req.user.role !== "hotelOwner") {
       return res.json({
         success: false,
@@ -20,6 +17,7 @@ export const createOffer = async (req, res) => {
       discountType,
       minimumStay,
       validTill,
+      image,
     } = req.body;
 
     if (!title || !description || !code || !discount || !validTill) {
@@ -65,25 +63,16 @@ export const createOffer = async (req, res) => {
       });
     }
 
-    if (!req.file) {
+    if (!image) {
       return res.json({
         success: false,
         message: "Offer image is required",
       });
     }
 
-    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-      folder: "hotel-offers",
-      resource_type: "auto",
-      use_filename: true,
-    });
-
-    const image = uploadResult.secure_url;
-
     console.log("Hotel:", hotel);
     console.log("User:", req.user);
     console.log("Body:", req.body);
-    console.log("File:", req.file);
     console.log("Image:", image);
 
     const offer = await Offer.create({
@@ -211,6 +200,7 @@ export const updateOffer = async (req, res) => {
       discountType,
       minimumStay,
       validTill,
+      image,
     } = req.body;
 
     offer.title = title;
@@ -221,14 +211,8 @@ export const updateOffer = async (req, res) => {
     offer.minimumStay = minimumStay;
     offer.validTill = validTill;
 
-    // Upload new image if selected
-    if (req.file) {
-      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: "hotel-offers",
-        resource_type: "auto",
-      });
-
-      offer.image = uploadResult.secure_url;
+    if (image) {
+      offer.image = image;
     }
 
     await offer.save();

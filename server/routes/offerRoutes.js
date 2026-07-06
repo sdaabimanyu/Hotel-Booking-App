@@ -12,7 +12,6 @@ import {
 } from "../controllers/offerController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
-import upload from "../middleware/uploadMiddleware.js";
 
 const offerRouter = express.Router();
 
@@ -29,8 +28,8 @@ offerRouter.get("/:id", getOfferById);
 offerRouter.post("/apply", protect, applyOfferCode);
 
 // Hotel Owner
-offerRouter.post("/", protect, upload.single("image"), createOffer);
-offerRouter.put("/:id", protect, upload.single("image"), updateOffer);
+offerRouter.post("/", protect, createOffer);
+offerRouter.put("/:id", protect, updateOffer);
 offerRouter.delete("/:id", protect, deleteOffer);
 offerRouter.patch("/:id/toggle", protect, toggleOfferStatus);
 
