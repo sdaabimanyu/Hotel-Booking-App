@@ -80,6 +80,9 @@ export const getRoomReviews = async (req, res) => {
   try {
     const reviews = await Review.find({
       room: req.params.roomId,
+
+      // Show approved reviews + old reviews without status
+      $or: [{ status: "approved" }, { status: { $exists: false } }],
     })
       .populate("user", "username")
       .sort({ createdAt: -1 });
@@ -95,7 +98,9 @@ export const getRoomReviews = async (req, res) => {
       averageRating,
     });
   } catch (error) {
-    res.json({
+    console.log("GET ROOM REVIEWS ERROR:", error);
+
+    res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -144,9 +149,12 @@ export const getHotelReviews = async (req, res) => {
 
 export const getAllReviews = async (req, res) => {
   try {
-    const reviews = await Review.find()
+    const reviews = await Review.find({
+      // Show approved reviews + old reviews without status
+      $or: [{ status: "approved" }, { status: { $exists: false } }],
+    })
       .populate("room", "roomType images")
-      .populate("hotel", "name city address image")
+      .populate("hotel", "name city address")
       .sort({ createdAt: -1 })
       .limit(100);
 
@@ -155,7 +163,194 @@ export const getAllReviews = async (req, res) => {
       reviews,
     });
   } catch (error) {
+    console.log("GET ALL REVIEWS ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// APPROVE REVIEW
+export const approveReview = async (req, res) => {
+  try {
+    const hotel = await Hotel.findOne({
+      owner: req.user._id,
+    });
+
+    if (!hotel) {
+      return res.json({
+        success: false,
+        message: "Hotel not found",
+      });
+    }
+
+    const review = await Review.findOne({
+      _id: req.params.id,
+      hotel: hotel._id,
+    });
+
+    if (!review) {
+      return res.json({
+        success: false,
+        message: "Review not found",
+      });
+    }
+
+    review.status = "approved";
+
+    await review.save();
+
     res.json({
+      success: true,
+      message: "Review approved successfully",
+      review,
+    });
+  } catch (error) {
+    console.log("APPROVE REVIEW ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// REJECT REVIEW
+export const rejectReview = async (req, res) => {
+  try {
+    const hotel = await Hotel.findOne({
+      owner: req.user._id,
+    });
+
+    if (!hotel) {
+      return res.json({
+        success: false,
+        message: "Hotel not found",
+      });
+    }
+
+    const review = await Review.findOne({
+      _id: req.params.id,
+      hotel: hotel._id,
+    });
+
+    if (!review) {
+      return res.json({
+        success: false,
+        message: "Review not found",
+      });
+    }
+
+    review.status = "rejected";
+
+    await review.save();
+
+    res.json({
+      success: true,
+      message: "Review rejected successfully",
+      review,
+    });
+  } catch (error) {
+    console.log("REJECT REVIEW ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ADMIN RESPONSE
+export const respondToReview = async (req, res) => {
+  try {
+    const { response } = req.body;
+
+    if (!response || !response.trim()) {
+      return res.json({
+        success: false,
+        message: "Response is required",
+      });
+    }
+
+    const hotel = await Hotel.findOne({
+      owner: req.user._id,
+    });
+
+    if (!hotel) {
+      return res.json({
+        success: false,
+        message: "Hotel not found",
+      });
+    }
+
+    const review = await Review.findOne({
+      _id: req.params.id,
+      hotel: hotel._id,
+    });
+
+    if (!review) {
+      return res.json({
+        success: false,
+        message: "Review not found",
+      });
+    }
+
+    review.adminResponse = response.trim();
+    review.respondedAt = new Date();
+
+    await review.save();
+
+    res.json({
+      success: true,
+      message: "Response added successfully",
+      review,
+    });
+  } catch (error) {
+    console.log("RESPOND REVIEW ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// DELETE REVIEW
+export const deleteReview = async (req, res) => {
+  try {
+    const hotel = await Hotel.findOne({
+      owner: req.user._id,
+    });
+
+    if (!hotel) {
+      return res.json({
+        success: false,
+        message: "Hotel not found",
+      });
+    }
+
+    const review = await Review.findOneAndDelete({
+      _id: req.params.id,
+      hotel: hotel._id,
+    });
+
+    if (!review) {
+      return res.json({
+        success: false,
+        message: "Review not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Review deleted successfully",
+    });
+  } catch (error) {
+    console.log("DELETE REVIEW ERROR:", error);
+
+    res.status(500).json({
       success: false,
       message: error.message,
     });
