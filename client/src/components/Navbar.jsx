@@ -23,20 +23,28 @@ const Navbar = () => {
   const { user, navigate, isOwner, setShowHotelReg } = useAppContext();
 
   useEffect(() => {
-    if (location.pathname !== "/") {
-      setIsScrolled(true);
-      return;
-    } else {
-      setIsScrolled(false);
-    }
-    setIsScrolled((prev) => (location.pathname !== "/" ? true : prev));
-
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      if (location.pathname !== "/") {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(window.scrollY > 10);
+      }
     };
+
+    // Immediately update navbar when route changes
+    handleScroll();
+
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [location.pathname]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    setIsMenuOpen(false);
+  }, [location.pathname]);
 
   return (
     <nav
@@ -103,7 +111,7 @@ const Navbar = () => {
             <UserButton.MenuItems>
               <UserButton.Action
                 label="My Booking"
-                labelIcon={<i class="fa-solid fa-book"></i>}
+                labelIcon={<i className="fa-solid fa-book"></i>}
                 onClick={() => navigate("/my-bookings")}
               />
             </UserButton.MenuItems>

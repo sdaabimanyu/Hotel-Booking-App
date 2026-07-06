@@ -15,6 +15,7 @@ export const AppProvider = ({ children }) => {
   const currency = import.meta.env.VITE_CURRENCY || "$";
 
   const [isOwner, setIsowner] = useState(false);
+  const [userLoading, setUserLoading] = useState(true);
   const [showHotelReg, setShowHotelReg] = useState(false);
   const [searchedCities, setSearchedCities] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -24,7 +25,6 @@ export const AppProvider = ({ children }) => {
       console.log("FETCHING ROOMS...");
 
       const { data } = await axios.get("/api/rooms");
-      
 
       if (data.success) {
         setRooms(data.rooms);
@@ -36,7 +36,12 @@ export const AppProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      if (!user) return;
+      setUserLoading(true);
+
+      if (!user) {
+        setIsowner(false);
+        return;
+      }
 
       const { data } = await axios.get("/api/user", {
         headers: {
@@ -46,10 +51,15 @@ export const AppProvider = ({ children }) => {
 
       if (data.success) {
         setIsowner(data.role === "hotelOwner");
-        setSearchedCities(data.recentSearchedCities);
+        setSearchedCities(data.recentSearchedCities || []);
+      } else {
+        setIsowner(false);
       }
     } catch (error) {
-      console.log(error);
+      console.log("FETCH USER ERROR:", error);
+      setIsowner(false);
+    } finally {
+      setUserLoading(false);
     }
   };
 
@@ -58,7 +68,12 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (user) fetchUser();
+    if (user) {
+      fetchUser();
+    } else {
+      setIsowner(false);
+      setUserLoading(false);
+    }
   }, [user]);
 
   const value = {
@@ -68,6 +83,7 @@ export const AppProvider = ({ children }) => {
     user,
     getToken,
     isOwner,
+    userLoading,
     setIsowner,
     showHotelReg,
     setShowHotelReg,
