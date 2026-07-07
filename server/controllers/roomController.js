@@ -1,5 +1,6 @@
 import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
+import Review from "../models/Review.js";
 import { cloudinary } from "../configs/cloudinary.js";
 import { getAuth } from "@clerk/express";
 
@@ -63,24 +64,45 @@ export const createRoom = async (req, res) => {
 // GET ALL ROOMS
 export const getRooms = async (req, res) => {
   try {
-    console.log("GET ROOMS HIT");
-
-    console.log("ALL ROOMS:", await Room.find({}));
     const rooms = await Room.find({
       isAvailable: true,
       isDeleted: false,
     })
       .populate("hotel")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
-    console.log(rooms);
+    const roomsWithReviews = await Promise.all(
+      rooms.map(async (room) => {
+        const reviews = await Review.find({
+          room: room._id,
+          $or: [{ status: "approved" }, { status: { $exists: false } }],
+        });
+
+        const reviewCount = reviews.length;
+
+        const averageRating =
+          reviewCount > 0
+            ? reviews.reduce((total, review) => total + review.rating, 0) /
+              reviewCount
+            : 0;
+
+        return {
+          ...room,
+          reviewCount,
+          averageRating,
+        };
+      }),
+    );
 
     res.json({
       success: true,
-      rooms,
+      rooms: roomsWithReviews,
     });
   } catch (error) {
-    res.json({
+    console.log("GET ROOMS ERROR:", error);
+
+    res.status(500).json({
       success: false,
       message: error.message,
     });

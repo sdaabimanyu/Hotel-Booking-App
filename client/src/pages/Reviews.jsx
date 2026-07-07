@@ -2,17 +2,12 @@ import { useEffect, useState } from "react";
 import { useAppContext } from "../context/AppContext";
 
 export default function Reviews() {
-  const { axios, getToken, user } = useAppContext();
-
+  const { axios, user } = useAppContext();
   const [reviews, setReviews] = useState([]);
 
   const fetchReviews = async () => {
     try {
       const { data } = await axios.get("/api/reviews");
-
-      console.log("FULL RESPONSE:", data);
-      console.log("REVIEWS:", data.reviews);
-
       if (data.success) {
         setReviews(data.reviews);
       }
@@ -38,7 +33,6 @@ export default function Reviews() {
       : "0.0";
 
   const fullStars = Math.floor(averageRating);
-
   const stars = "★".repeat(fullStars) + "☆".repeat(5 - fullStars);
 
   useEffect(() => {
@@ -48,32 +42,44 @@ export default function Reviews() {
   }, [user]);
 
   return (
-    <div className="pt-32 pb-20 px-4 md:px-16 lg:px-24 xl:px-32">
-      <div className="mb-10 flex items-center justify-between flex-wrap gap-6">
+    <div className="pt-36 pb-24 px-6 md:px-16 lg:px-24 xl:px-32 max-w-7xl mx-auto bg-slate-50/40 min-h-screen antialiased">
+      {/* Header Section */}
+      <div className="mb-12 flex items-end justify-between flex-wrap gap-8 border-b border-gray-100 pb-8">
         <div>
-          <h1 className="text-5xl font-bold">Guest Reviews</h1>
-
-          <p className="text-gray-500 mt-2">{reviews.length} Reviews</p>
+          <h1 className="text-5xl font-playfair font-medium tracking-tight text-slate-900">
+            Guest Reviews
+          </h1>
+          <p className="font-inter text-slate-500 font-normal mt-3 tracking-wide text-sm">
+            Take advantage of our customer feedback and verified testimonials •{" "}
+            {reviews.length} Reviews
+          </p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all duration-300">
-          <p className="text-gray-500 text-sm">Average Rating</p>
-
-          <div className="flex items-center gap-3 mt-2">
-            <div className="text-yellow-400 text-3xl">{stars}</div>
-
-            <span className="text-4xl font-bold">{averageRating}</span>
+        {/* Score Overview Card */}
+        <div className="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-gray-100 flex items-center gap-6 min-w-[240px]">
+          <div>
+            <p className="font-inter text-slate-400 text-xs font-semibold tracking-wider uppercase">
+              Average Rating
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-4xl font-playfair font-bold text-slate-800">
+                {averageRating}
+              </span>
+              <span className="font-inter text-slate-400 text-sm">/ 5.0</span>
+            </div>
           </div>
+          <div className="h-10 w-px bg-gray-100" />
+          <div className="text-secondary text-xl tracking-tight">{stars}</div>
         </div>
       </div>
 
+      {/* Reviews Content Grid */}
       {reviews.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-dashed border-gray-300 p-16 text-center">
-          <h2 className="text-2xl font-semibold text-gray-700">
+        <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-20 text-center shadow-sm">
+          <h2 className="text-2xl font-playfair font-semibold text-slate-700">
             No Reviews Yet
           </h2>
-
-          <p className="text-gray-500 mt-2">
+          <p className="font-inter text-slate-400 mt-2 text-sm">
             Guests haven't reviewed your hotel yet.
           </p>
         </div>
@@ -82,83 +88,84 @@ export default function Reviews() {
           {reviews.map((review) => (
             <div
               key={review._id}
-              className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all duration-300"
+              className="bg-white rounded-2xl p-8 shadow-[0_6px_24px_rgba(0,0,0,0.015)] border border-slate-100/80 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
             >
-              <div className="flex justify-between items-start flex-col md:flex-row gap-6">
-                {/* Left */}
-                <div className="flex gap-4">
-                  {/* Room Image */}
+              <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+                {/* User Info & Metadata Group */}
+                <div className="flex flex-col sm:flex-row gap-6 items-start w-full">
+                  {/* Room Thumbnail Image */}
                   {review.room?.images?.[0] ? (
                     <img
                       src={review.hotel?.image || review.room?.images?.[0]}
                       alt={review.hotel?.name}
-                      className="w-32 h-32 rounded-2xl object-cover shadow"
+                      className="w-28 h-28 rounded-2xl object-cover shadow-sm bg-slate-100"
                     />
                   ) : (
-                    <div className="w-32 h-32 rounded-xl bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
+                    <div className="font-inter w-28 h-28 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 text-xs tracking-wider uppercase">
                       No Image
                     </div>
                   )}
 
-                  {/* User */}
-                  <div>
+                  {/* Profile & Detail Badges */}
+                  <div className="flex-1 space-y-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-2xl font-bold shadow-lg">
+                      <div className="w-12 h-12 rounded-full bg-slate-900 text-slate-100 flex items-center justify-center text-base font-semibold shadow-sm">
                         {(review.userName || review.user?.username || "G")
                           .charAt(0)
                           .toUpperCase()}
                       </div>
-
                       <div>
-                        <h3 className="text-2xl font-bold">
+                        <h3 className="text-xl font-bold text-slate-800 tracking-tight capitalize">
                           {review.userName || review.user?.username || "Guest"}
                         </h3>
-
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold">
-                            🏨 {review.hotel?.name}
-                          </span>
-
-                          <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-sm font-semibold">
-                            🛏 {review.room?.roomType}
-                          </span>
-
-                          <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-semibold">
-                            ✔ Verified Stay
-                          </span>
-                        </div>
+                        <p className="font-inter text-xs text-slate-400 font-medium">
+                          Verified Resident
+                        </p>
                       </div>
+                    </div>
+
+                    {/* Styled Meta Badges using Outfit natively */}
+                    <div className="flex flex-wrap gap-2 pt-0.5">
+                      <span className="px-3 py-1 rounded-lg bg-slate-50 border border-slate-100 text-slate-600 text-xs font-semibold tracking-wide">
+                        🏢 {review.hotel?.name}
+                      </span>
+                      <span className="px-3 py-1 rounded-lg bg-slate-50 border border-slate-100 text-slate-600 text-xs font-semibold tracking-wide">
+                        🛏 {review.room?.roomType}
+                      </span>
+                      <span className="font-inter px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold tracking-wide">
+                        ✓ Verified Stay
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Rating */}
-                <div className="flex items-center gap-2">
-                  <div className="flex text-yellow-400 text-2xl">
+                {/* Rating Value with Custom Secondary Accent color */}
+                <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100 self-start md:self-auto">
+                  <div className="flex text-secondary text-base tracking-tighter">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <span key={star}>
                         {star <= review.rating ? "★" : "☆"}
                       </span>
                     ))}
                   </div>
-
-                  <span className="text-lg font-semibold text-gray-700">
+                  <span className="font-inter text-xs font-bold text-slate-700">
                     {review.rating}.0
                   </span>
                 </div>
               </div>
 
-              <h3 className="text-xl font-semibold mt-8 mb-3">
-                {getTitle(review.rating)}
-              </h3>
+              {/* Review Text Area */}
+              <div className="mt-6 pt-6 border-t border-slate-50">
+                <h4 className="text-xl font-playfair font-bold text-slate-800 mb-2">
+                  {getTitle(review.rating)}
+                </h4>
+                <p className="font-inter text-slate-600 text-base leading-relaxed font-light">
+                  "{review.comment}"
+                </p>
+              </div>
 
-              {/* Comment */}
-              <p className="text-gray-700 text-lg leading-9">
-                {review.comment}
-              </p>
-
-              {/* Date */}
-              <p className="mt-6 text-gray-400 text-sm">
+              {/* Date Block */}
+              <p className="font-inter mt-5 text-slate-400 text-xs tracking-wide">
                 Reviewed on{" "}
                 {new Date(review.createdAt).toLocaleDateString("en-US", {
                   day: "numeric",

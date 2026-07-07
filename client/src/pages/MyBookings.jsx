@@ -52,12 +52,7 @@ export default function MyBookings() {
 
   const submitReview = async () => {
     try {
-      console.log("SUBMIT REVIEW CLICKED");
       const token = await getToken();
-      console.log("SELECTED BOOKING:", selectedBooking);
-      console.log("RATING:", rating);
-      console.log("COMMENT:", comment);
-      console.log("SENDING REQUEST...");
       const { data } = await axios.post(
         "/api/reviews",
         {
@@ -74,9 +69,7 @@ export default function MyBookings() {
 
       if (data.success) {
         toast.success("Review Added");
-
         await fetchUserBookings();
-
         setShowReviewModal(false);
         setSelectedBooking(null);
         setComment("");
@@ -103,7 +96,6 @@ export default function MyBookings() {
 
       if (data.success) {
         toast.success(data.message);
-
         fetchUserBookings();
       } else {
         toast.error(data.message);
@@ -119,204 +111,290 @@ export default function MyBookings() {
     }
   }, [user]);
 
+  // Helper styling configuration for status badges
+  const getStatusStyles = (status) => {
+    switch (status) {
+      case "pending":
+        return "bg-amber-50 text-amber-700 border-amber-200/60";
+      case "confirmed":
+        return "bg-sky-50 text-sky-700 border-sky-200/60";
+      case "checked-in":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200/60";
+      case "checked-out":
+        return "bg-slate-50 text-slate-600 border-slate-200";
+      default:
+        return "bg-red-50 text-red-600 border-red-200/60";
+    }
+  };
+
   return (
     <>
-      <div className="py-28 md:pb-35 md:pt-32 px-4 md:px-16 lg:px-24 xl:px-32">
-        <div className="mb-10">
-          <h1 className="text-[40px] font-playfair">My Bookings</h1>
-          <p className="max-w-150 text-gray-500/90">
-            Easily manage your past, current, and upcoming hotel reservations in
-            one place. Plan your trips seamlessly with just a few clicks
-          </p>
-        </div>
-
-        <div className="max-w-6xl mt-8 w-full text-gray-800">
-          <div className="hidden md:grid md:grid-cols-[3fr_2fr_1fr] w-full border-b border-gray-300 font-medium text-base py-3">
-            <div>Hotels</div>
-            <div>Date & Timings</div>
-            <div>Payment</div>
+      <div className="bg-[#faf9f7] min-h-screen py-32 md:pb-36 px-4 md:px-16 lg:px-24 xl:px-32 antialiased">
+        <div className="max-w-6xl mx-auto">
+          {/* Header Section */}
+          <div className="mb-12">
+            <h1 className="text-4xl md:text-5xl font-medium font-playfair text-slate-900 tracking-tight">
+              My Bookings
+            </h1>
+            <p className="max-w-2xl text-sm font-inter text-slate-500 mt-3 leading-relaxed">
+              Easily manage your past, current, and upcoming hotel reservations
+              in one place. Plan your trips seamlessly with just a few clicks.
+            </p>
           </div>
 
-          {bookings.map((booking) => (
-            <div
-              key={booking._id}
-              className="grid grid-cols-1 md:grid-cols-[3fr_2fr_1fr] w-full border-b border-gray-300 py-6 first:border-t"
-            >
-              {/* Hotel Details */}
-              <div className="flex flex-col md:flex-row">
-                <img
-                  src={booking.room?.images?.[0] || "/placeholder-room.jpg"}
-                  alt="hotel-img"
-                  className="md:w-44 rounded shadow object-cover"
-                />
-
-                <div className="flex flex-col gap-1.5 max-md:mt-3 md:ml-4">
-                  <p className="font-playfair text-2xl">
-                    {booking.hotel.name}
-                    <span className="font-inter text-sm">
-                      {" "}
-                      ({booking.room.roomType})
-                    </span>
-                  </p>
-
-                  <div className="flex items-center gap-1 text-sm text-gray-500">
-                    <i className="fa-solid fa-location-dot"></i>
-                    <span>{booking.hotel.address}</span>
-                  </div>
-
-                  <div className="flex items-center gap-1 text-sm text-gray-500">
-                    <i className="fa-solid fa-people-group"></i>
-                    <span>Guests: {booking.guests}</span>
-                  </div>
-
-                  <p className="text-base font-semibold">
-                    Total: ${booking.totalPrice}
-                  </p>
-
-                  {booking.selectedOffer && (
-                    <p className="text-green-600 text-sm mt-1">
-                      Offer Applied: {booking.selectedOffer.code}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Dates */}
-              <div className="flex flex-row md:items-center md:gap-12 mt-3 gap-8">
-                <div>
-                  <p>Check-In</p>
-                  <p className="text-gray-500 text-sm">
-                    {new Date(booking.checkInDate).toDateString()}
-                  </p>
-                </div>
-
-                <div>
-                  <p>Check-Out</p>
-                  <p className="text-gray-500 text-sm">
-                    {new Date(booking.checkOutDate).toDateString()}
-                  </p>
-                </div>
-              </div>
-
-              {/* Payment */}
-              <div className="flex flex-col items-start justify-center pt-3">
-                <div className="flex items-center gap-2">
-                  <div
-                    className={`h-3 w-3 rounded-full ${
-                      booking.isPaid ? "bg-green-500" : "bg-red-500"
-                    }`}
-                  />
-
-                  <p
-                    className={`text-sm ${
-                      booking.isPaid ? "text-green-500" : "text-red-500"
-                    }`}
-                  >
-                    {booking.isPaid ? "Paid" : "Unpaid"}
-                  </p>
-                </div>
-
-                <p
-                  className={`font-medium ${
-                    booking.status === "pending"
-                      ? "text-yellow-500"
-                      : booking.status === "confirmed"
-                        ? "text-blue-500"
-                        : booking.status === "checked-in"
-                          ? "text-green-500"
-                          : booking.status === "checked-out"
-                            ? "text-emerald-600"
-                            : "text-red-500"
-                  }`}
-                >
-                  Status: {booking.status}
+          {/* Bookings Container Container */}
+          <div className="space-y-6 w-full text-slate-800">
+            {bookings.length === 0 ? (
+              <div className="text-center py-20 bg-white rounded-3xl border border-slate-100 shadow-sm">
+                <p className="font-playfair text-xl text-slate-400">
+                  No reservations found
                 </p>
-
-                {booking.status !== "cancelled" &&
-                  new Date(booking.checkInDate) > new Date() && (
-                    <button
-                      onClick={() => cancelBooking(booking._id)}
-                      className="mt-3 px-5 py-2 bg-red-500 text-white rounded-lg"
-                    >
-                      Cancel Booking
-                    </button>
-                  )}
-
-                {/* Review Already Submitted */}
-                {booking.reviewSubmitted ? (
-                  <div className="mt-3">
-                    <p className="text-green-600 font-medium">
-                      Review Submitted
-                    </p>
-                  </div>
-                ) : !booking.isPaid ? (
-                  <button
-                    onClick={() => handlePayment(booking._id)}
-                    className="mt-3 px-5 py-2 bg-blue-600 text-white rounded-lg"
-                  >
-                    Pay Now
-                  </button>
-                ) : new Date(booking.checkOutDate) > new Date() ? (
-                  <p className="mt-3 text-gray-500 text-sm">
-                    Review available after checkout
-                  </p>
-                ) : (
-                  <button
-                    onClick={() => openReviewModal(booking)}
-                    className="mt-3 px-5 py-2 bg-blue-600 text-white rounded-lg"
-                  >
-                    Write Review
-                  </button>
-                )}
               </div>
-            </div>
-          ))}
+            ) : (
+              bookings.map((booking) => {
+                const isUpcoming = new Date(booking.checkInDate) > new Date();
+                const isPastCheckout =
+                  new Date(booking.checkOutDate) < new Date();
+
+                return (
+                  <div
+                    key={booking._id}
+                    className="flex flex-col lg:flex-row justify-between bg-white rounded-3xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.02)] border border-slate-100 hover:shadow-[0_8px_30px_rgba(0,0,0,0.05)] transition-all duration-300 gap-6"
+                  >
+                    {/* Left & Center Information Segment */}
+                    <div className="flex flex-col md:flex-row flex-1 gap-6">
+                      {/* Room Image Card */}
+                      <div className="relative md:w-56 h-40 md:h-auto shrink-0 rounded-2xl overflow-hidden shadow-sm">
+                        <img
+                          src={
+                            booking.room?.images?.[0] || "/placeholder-room.jpg"
+                          }
+                          alt="hotel-img"
+                          className="w-full h-full object-cover"
+                        />
+                        {booking.selectedOffer && (
+                          <div className="absolute bottom-3 left-3 bg-emerald-500 text-white font-inter text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md shadow-sm">
+                            % {booking.selectedOffer.code} Applied
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Room Description & Meta */}
+                      <div className="flex flex-col justify-between flex-1 py-1">
+                        <div>
+                          <div className="flex flex-wrap items-baseline gap-2">
+                            <h2 className="font-playfair text-2xl font-bold text-slate-800 tracking-tight">
+                              {booking.hotel.name}
+                            </h2>
+                            <span className="font-inter text-xs text-slate-400 font-medium bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md">
+                              {booking.room.roomType}
+                            </span>
+                          </div>
+
+                          <div className="flex flex-col gap-2 mt-4 text-sm font-inter text-slate-500">
+                            <div className="flex items-center gap-2">
+                              <span className="text-slate-400 text-xs w-4 text-center">
+                                📍
+                              </span>
+                              <span className="line-clamp-1">
+                                {booking.hotel.address}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-slate-400 text-xs w-4 text-center">
+                                👥
+                              </span>
+                              <span>
+                                Guests: {booking.guests}{" "}
+                                {booking.guests > 1 ? "People" : "Person"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Stay Timings Grid Info */}
+                        <div className="grid grid-cols-2 gap-4 pt-5 mt-5 border-t border-slate-50 max-w-sm">
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 font-inter">
+                              Check-In
+                            </p>
+                            <p className="text-xs font-semibold text-slate-700 mt-1 font-inter">
+                              {new Date(booking.checkInDate).toLocaleDateString(
+                                "en-US",
+                                {
+                                  weekday: "short",
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                },
+                              )}
+                            </p>
+                          </div>
+                          <div className="border-l border-slate-100 pl-4">
+                            <p className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 font-inter">
+                              Check-Out
+                            </p>
+                            <p className="text-xs font-semibold text-slate-700 mt-1 font-inter">
+                              {new Date(
+                                booking.checkOutDate,
+                              ).toLocaleDateString("en-US", {
+                                weekday: "short",
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right-Aligned Control Panel & Financial Statement */}
+                    <div className="flex flex-row lg:flex-col justify-between items-end lg:justify-between p-1 lg:border-l lg:border-slate-50 lg:pl-8 min-w-[200px] gap-4">
+                      {/* Financial Status & Badges */}
+                      <div className="flex flex-col items-start lg:items-end w-full space-y-2.5">
+                        <p className="text-xs font-inter text-slate-400 font-medium">
+                          Total Cost
+                        </p>
+                        <p className="text-3xl font-bold font-inter text-slate-900 tracking-tight">
+                          ${booking.totalPrice}
+                        </p>
+
+                        <div className="flex flex-wrap gap-1.5 lg:justify-end w-full pt-1">
+                          {/* Financial Paid Status Badge */}
+                          <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold font-inter border ${
+                              booking.isPaid
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                                : "bg-rose-50 text-rose-700 border-rose-100"
+                            }`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${booking.isPaid ? "bg-emerald-500" : "bg-rose-500"}`}
+                            ></span>
+                            {booking.isPaid ? "Paid" : "Unpaid"}
+                          </span>
+
+                          {/* Order Status Tracking Badge */}
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold font-inter border uppercase tracking-wider text-[10px] ${getStatusStyles(booking.status)}`}
+                          >
+                            {booking.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Transaction Call-to-Action Buttons */}
+                      <div className="w-full shrink-0 max-w-[180px] lg:max-w-none">
+                        {booking.status !== "cancelled" && isUpcoming && (
+                          <button
+                            onClick={() => cancelBooking(booking._id)}
+                            className="w-full py-2.5 border border-red-200 text-red-600 hover:bg-red-50 rounded-xl text-xs font-bold tracking-wide transition duration-200 mb-2"
+                          >
+                            Cancel Reservation
+                          </button>
+                        )}
+
+                        {booking.reviewSubmitted ? (
+                          <div className="w-full text-center py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold font-inter text-emerald-600 flex items-center justify-center gap-1.5">
+                            <span>✓</span> Review Submitted
+                          </div>
+                        ) : !booking.isPaid ? (
+                          <button
+                            onClick={() => handlePayment(booking._id)}
+                            className="w-full py-3 bg-secondary hover:bg-amber-500 text-slate-950 rounded-xl text-xs font-bold tracking-wide shadow-md shadow-amber-500/5 transition duration-200"
+                          >
+                            Complete Secure Payment
+                          </button>
+                        ) : !isPastCheckout ? (
+                          <div className="w-full text-center py-2.5 text-slate-400 font-inter text-xs font-medium italic">
+                            Review unlocks post-checkout
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => openReviewModal(booking)}
+                            className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold tracking-wide transition duration-200 shadow-sm shadow-slate-900/10"
+                          >
+                            Write Stay Experience
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Review Modal */}
+      {/* Luxury Modal Overlay Block */}
       {showReviewModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl w-[500px]">
-            <h2 className="text-2xl font-bold mb-4">Write Review</h2>
+        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-all duration-300">
+          <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl border border-slate-100/80 transform transition-all animate-in fade-in zoom-in-95 duration-200">
+            <h2 className="text-3xl font-medium font-playfair text-slate-900 tracking-tight mb-2">
+              Share Your Stay
+            </h2>
+            <p className="text-xs font-inter text-slate-400 mb-6">
+              Your valuable feedback helps refine our bespoke luxury services.
+            </p>
 
-            <label className="block mb-2">Rating</label>
+            <div className="space-y-5 font-inter">
+              <div>
+                <label className="block text-xs uppercase tracking-wider font-semibold text-slate-500 mb-2">
+                  Overall Rating
+                </label>
+                <select
+                  value={rating}
+                  onChange={(e) => setRating(Number(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-100 text-slate-700 p-3.5 rounded-xl font-medium outline-hidden focus:border-amber-300 transition text-sm appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>")`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "right 14px center",
+                    backgroundSize: "16px",
+                  }}
+                >
+                  <option value={5}>⭐⭐⭐⭐⭐ 5 Excellent Stars</option>
+                  <option value={4}>⭐⭐⭐⭐ 4 Good Stars</option>
+                  <option value={3}>⭐⭐⭐ 3 Average Stars</option>
+                  <option value={2}>⭐⭐ 2 Below Average Stars</option>
+                  <option value={1}>⭐ 1 Poor Star</option>
+                </select>
+              </div>
 
-            <select
-              value={rating}
-              onChange={(e) => setRating(Number(e.target.value))}
-              className="w-full border p-3 rounded-lg mb-4"
-            >
-              <option value={1}>⭐ 1 Star</option>
-              <option value={2}>⭐⭐ 2 Stars</option>
-              <option value={3}>⭐⭐⭐ 3 Stars</option>
-              <option value={4}>⭐⭐⭐⭐ 4 Stars</option>
-              <option value={5}>⭐⭐⭐⭐⭐ 5 Stars</option>
-            </select>
+              <div>
+                <label className="block text-xs uppercase tracking-wider font-semibold text-slate-500 mb-2">
+                  Review Statement
+                </label>
+                <textarea
+                  rows={4}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Elaborate on your experience regarding amenities, ambiance, and care..."
+                  className="w-full bg-slate-50 border border-slate-100 text-slate-700 text-sm p-4 rounded-xl outline-hidden focus:border-amber-300 focus:bg-white placeholder:text-slate-400 transition resize-none leading-relaxed"
+                />
+              </div>
+            </div>
 
-            <label className="block mb-2">Review</label>
-
-            <textarea
-              rows={5}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Share your experience..."
-              className="w-full border p-3 rounded-lg"
-            />
-
-            <div className="flex justify-end gap-3 mt-6">
+            <div className="flex justify-end gap-3 mt-8 font-inter">
               <button
-                onClick={() => setShowReviewModal(false)}
-                className="px-4 py-2 border rounded-lg"
+                onClick={() => {
+                  setShowReviewModal(false);
+                  setSelectedBooking(null);
+                  setComment("");
+                  setRating(5);
+                }}
+                className="px-5 py-3 border border-slate-200 text-slate-500 hover:bg-slate-50 rounded-xl text-xs font-bold tracking-wide transition duration-200"
               >
-                Cancel
+                Dismiss
               </button>
 
               <button
                 onClick={submitReview}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold tracking-wide shadow-md shadow-slate-900/10 transition duration-200"
               >
-                Submit Review
+                Publish Review
               </button>
             </div>
           </div>
