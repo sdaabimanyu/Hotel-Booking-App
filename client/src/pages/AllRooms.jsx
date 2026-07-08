@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import StarRating from "../components/StarRating";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 
 // Premium Styled Custom Checkbox Component

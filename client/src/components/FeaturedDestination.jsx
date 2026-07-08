@@ -7,7 +7,7 @@ export default function FeaturedDestination() {
 
   return (
     rooms?.length > 0 && (
-      <div className="bg-white py-24 px-4 md:px-16 lg:px-24 antialiased border-t border-slate-100/60">
+      <div className="bg-white pt-24 pb-32 px-4 md:px-16 lg:px-24 antialiased border-t border-slate-100/60">
         <div className="max-w-7xl mx-auto flex flex-col items-center">
           {/* Original Font Size Header Section */}
           <div className="mb-16 text-center">
@@ -24,25 +24,25 @@ export default function FeaturedDestination() {
             </p>
           </div>
 
-          {/* Dynamic Card Container Layout Grid */}
-          <div className="flex flex-wrap justify-center gap-6 md:gap-8 w-full max-w-7xl mb-14">
+          {/* Locked Grid: Clean spacing with bottom padding for card drop-shadows */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 w-full pb-16">
             {rooms.slice(0, 4).map((room, index) => (
               <div
                 key={room._id}
-                className="w-full sm:w-[calc(50%-16px)] lg:w-[calc(25%-24px)] min-w-[280px] max-w-[340px]"
+                className="w-full mx-auto max-w-[340px] sm:max-w-none"
               >
                 <HotelCard room={room} index={index} />
               </div>
             ))}
           </div>
 
-          {/* Premium Call To Action Button */}
+          {/* Clean Premium Call To Action Button */}
           <button
             onClick={() => {
               navigate("/rooms");
               window.scrollTo(0, 0);
             }}
-            className="group flex items-center gap-2.5 px-6 py-3 border border-slate-300 text-slate-800 rounded-xl text-xs font-semibold font-inter uppercase tracking-widest hover:bg-slate-955  hover:border-slate-955 transition-all duration-300 ease-out shadow-xs"
+            className="group flex items-center gap-2.5 px-6 py-3 border border-slate-300 text-slate-800 rounded-xl text-xs font-semibold font-inter uppercase tracking-widest hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all duration-300 ease-out shadow-xs"
           >
             <span>View All Destinations</span>
             <svg

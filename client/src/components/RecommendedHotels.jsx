@@ -41,12 +41,12 @@ export default function RecommendedHotels() {
           </p>
         </div>
 
-        {/* Dynamic Card Layout Grid */}
-        <div className="flex flex-wrap justify-center gap-6 md:gap-8 w-full max-w-7xl">
+        {/* Locked Grid: 1 on mobile, 2 on tablet, strictly 4 on desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 w-full">
           {recommended.slice(0, 4).map((room, index) => (
             <div
               key={room._id}
-              className="w-full sm:w-[calc(50%-16px)] lg:w-[calc(25%-24px)] min-w-[280px] max-w-[340px]"
+              className="w-full mx-auto max-w-[340px] sm:max-w-none"
             >
               <HotelCard room={room} index={index} />
             </div>
