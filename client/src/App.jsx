@@ -27,7 +27,7 @@ import Favorites from "./pages/Favorites";
 
 function App() {
   const isOwnerPath = useLocation().pathname.includes("owner");
-  const { showHotelReg } = useAppContext();
+  const { showHotelReg, axios, getToken, rooms } = useAppContext();
 
   const testFavoriteHotel = async () => {
     try {
