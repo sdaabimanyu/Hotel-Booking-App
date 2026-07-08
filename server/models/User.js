@@ -35,7 +35,7 @@ const userSchema = mongoose.Schema(
       },
     ],
 
-    // PERSONAL INFORMATION
+    // PERSONAL PROFILE INFORMATION
     profile: {
       phone: {
         type: String,
@@ -68,11 +68,28 @@ const userSchema = mongoose.Schema(
       preferredGuests: {
         type: Number,
         default: 1,
-        min: 1,
       },
     },
+
+    // FAVORITE HOTELS
+    favoriteHotels: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Hotel",
+      },
+    ],
+
+    // FAVORITE ROOMS
+    favoriteRooms: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Room",
+      },
+    ],
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+  },
 );
 
 const User = mongoose.model("User", userSchema);

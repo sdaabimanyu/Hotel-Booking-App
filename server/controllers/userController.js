@@ -1,3 +1,4 @@
+// GET BASIC USER DATA
 export const getUserData = async (req, res) => {
   try {
     const role = req.user.role;
@@ -9,7 +10,9 @@ export const getUserData = async (req, res) => {
       recentSearchedCities,
     });
   } catch (error) {
-    res.json({
+    console.log("GET USER DATA ERROR:", error);
+
+    res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -23,6 +26,7 @@ export const getUserProfile = async (req, res) => {
 
     res.json({
       success: true,
+
       user: {
         _id: user._id,
         username: user.username,
@@ -91,6 +95,7 @@ export const updateUserProfile = async (req, res) => {
         username: user.username,
         email: user.email,
         image: user.image,
+        role: user.role,
 
         profile: user.profile,
 
@@ -107,6 +112,7 @@ export const updateUserProfile = async (req, res) => {
   }
 };
 
+// STORE RECENT SEARCHED CITIES
 export const storeRecentSearchedCities = async (req, res) => {
   try {
     const { recentSearchedCity } = req.body;
@@ -127,7 +133,142 @@ export const storeRecentSearchedCities = async (req, res) => {
       message: "City added",
     });
   } catch (error) {
+    console.log("STORE RECENT SEARCH ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// TOGGLE FAVORITE HOTEL
+export const toggleFavoriteHotel = async (req, res) => {
+  try {
+    const { hotelId } = req.body;
+
+    if (!hotelId) {
+      return res.status(400).json({
+        success: false,
+        message: "Hotel ID is required",
+      });
+    }
+
+    const user = req.user;
+
+    const favoriteHotels = user.favoriteHotels || [];
+
+    const isFavorite = favoriteHotels.some((id) => id.toString() === hotelId);
+
+    if (isFavorite) {
+      user.favoriteHotels = favoriteHotels.filter(
+        (id) => id.toString() !== hotelId,
+      );
+
+      await user.save();
+
+      return res.json({
+        success: true,
+        message: "Hotel removed from favorites",
+        isFavorite: false,
+      });
+    }
+
+    user.favoriteHotels.push(hotelId);
+
+    await user.save();
+
     res.json({
+      success: true,
+      message: "Hotel added to favorites",
+      isFavorite: true,
+    });
+  } catch (error) {
+    console.log("TOGGLE FAVORITE HOTEL ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// TOGGLE FAVORITE ROOM
+export const toggleFavoriteRoom = async (req, res) => {
+  try {
+    const { roomId } = req.body;
+
+    if (!roomId) {
+      return res.status(400).json({
+        success: false,
+        message: "Room ID is required",
+      });
+    }
+
+    const user = req.user;
+
+    const favoriteRooms = user.favoriteRooms || [];
+
+    const isFavorite = favoriteRooms.some((id) => id.toString() === roomId);
+
+    if (isFavorite) {
+      user.favoriteRooms = favoriteRooms.filter(
+        (id) => id.toString() !== roomId,
+      );
+
+      await user.save();
+
+      return res.json({
+        success: true,
+        message: "Room removed from favorites",
+        isFavorite: false,
+      });
+    }
+
+    user.favoriteRooms.push(roomId);
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Room added to favorites",
+      isFavorite: true,
+    });
+  } catch (error) {
+    console.log("TOGGLE FAVORITE ROOM ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// GET ALL USER FAVORITES
+export const getFavorites = async (req, res) => {
+  try {
+    await req.user.populate([
+      {
+        path: "favoriteHotels",
+      },
+      {
+        path: "favoriteRooms",
+
+        populate: {
+          path: "hotel",
+        },
+      },
+    ]);
+
+    res.json({
+      success: true,
+      favoriteHotels: req.user.favoriteHotels || [],
+      favoriteRooms: req.user.favoriteRooms || [],
+    });
+  } catch (error) {
+    console.log("GET FAVORITES ERROR:", error);
+
+    res.status(500).json({
       success: false,
       message: error.message,
     });

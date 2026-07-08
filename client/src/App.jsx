@@ -22,32 +22,54 @@ import Reviews from "./pages/Reviews";
 import EditRoom from "./pages/hotelOwner/EditRoom";
 import Analytics from "./pages/hotelOwner/Analytics";
 import OwnerOffers from "./pages/hotelOwner/Offers";
+import MyProfile from "./pages/MyProfile";
 
 function App() {
-  const { axios, getToken } = useAppContext();
+  const isOwnerPath = useLocation().pathname.includes("owner");
+  const { showHotelReg, axios, getToken, rooms } = useAppContext();
 
-  const testProfile = async () => {
+  const testFavoriteRoom = async () => {
     try {
+      if (rooms.length === 0) {
+        console.log("NO ROOMS AVAILABLE");
+        return;
+      }
+
+      const roomId = rooms[0]._id;
+
+      console.log("TESTING ROOM ID:", roomId);
+
       const token = await getToken();
 
-      const { data } = await axios.get("/api/user/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const { data } = await axios.patch(
+        "/api/user/favorites/room",
+        {
+          roomId,
         },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
-      console.log("PROFILE RESPONSE:", data);
+      console.log("FAVORITE ROOM RESPONSE:", data);
     } catch (error) {
-      console.log("PROFILE ERROR:", error);
+      console.log(
+        "FAVORITE ROOM ERROR:",
+        error.response?.data || error.message,
+      );
     }
   };
 
-  const isOwnerPath = useLocation().pathname.includes("owner");
-  const { showHotelReg } = useAppContext();
-
   return (
     <div>
-      <button onClick={testProfile}>Test Profile</button>
+      <button
+        onClick={testFavoriteRoom}
+        className="fixed top-20 left-5 z-[100] bg-black text-white px-4 py-2"
+      >
+        Test Favorite Room
+      </button>
       <Toaster />
       {!isOwnerPath && <Navbar />}
 
@@ -63,6 +85,7 @@ function App() {
           <Route path="/offers" element={<Offers />} />
           <Route path="/booking/:roomId" element={<BookingWizard />} />
           <Route path="/reviews" element={<Reviews />} />
+          <Route path="/profile" element={<MyProfile />} />
 
           <Route path="/owner" element={<Layout />}>
             <Route index element={<Dashboard />} />
