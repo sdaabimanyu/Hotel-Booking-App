@@ -24,11 +24,30 @@ import Analytics from "./pages/hotelOwner/Analytics";
 import OwnerOffers from "./pages/hotelOwner/Offers";
 
 function App() {
+  const { axios, getToken } = useAppContext();
+
+  const testProfile = async () => {
+    try {
+      const token = await getToken();
+
+      const { data } = await axios.get("/api/user/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("PROFILE RESPONSE:", data);
+    } catch (error) {
+      console.log("PROFILE ERROR:", error);
+    }
+  };
+
   const isOwnerPath = useLocation().pathname.includes("owner");
   const { showHotelReg } = useAppContext();
 
   return (
     <div>
+      <button onClick={testProfile}>Test Profile</button>
       <Toaster />
       {!isOwnerPath && <Navbar />}
 

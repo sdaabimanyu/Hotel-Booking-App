@@ -176,7 +176,7 @@ const Navbar = () => {
             }
             className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all"
           >
-            {isOwner ? "Dashboard" : "List Your Hotel"}
+            {isOwner ? "Admin Dashboard" : "List Your Hotel"}
           </button>
         )}
         {!user && (
