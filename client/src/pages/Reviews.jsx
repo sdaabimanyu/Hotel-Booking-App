@@ -8,6 +8,10 @@ export default function Reviews() {
   const fetchReviews = async () => {
     try {
       const { data } = await axios.get("/api/reviews");
+
+      console.log("PUBLIC REVIEWS RESPONSE:", data);
+      console.log("NUMBER OF PUBLIC REVIEWS:", data.reviews?.length);
+
       if (data.success) {
         setReviews(data.reviews);
       }

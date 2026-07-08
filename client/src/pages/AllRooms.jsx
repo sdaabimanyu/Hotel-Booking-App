@@ -171,7 +171,8 @@ export default function AllRooms() {
 
   return (
     <div className="bg-[#faf9f7] min-h-screen pt-28 lg:pt-36 pb-24 px-4 md:px-16 lg:px-24 antialiased">
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-start justify-between gap-10">
+      {/* FIX: Used flex-col-reverse so filters render above room layout modules on small viewports */}
+      <div className="max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-start justify-between gap-10">
         {/* Left Side: Room Listing Modules */}
         <div className="w-full lg:w-[76%]">
           {/* Header Title Section */}
@@ -226,7 +227,6 @@ export default function AllRooms() {
                       </h2>
 
                       {/* Ratings Overlay Row */}
-                      {/* Dynamic Ratings Row */}
                       <div className="flex items-center gap-3 mb-4">
                         <div className="scale-95 origin-left">
                           <StarRating rating={room.averageRating || 0} />
