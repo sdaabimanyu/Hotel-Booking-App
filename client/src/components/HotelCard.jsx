@@ -1,66 +1,27 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import toast from "react-hot-toast";
 import { useAppContext } from "../context/AppContext";
 
 export default function HotelCard({ room, index }) {
-  const { user, axios, getToken, favoriteHotels, fetchFavorites } =
-    useAppContext();
+  const { toggleFavoriteHotel, isHotelFavorite } = useAppContext();
 
   const hotelId = room.hotel?._id;
 
-  // Check whether this hotel is already saved
-  const isFavoriteHotel = favoriteHotels?.some(
-    (hotel) => hotel._id === hotelId,
-  );
+  const favorite = hotelId ? isHotelFavorite(hotelId) : false;
 
-  // ADD / REMOVE FAVORITE HOTEL
   const handleFavoriteHotel = async (event) => {
-    // Prevent clicking the heart from opening RoomDetails
+    // Prevent the Link from opening RoomDetails
     event.preventDefault();
+
+    // Prevent click from bubbling to parent Link
     event.stopPropagation();
 
-    try {
-      if (!user) {
-        toast.error("Please login to save favorite hotels");
-        return;
-      }
-
-      if (!hotelId) {
-        toast.error("Hotel information not found");
-        return;
-      }
-
-      const token = await getToken();
-
-      const { data } = await axios.patch(
-        "/api/user/favorites/hotel",
-        {
-          hotelId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (data.success) {
-        toast.success(data.message);
-
-        // Fetch favorites again so UI updates immediately
-        await fetchFavorites();
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error) {
-      console.log(
-        "FAVORITE HOTEL ERROR:",
-        error.response?.data || error.message,
-      );
-
-      toast.error(error.response?.data?.message || "Something went wrong");
+    if (!hotelId) {
+      console.log("HOTEL ID NOT FOUND");
+      return;
     }
+
+    await toggleFavoriteHotel(hotelId);
   };
 
   return (
@@ -90,19 +51,19 @@ export default function HotelCard({ room, index }) {
           <button
             type="button"
             onClick={handleFavoriteHotel}
-            className="absolute top-3.5 right-3.5 w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center transition-all duration-300 hover:scale-110"
-            title={
-              isFavoriteHotel
+            className="absolute top-3.5 right-3.5 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md shadow-md flex items-center justify-center hover:scale-110 transition-all duration-300 cursor-pointer z-10"
+            aria-label={
+              favorite
                 ? "Remove hotel from favorites"
                 : "Add hotel to favorites"
             }
           >
             <i
               className={`${
-                isFavoriteHotel
-                  ? "fa-solid text-red-500"
-                  : "fa-regular text-slate-500"
-              } fa-heart text-lg`}
+                favorite
+                  ? "fa-solid fa-heart text-red-500"
+                  : "fa-regular fa-heart text-slate-500"
+              } text-lg`}
             ></i>
           </button>
         </div>
@@ -121,7 +82,7 @@ export default function HotelCard({ room, index }) {
         </div>
       </div>
 
-      {/* PRICE AND BOOKING */}
+      {/* PRICE + BUTTON */}
       <div className="px-5 pb-5">
         <div className="flex items-center justify-between pt-4 border-t border-slate-100">
           <p className="text-slate-900 font-inter font-semibold text-base whitespace-nowrap">
@@ -131,10 +92,7 @@ export default function HotelCard({ room, index }) {
             </span>
           </p>
 
-          <button
-            type="button"
-            className="px-4 py-2.5 bg-slate-950 group-hover:bg-slate-800 text-white text-xs font-medium rounded-xl font-inter tracking-wide transition-colors duration-150 whitespace-nowrap"
-          >
+          <button className="px-4 py-2.5 bg-slate-950 group-hover:bg-slate-800 text-white text-xs font-medium rounded-xl font-inter tracking-wide transition-colors duration-150 whitespace-nowrap">
             Book Now
           </button>
         </div>
