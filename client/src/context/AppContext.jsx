@@ -19,6 +19,8 @@ export const AppProvider = ({ children }) => {
   const [showHotelReg, setShowHotelReg] = useState(false);
   const [searchedCities, setSearchedCities] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const [favoriteRooms, setFavoriteRooms] = useState([]);
+  const [favoriteHotels, setFavoriteHotels] = useState([]);
 
   const fetchRooms = async () => {
     try {
@@ -60,6 +62,120 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  const fetchFavorites = async () => {
+    try {
+      if (!user) return;
+
+      const token = await getToken();
+
+      const { data } = await axios.get("/api/user/favorites", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("FAVORITES RESPONSE:", data);
+
+      if (data.success) {
+        setFavoriteRooms(data.favoriteRooms || []);
+        setFavoriteHotels(data.favoriteHotels || []);
+      }
+    } catch (error) {
+      console.log(
+        "FETCH FAVORITES ERROR:",
+        error.response?.data || error.message,
+      );
+    }
+  };
+
+  const toggleFavoriteRoom = async (roomId) => {
+    try {
+      if (!user) {
+        toast.error("Please login to save favorites");
+        return;
+      }
+
+      const token = await getToken();
+
+      const { data } = await axios.patch(
+        "/api/user/favorites/room",
+        {
+          roomId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (data.success) {
+        toast.success(data.message);
+
+        await fetchFavorites();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.log(
+        "TOGGLE FAVORITE ROOM ERROR:",
+        error.response?.data || error.message,
+      );
+
+      toast.error(
+        error.response?.data?.message || "Failed to update favorite room",
+      );
+    }
+  };
+
+  const toggleFavoriteHotel = async (hotelId) => {
+    try {
+      if (!user) {
+        toast.error("Please login to save favorites");
+        return;
+      }
+
+      const token = await getToken();
+
+      const { data } = await axios.patch(
+        "/api/user/favorites/hotel",
+        {
+          hotelId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (data.success) {
+        toast.success(data.message);
+
+        await fetchFavorites();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.log(
+        "TOGGLE FAVORITE HOTEL ERROR:",
+        error.response?.data || error.message,
+      );
+
+      toast.error(
+        error.response?.data?.message || "Failed to update favorite hotel",
+      );
+    }
+  };
+
+  const isRoomFavorite = (roomId) => {
+    return favoriteRooms.some((room) => room._id === roomId);
+  };
+
+  const isHotelFavorite = (hotelId) => {
+    return favoriteHotels.some((hotel) => hotel._id === hotelId);
+  };
+
   useEffect(() => {
     fetchRooms();
   }, []);
@@ -73,12 +189,15 @@ export const AppProvider = ({ children }) => {
     // Clerk finished, and there is no logged-in user
     if (!user) {
       setIsowner(false);
+      setFavoriteRooms([]);
+      setFavoriteHotels([]);
       setUserLoading(false);
       return;
     }
 
     // Clerk finished, and user exists
     fetchUser();
+    fetchFavorites();
   }, [user, isLoaded]);
 
   const value = {
@@ -87,15 +206,32 @@ export const AppProvider = ({ children }) => {
     navigate,
     user,
     getToken,
+
     isOwner,
-    userLoading,
     setIsowner,
+
     showHotelReg,
     setShowHotelReg,
+
     searchedCities,
     setSearchedCities,
+
     rooms,
     setRooms,
+
+    favoriteRooms,
+    setFavoriteRooms,
+
+    favoriteHotels,
+    setFavoriteHotels,
+
+    fetchFavorites,
+
+    toggleFavoriteRoom,
+    toggleFavoriteHotel,
+
+    isRoomFavorite,
+    isHotelFavorite,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

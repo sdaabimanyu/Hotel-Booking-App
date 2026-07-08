@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { assets } from "../assets/assets";
 import { useClerk, UserButton } from "@clerk/clerk-react";
-import profileIcon from "../assets/user.png";
 import { useAppContext } from "../context/AppContext";
 
 const Navbar = () => {
@@ -18,9 +16,15 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const { openSignIn } = useClerk();
+
   const location = useLocation();
 
-  const { user, navigate, isOwner, setShowHotelReg } = useAppContext();
+  const { user, navigate, isOwner, setShowHotelReg, favoriteRooms } =
+    useAppContext();
+
+  // --------------------------------------------------
+  // HANDLE NAVBAR BACKGROUND WHEN SCROLLING
+  // --------------------------------------------------
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,7 +35,6 @@ const Navbar = () => {
       }
     };
 
-    // Immediately update navbar when route changes
     handleScroll();
 
     window.addEventListener("scroll", handleScroll);
@@ -41,40 +44,64 @@ const Navbar = () => {
     };
   }, [location.pathname]);
 
+  // --------------------------------------------------
+  // SCROLL TO TOP WHEN ROUTE CHANGES
+  // --------------------------------------------------
+
   useEffect(() => {
     window.scrollTo(0, 0);
     setIsMenuOpen(false);
   }, [location.pathname]);
 
+  // --------------------------------------------------
+  // OWNER / LIST HOTEL BUTTON
+  // --------------------------------------------------
+
+  const handleOwnerButton = () => {
+    if (isOwner) {
+      navigate("/owner");
+    } else {
+      setShowHotelReg(true);
+    }
+  };
+
   return (
     <nav
-      className={`fixed top-0 left-0 w-full flex items-center justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${isScrolled ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4" : "py-4 md:py-6"}`}
+      className={`fixed top-0 left-0 w-full flex items-center justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${
+        isScrolled
+          ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4"
+          : "py-4 md:py-6"
+      }`}
     >
-      {/* Logo */}
-      <Link to={"/"} className="flex items-center gap-x-2">
-        {/* <img
-          src={assets.appicon}
-          alt=""
-          className={`h-9 ${isScrolled && "invert opacity-80"}`}
-        /> */}
+      {/* ==================================================
+          LOGO
+      ================================================== */}
+
+      <Link to="/" className="flex items-center gap-x-2">
         <h1
-          className={`text-4xl font-semibold font-bonheur ${isScrolled ? "text-gray-700" : "text-white"}`}
+          className={`text-4xl font-semibold font-bonheur ${
+            isScrolled ? "text-gray-700" : "text-white"
+          }`}
         >
           El Hotel
         </h1>
       </Link>
 
-      {/* Desktop Nav */}
+      {/* ==================================================
+          DESKTOP NAVIGATION
+      ================================================== */}
+
       <div className="hidden md:flex items-center gap-4 lg:gap-8">
-        {navLinks.map((link, i) => (
+        {navLinks.map((link) => (
           <Link
-            key={i}
+            key={link.path}
             to={link.path}
             className={`group flex flex-col gap-0.5 ${
               isScrolled ? "text-gray-700" : "text-white"
             }`}
           >
             {link.name}
+
             <div
               className={`${
                 isScrolled ? "bg-gray-700" : "bg-white"
@@ -82,56 +109,126 @@ const Navbar = () => {
             />
           </Link>
         ))}
+
         {user && (
           <button
-            onClick={() =>
-              isOwner ? navigate("/owner") : setShowHotelReg(true)
-            }
-            className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${isScrolled ? "text-black" : "text-white"} transition-all`}
+            onClick={handleOwnerButton}
+            className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${
+              isScrolled ? "text-black" : "text-white"
+            } transition-all`}
           >
             {isOwner ? "Admin Dashboard" : "List Your Hotel"}
           </button>
         )}
       </div>
 
-      {/* Desktop Right */}
+      {/* ==================================================
+          DESKTOP RIGHT SIDE
+      ================================================== */}
+
       <div className="hidden md:flex items-center gap-4">
         {user ? (
           <UserButton>
             <UserButton.MenuItems>
+              {/* MY PROFILE */}
+
               <UserButton.Action
-                label="My Booking"
+                label="My Profile"
+                labelIcon={<i className="fa-solid fa-user"></i>}
+                onClick={() => navigate("/profile")}
+              />
+
+              {/* FAVORITES */}
+
+              <UserButton.Action
+                label={`My Favorites (${favoriteRooms?.length || 0})`}
+                labelIcon={<i className="fa-solid fa-heart"></i>}
+                onClick={() => navigate("/favorites")}
+              />
+
+              {/* MY BOOKINGS */}
+
+              <UserButton.Action
+                label="My Bookings"
                 labelIcon={<i className="fa-solid fa-book"></i>}
                 onClick={() => navigate("/my-bookings")}
               />
+
+              {/* ADMIN DASHBOARD */}
+
+              {isOwner && (
+                <UserButton.Action
+                  label="Admin Dashboard"
+                  labelIcon={<i className="fa-solid fa-hotel"></i>}
+                  onClick={() => navigate("/owner")}
+                />
+              )}
             </UserButton.MenuItems>
           </UserButton>
         ) : (
           <button
             onClick={openSignIn}
-            className={`px-8 py-2.5 rounded-full ml-4 transition-all duration-500 ${isScrolled ? "text-white bg-black" : "bg-white text-black"}`}
+            className={`px-8 py-2.5 rounded-full ml-4 transition-all duration-500 ${
+              isScrolled ? "text-white bg-black" : "bg-white text-black"
+            }`}
           >
             Login
           </button>
         )}
       </div>
 
-      {/* Mobile Menu Button */}
+      {/* ==================================================
+          MOBILE RIGHT SIDE
+      ================================================== */}
+
       <div className="flex items-center gap-3 md:hidden">
         {user && (
           <UserButton>
             <UserButton.MenuItems>
+              {/* PROFILE */}
+
               <UserButton.Action
-                label="My Booking"
+                label="My Profile"
+                labelIcon={<i className="fa-solid fa-user"></i>}
+                onClick={() => navigate("/profile")}
+              />
+
+              {/* FAVORITES */}
+
+              <UserButton.Action
+                label={`My Favorites (${favoriteRooms?.length || 0})`}
+                labelIcon={<i className="fa-solid fa-heart"></i>}
+                onClick={() => navigate("/favorites")}
+              />
+
+              {/* BOOKINGS */}
+
+              <UserButton.Action
+                label="My Bookings"
                 labelIcon={<i className="fa-solid fa-book"></i>}
                 onClick={() => navigate("/my-bookings")}
               />
+
+              {/* ADMIN */}
+
+              {isOwner && (
+                <UserButton.Action
+                  label="Admin Dashboard"
+                  labelIcon={<i className="fa-solid fa-hotel"></i>}
+                  onClick={() => navigate("/owner")}
+                />
+              )}
             </UserButton.MenuItems>
           </UserButton>
         )}
+
+        {/* HAMBURGER BUTTON */}
+
         <svg
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className={`h-6 w-6 cursor-pointer ${isScrolled ? "invert" : ""}`}
+          className={`h-6 w-6 cursor-pointer ${
+            isScrolled ? "text-gray-700" : "text-white"
+          }`}
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
@@ -143,11 +240,19 @@ const Navbar = () => {
         </svg>
       </div>
 
-      {/* Mobile Menu */}
+      {/* ==================================================
+          MOBILE MENU
+      ================================================== */}
+
       <div
-        className={`fixed top-0 left-0 w-full h-screen bg-white text-base flex flex-col md:hidden items-center justify-center gap-6 font-medium text-gray-800 transition-all duration-500 ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed top-0 left-0 w-full h-screen bg-white text-base flex flex-col md:hidden items-center justify-center gap-6 font-medium text-gray-800 transition-all duration-500 ${
+          isMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
+        {/* CLOSE BUTTON */}
+
         <button
+          type="button"
           className="absolute top-4 right-4"
           onClick={() => setIsMenuOpen(false)}
         >
@@ -163,25 +268,67 @@ const Navbar = () => {
           </svg>
         </button>
 
-        {navLinks.map((link, i) => (
-          <a key={i} href={link.path} onClick={() => setIsMenuOpen(false)}>
+        {/* MOBILE LINKS */}
+
+        {navLinks.map((link) => (
+          <Link
+            key={link.path}
+            to={link.path}
+            onClick={() => setIsMenuOpen(false)}
+          >
             {link.name}
-          </a>
+          </Link>
         ))}
+
+        {/* PROFILE MOBILE LINK */}
+
+        {user && (
+          <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
+            My Profile
+          </Link>
+        )}
+
+        {/* FAVORITES MOBILE LINK */}
+
+        {user && (
+          <Link
+            to="/favorites"
+            onClick={() => setIsMenuOpen(false)}
+            className="flex items-center gap-2"
+          >
+            My Favorites
+            {favoriteRooms?.length > 0 && (
+              <span className="bg-red-500 text-white text-xs min-w-5 h-5 px-1 rounded-full flex items-center justify-center">
+                {favoriteRooms.length}
+              </span>
+            )}
+          </Link>
+        )}
+
+        {/* OWNER BUTTON */}
 
         {user && (
           <button
-            onClick={() =>
-              isOwner ? navigate("/owner") : setShowHotelReg(true)
-            }
+            type="button"
+            onClick={() => {
+              handleOwnerButton();
+              setIsMenuOpen(false);
+            }}
             className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all"
           >
             {isOwner ? "Admin Dashboard" : "List Your Hotel"}
           </button>
         )}
+
+        {/* LOGIN */}
+
         {!user && (
           <button
-            onClick={openSignIn}
+            type="button"
+            onClick={() => {
+              openSignIn();
+              setIsMenuOpen(false);
+            }}
             className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500"
           >
             Login

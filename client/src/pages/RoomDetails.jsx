@@ -8,7 +8,15 @@ import logo1 from "../assets/logo1.png";
 
 export default function RoomDetails() {
   const { id } = useParams();
-  const { rooms, getToken, axios, navigate } = useAppContext();
+  const {
+    rooms,
+    getToken,
+    axios,
+    navigate,
+    user,
+    toggleFavoriteRoom,
+    isRoomFavorite,
+  } = useAppContext();
   const [room, setRoom] = useState(null);
   const [mainImage, setMainImage] = useState(null);
   const [checkInDate, setCheckInDate] = useState(null);
@@ -139,17 +147,43 @@ export default function RoomDetails() {
               </div>
             </div>
 
-            <div className="text-left lg:text-right border-t lg:border-none pt-4 lg:pt-0 border-slate-200">
-              <span className="text-xs text-slate-400 uppercase tracking-widest block font-medium">
-                From Rate
-              </span>
-              <p className="text-3xl font-inter font-semibold text-slate-950">
-                ${room.pricePerNight}
-                <span className="text-sm font-light text-slate-500 tracking-normal">
-                  {" "}
-                  / night
+            <div className="flex items-center gap-4 border-t lg:border-none pt-4 lg:pt-0 border-slate-200">
+              {/* FAVORITE BUTTON */}
+              {user && (
+                <button
+                  type="button"
+                  onClick={() => toggleFavoriteRoom(room._id)}
+                  className="w-12 h-12 shrink-0 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer"
+                  aria-label={
+                    isRoomFavorite(room._id)
+                      ? "Remove from favorites"
+                      : "Add to favorites"
+                  }
+                >
+                  <i
+                    className={`text-xl transition-all duration-200 ${
+                      isRoomFavorite(room._id)
+                        ? "fa-solid fa-heart text-red-500"
+                        : "fa-regular fa-heart text-slate-600"
+                    }`}
+                  />
+                </button>
+              )}
+
+              {/* PRICE */}
+              <div className="text-left lg:text-right">
+                <span className="text-xs text-slate-400 uppercase tracking-widest block font-medium">
+                  From Rate
                 </span>
-              </p>
+
+                <p className="text-3xl font-inter font-semibold text-slate-950">
+                  ${room.pricePerNight}
+                  <span className="text-sm font-light text-slate-500 tracking-normal">
+                    {" "}
+                    / night
+                  </span>
+                </p>
+              </div>
             </div>
           </div>
         </div>

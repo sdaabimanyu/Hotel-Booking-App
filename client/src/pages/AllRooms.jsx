@@ -79,7 +79,8 @@ const RadioButton = ({ label, selected = false, onChange = () => {} }) => {
 
 export default function AllRooms() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { rooms, navigate, currency } = useAppContext();
+  const { rooms, navigate, currency, favoriteRooms, toggleFavoriteRoom, user } =
+    useAppContext();
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState({
     roomType: [],
@@ -169,6 +170,10 @@ export default function AllRooms() {
     Gym: "fa-solid fa-dumbbell",
   };
 
+  const isRoomFavorite = (roomId) => {
+    return favoriteRooms.some((room) => room._id === roomId);
+  };
+
   return (
     <div className="bg-[#faf9f7] min-h-screen pt-28 lg:pt-36 pb-24 px-4 md:px-16 lg:px-24 antialiased">
       {/* FIX: Used flex-col-reverse so filters render above room layout modules on small viewports */}
@@ -208,6 +213,30 @@ export default function AllRooms() {
                       alt={room.hotel?.name}
                       className="w-full h-full object-cover cursor-pointer group-hover:scale-103 transition-transform duration-500 ease-out"
                     />
+
+                    {user && (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          toggleFavoriteRoom(room._id);
+                        }}
+                        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-md flex items-center justify-center hover:scale-110 transition-all duration-200 cursor-pointer"
+                        aria-label={
+                          isRoomFavorite(room._id)
+                            ? "Remove from favorites"
+                            : "Add to favorites"
+                        }
+                      >
+                        <i
+                          className={`${
+                            isRoomFavorite(room._id)
+                              ? "fa-solid fa-heart text-red-500"
+                              : "fa-regular fa-heart text-slate-600"
+                          } text-lg`}
+                        ></i>
+                      </button>
+                    )}
                   </div>
 
                   {/* Room Text Details & Value Metrics */}
