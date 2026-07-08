@@ -18,7 +18,15 @@ export default function MyBookings() {
       });
 
       if (data.success) {
-        setBookings(data.bookings);
+        // Sort bookings: Newest to Oldest based on createdAt timestamp
+        // (falls back to checkInDate if createdAt isn't provided by your schema)
+        const sortedBookings = [...data.bookings].sort((a, b) => {
+          const dateA = new Date(a.createdAt || a.checkInDate);
+          const dateB = new Date(b.createdAt || b.checkInDate);
+          return dateB - dateA; // Sorts descending (Newest -> Oldest)
+        });
+
+        setBookings(sortedBookings);
       } else {
         toast.error(data.message);
       }
@@ -184,10 +192,10 @@ export default function MyBookings() {
                         <div>
                           <div className="flex flex-wrap items-baseline gap-2">
                             <h2 className="font-playfair text-2xl font-bold text-slate-800 tracking-tight">
-                              {booking.hotel.name}
+                              {booking.hotel?.name}
                             </h2>
                             <span className="font-inter text-xs text-slate-400 font-medium bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md">
-                              {booking.room.roomType}
+                              {booking.room?.roomType}
                             </span>
                           </div>
 
@@ -197,7 +205,7 @@ export default function MyBookings() {
                                 📍
                               </span>
                               <span className="line-clamp-1">
-                                {booking.hotel.address}
+                                {booking.hotel?.address}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
