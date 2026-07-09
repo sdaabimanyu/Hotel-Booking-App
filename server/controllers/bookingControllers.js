@@ -247,6 +247,18 @@ export const getHotelBookings = async (req, res) => {
     const bookings = await Booking.find({ hotel: hotel._id })
       .populate("room hotel user selectedOffer")
       .sort({ createdAt: -1 });
+
+    console.log(
+      "BOOKINGS STATUS DEBUG:",
+      bookings.map((booking) => ({
+        id: booking._id,
+        createdAt: booking.createdAt,
+        checkInDate: booking.checkInDate,
+        checkOutDate: booking.checkOutDate,
+        status: booking.status,
+      })),
+    );
+
     const totalRooms = await Room.countDocuments({
       hotel: hotel._id,
       isDeleted: false,

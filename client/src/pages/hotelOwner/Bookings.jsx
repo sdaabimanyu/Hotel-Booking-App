@@ -35,17 +35,25 @@ export default function Bookings() {
 
   const fetchBookings = async () => {
     try {
-      setLoading(true);
-
-      const token = await getToken();
-
       const { data } = await axios.get("/api/bookings/hotel", {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${await getToken()}`,
         },
       });
 
-      console.log("HOTEL BOOKINGS RESPONSE:", data);
+      console.log("FULL HOTEL BOOKINGS RESPONSE:", data);
+
+      console.log(
+        "BOOKING STATUSES:",
+        data.dashboardData?.bookings?.map((booking) => ({
+          id: booking._id,
+          name: booking.name,
+          createdAt: booking.createdAt,
+          checkInDate: booking.checkInDate,
+          checkOutDate: booking.checkOutDate,
+          status: booking.status,
+        })),
+      );
 
       if (data.success) {
         setBookings(data.dashboardData?.bookings || []);
