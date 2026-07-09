@@ -139,8 +139,21 @@ export default function AllRooms() {
 
   const filteredDestination = (room) => {
     const destination = searchParams.get("destination");
+
     if (!destination) return true;
-    return room.hotel.city.toLowerCase().includes(destination.toLowerCase());
+
+    return room.hotel?.city?.toLowerCase().includes(destination.toLowerCase());
+  };
+
+  const filteredHotel = (room) => {
+    const hotelId = searchParams.get("hotel");
+
+    if (!hotelId) return true;
+
+    const roomHotelId =
+      typeof room.hotel === "object" ? room.hotel?._id : room.hotel;
+
+    return roomHotelId?.toString() === hotelId.toString();
   };
 
   const filteredRooms = useMemo(() => {
@@ -149,7 +162,8 @@ export default function AllRooms() {
         (room) =>
           matchesRoomType(room) &&
           matchesPriceRange(room) &&
-          filteredDestination(room),
+          filteredDestination(room) &&
+          filteredHotel(room),
       )
       .sort(sortRooms);
   }, [rooms, selectedFilters, selectedSort, searchParams]);

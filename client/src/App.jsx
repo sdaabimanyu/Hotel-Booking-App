@@ -27,54 +27,10 @@ import Favorites from "./pages/Favorites";
 
 function App() {
   const isOwnerPath = useLocation().pathname.includes("owner");
-  const { showHotelReg, axios, getToken, rooms } = useAppContext();
+  const { showHotelReg } = useAppContext();
 
-  const testFavoriteHotel = async () => {
-    try {
-      if (rooms.length === 0) {
-        console.log("NO ROOMS AVAILABLE");
-        return;
-      }
-
-      const hotelId = rooms[0].hotel?._id;
-
-      if (!hotelId) {
-        console.log("NO HOTEL ID FOUND");
-        return;
-      }
-
-      console.log("TESTING HOTEL ID:", hotelId);
-
-      const token = await getToken();
-
-      const { data } = await axios.patch(
-        "/api/user/favorites/hotel",
-        {
-          hotelId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      console.log("FAVORITE HOTEL RESPONSE:", data);
-    } catch (error) {
-      console.log(
-        "FAVORITE HOTEL ERROR:",
-        error.response?.data || error.message,
-      );
-    }
-  };
   return (
     <div>
-      <button
-        onClick={testFavoriteHotel}
-        className="fixed top-20 left-5 z-[100] bg-black text-white px-4 py-2"
-      >
-        Test Favorite Hotel
-      </button>
       <Toaster />
       {!isOwnerPath && <Navbar />}
 

@@ -14,8 +14,12 @@ export default function RoomDetails() {
     axios,
     navigate,
     user,
+
     toggleFavoriteRoom,
     isRoomFavorite,
+
+    toggleFavoriteHotel,
+    isHotelFavorite,
   } = useAppContext();
   const [room, setRoom] = useState(null);
   const [mainImage, setMainImage] = useState(null);
@@ -148,26 +152,50 @@ export default function RoomDetails() {
             </div>
 
             <div className="flex items-center gap-4 border-t lg:border-none pt-4 lg:pt-0 border-slate-200">
-              {/* FAVORITE BUTTON */}
+              {/* FAVORITE BUTTONS */}
               {user && (
-                <button
-                  type="button"
-                  onClick={() => toggleFavoriteRoom(room._id)}
-                  className="w-12 h-12 shrink-0 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer"
-                  aria-label={
-                    isRoomFavorite(room._id)
-                      ? "Remove from favorites"
-                      : "Add to favorites"
-                  }
-                >
-                  <i
-                    className={`text-xl transition-all duration-200 ${
-                      isRoomFavorite(room._id)
-                        ? "fa-solid fa-heart text-red-500"
-                        : "fa-regular fa-heart text-slate-600"
-                    }`}
-                  />
-                </button>
+                <div className="flex items-center gap-3">
+                  {/* FAVORITE HOTEL */}
+                  <button
+                    type="button"
+                    onClick={() => toggleFavoriteHotel(room.hotel?._id)}
+                    disabled={!room.hotel?._id}
+                    className="flex items-center gap-2 h-12 px-4 shrink-0 rounded-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <i
+                      className={`text-lg transition-all duration-200 ${
+                        isHotelFavorite(room.hotel?._id)
+                          ? "fa-solid fa-building text-amber-600"
+                          : "fa-regular fa-building text-slate-600"
+                      }`}
+                    />
+
+                    <span className="text-xs font-medium text-slate-700">
+                      {isHotelFavorite(room.hotel?._id)
+                        ? "Hotel Saved"
+                        : "Save Hotel"}
+                    </span>
+                  </button>
+
+                  {/* FAVORITE ROOM */}
+                  <button
+                    type="button"
+                    onClick={() => toggleFavoriteRoom(room._id)}
+                    className="flex items-center gap-2 h-12 px-4 shrink-0 rounded-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer"
+                  >
+                    <i
+                      className={`text-lg transition-all duration-200 ${
+                        isRoomFavorite(room._id)
+                          ? "fa-solid fa-heart text-red-500"
+                          : "fa-regular fa-heart text-slate-600"
+                      }`}
+                    />
+
+                    <span className="text-xs font-medium text-slate-700">
+                      {isRoomFavorite(room._id) ? "Room Saved" : "Save Room"}
+                    </span>
+                  </button>
+                </div>
               )}
 
               {/* PRICE */}

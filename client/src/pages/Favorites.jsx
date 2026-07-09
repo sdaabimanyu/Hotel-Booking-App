@@ -5,6 +5,7 @@ export default function Favorites() {
   const {
     favoriteHotels,
     favoriteRooms,
+    rooms,
     toggleFavoriteHotel,
     toggleFavoriteRoom,
     navigate,
@@ -22,9 +23,27 @@ export default function Favorites() {
     Gym: "fa-solid fa-dumbbell",
   };
 
+  // Find one room belonging to a hotel.
+  // We use that room's first image as the hotel image.
+  const getHotelRoom = (hotelId) => {
+    return rooms.find((room) => {
+      const roomHotelId =
+        typeof room.hotel === "object" ? room.hotel?._id : room.hotel;
+
+      return roomHotelId === hotelId;
+    });
+  };
+
+  // Get hotel image from one of its rooms.
+  const getHotelImage = (hotelId) => {
+    const hotelRoom = getHotelRoom(hotelId);
+
+    return hotelRoom?.images?.[0] || "";
+  };
+
   if (userLoading) {
     return (
-      <div className="min-h-screen pt-36 flex items-center justify-center">
+      <div className="min-h-screen pt-36 flex items-center justify-center bg-[#faf9f7]">
         <p className="text-slate-500">Loading favorites...</p>
       </div>
     );
@@ -35,7 +54,8 @@ export default function Favorites() {
   return (
     <div className="min-h-screen bg-[#faf9f7] pt-32 md:pt-36 pb-24 px-4 md:px-16 lg:px-24 xl:px-32">
       <div className="max-w-7xl mx-auto">
-        {/* HEADER */}
+        {/* ================= HEADER ================= */}
+
         <div className="mb-14">
           <p className="text-xs uppercase tracking-[0.25em] text-amber-600 font-semibold mb-3">
             Your Collection
@@ -51,7 +71,8 @@ export default function Favorites() {
           </p>
         </div>
 
-        {/* NO FAVORITES AT ALL */}
+        {/* ================= NO FAVORITES ================= */}
+
         {noFavorites ? (
           <div className="bg-white border border-slate-100 rounded-3xl py-24 px-6 text-center shadow-sm">
             <div className="w-16 h-16 mx-auto rounded-full bg-slate-50 flex items-center justify-center mb-5">
@@ -76,11 +97,13 @@ export default function Favorites() {
           </div>
         ) : (
           <div className="space-y-20">
-            {/* ======================================== */}
+            {/* ================================================= */}
             {/* FAVORITE HOTELS */}
-            {/* ======================================== */}
+            {/* ================================================= */}
 
             <section>
+              {/* HOTEL HEADER */}
+
               <div className="flex items-end justify-between mb-7">
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.2em] text-amber-600 font-semibold mb-2">
@@ -97,6 +120,8 @@ export default function Favorites() {
                   {favoriteHotels.length === 1 ? "hotel" : "hotels"}
                 </p>
               </div>
+
+              {/* NO FAVORITE HOTELS */}
 
               {favoriteHotels.length === 0 ? (
                 <div className="bg-white border border-dashed border-slate-200 rounded-2xl py-14 px-6 text-center">
@@ -120,73 +145,106 @@ export default function Favorites() {
                   </button>
                 </div>
               ) : (
+                /* HOTEL GRID */
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
-                  {favoriteHotels.map((hotel) => (
-                    <div
-                      key={hotel._id}
-                      className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 group"
-                    >
-                      {/* HOTEL IMAGE */}
-                      <div className="relative h-60 overflow-hidden">
-                        <img
-                          src={hotel.image}
-                          alt={hotel.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
+                  {favoriteHotels.map((hotel) => {
+                    const hotelImage = getHotelImage(hotel._id);
 
-                        {/* REMOVE HOTEL FAVORITE */}
-                        <button
-                          type="button"
-                          onClick={() => toggleFavoriteHotel(hotel._id)}
-                          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md shadow-md flex items-center justify-center hover:scale-110 transition-all cursor-pointer"
-                          aria-label="Remove hotel from favorites"
-                        >
-                          <i className="fa-solid fa-heart text-red-500 text-lg"></i>
-                        </button>
+                    return (
+                      <div
+                        key={hotel._id}
+                        className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 group"
+                      >
+                        {/* HOTEL IMAGE */}
 
-                        <span className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-[11px] font-semibold text-slate-700">
-                          Favorite Hotel
-                        </span>
-                      </div>
+                        <div className="relative h-60 overflow-hidden bg-slate-100">
+                          {hotelImage ? (
+                            <img
+                              src={hotelImage}
+                              alt={hotel.name}
+                              onClick={() =>
+                                navigate(`/rooms?hotel=${hotel._id}`)
+                              }
+                              className="w-full h-full object-cover cursor-pointer group-hover:scale-105 transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                              <i className="fa-regular fa-building text-3xl mb-3"></i>
 
-                      {/* HOTEL INFORMATION */}
-                      <div className="p-6">
-                        <p className="text-[10px] uppercase tracking-widest font-semibold text-amber-600 mb-1">
-                          {hotel.city || "Destination"}
-                        </p>
+                              <p className="text-sm">No image available</p>
+                            </div>
+                          )}
 
-                        <h2 className="font-playfair text-2xl font-semibold text-slate-900">
-                          {hotel.name}
-                        </h2>
+                          {/* REMOVE FAVORITE HOTEL */}
 
-                        <p className="text-xs text-slate-400 mt-2 flex items-center gap-2">
-                          <i className="fa-solid fa-location-dot text-amber-600"></i>
-
-                          <span className="line-clamp-1">
-                            {hotel.address || "Location unavailable"}
-                          </span>
-                        </p>
-
-                        <div className="mt-6 pt-5 border-t border-slate-100">
                           <button
-                            onClick={() => navigate("/rooms")}
-                            className="w-full py-3 rounded-xl bg-slate-950 text-white text-xs hover:bg-amber-600 transition-all cursor-pointer"
+                            type="button"
+                            onClick={() => toggleFavoriteHotel(hotel._id)}
+                            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md shadow-md flex items-center justify-center hover:scale-110 transition-all cursor-pointer"
+                            aria-label="Remove hotel from favorites"
                           >
-                            Explore Rooms
+                            <i className="fa-solid fa-heart text-red-500 text-lg"></i>
                           </button>
+
+                          {/* HOTEL BADGE */}
+
+                          <span className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-[11px] font-semibold text-slate-700">
+                            Favorite Hotel
+                          </span>
+                        </div>
+
+                        {/* HOTEL INFORMATION */}
+
+                        <div className="p-6">
+                          <p className="text-[10px] uppercase tracking-widest font-semibold text-amber-600 mb-1">
+                            {hotel.city || "Destination"}
+                          </p>
+
+                          <h2
+                            onClick={() =>
+                              navigate(`/rooms?hotel=${hotel._id}`)
+                            }
+                            className="font-playfair text-2xl font-semibold text-slate-900 cursor-pointer hover:text-amber-600 transition-colors"
+                          >
+                            {hotel.name}
+                          </h2>
+
+                          <p className="text-xs text-slate-400 mt-2 flex items-center gap-2">
+                            <i className="fa-solid fa-location-dot text-amber-600"></i>
+
+                            <span className="line-clamp-1">
+                              {hotel.address || "Location unavailable"}
+                            </span>
+                          </p>
+
+                          {/* EXPLORE BUTTON */}
+
+                          <div className="mt-6 pt-5 border-t border-slate-100">
+                            <button
+                              onClick={() =>
+                                navigate(`/rooms?hotel=${hotel._id}`)
+                              }
+                              className="w-full py-3 rounded-xl bg-slate-950 text-white text-xs hover:bg-amber-600 transition-all cursor-pointer"
+                            >
+                              Explore Rooms
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </section>
 
-            {/* ======================================== */}
+            {/* ================================================= */}
             {/* FAVORITE ROOMS */}
-            {/* ======================================== */}
+            {/* ================================================= */}
 
             <section>
+              {/* ROOM HEADER */}
+
               <div className="flex items-end justify-between mb-7">
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.2em] text-amber-600 font-semibold mb-2">
@@ -203,6 +261,8 @@ export default function Favorites() {
                   {favoriteRooms.length === 1 ? "room" : "rooms"}
                 </p>
               </div>
+
+              {/* NO FAVORITE ROOMS */}
 
               {favoriteRooms.length === 0 ? (
                 <div className="bg-white border border-dashed border-slate-200 rounded-2xl py-14 px-6 text-center">
@@ -226,6 +286,8 @@ export default function Favorites() {
                   </button>
                 </div>
               ) : (
+                /* ROOM GRID */
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
                   {favoriteRooms.map((room) => (
                     <div
@@ -233,6 +295,7 @@ export default function Favorites() {
                       className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 group"
                     >
                       {/* ROOM IMAGE */}
+
                       <div className="relative h-60 overflow-hidden">
                         <img
                           src={room.images?.[0]}
@@ -242,6 +305,7 @@ export default function Favorites() {
                         />
 
                         {/* REMOVE ROOM FAVORITE */}
+
                         <button
                           type="button"
                           onClick={() => toggleFavoriteRoom(room._id)}
@@ -252,12 +316,14 @@ export default function Favorites() {
                         </button>
 
                         {/* ROOM TYPE */}
+
                         <span className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-[11px] font-semibold text-slate-700">
                           {room.roomType}
                         </span>
                       </div>
 
                       {/* ROOM INFORMATION */}
+
                       <div className="p-6">
                         <p className="text-[10px] uppercase tracking-widest font-semibold text-amber-600 mb-1">
                           {room.hotel?.city || "Destination"}
@@ -279,6 +345,7 @@ export default function Favorites() {
                         </p>
 
                         {/* AMENITIES */}
+
                         <div className="flex flex-wrap gap-2 mt-5">
                           {room.amenities?.slice(0, 3).map((amenity, index) => (
                             <span
@@ -297,7 +364,8 @@ export default function Favorites() {
                           ))}
                         </div>
 
-                        {/* PRICE + VIEW BUTTON */}
+                        {/* PRICE AND VIEW BUTTON */}
+
                         <div className="flex items-end justify-between mt-6 pt-5 border-t border-slate-100">
                           <div>
                             <p className="text-[10px] uppercase tracking-wider text-slate-400">
