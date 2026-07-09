@@ -14,6 +14,7 @@ import connectCloudinary from "./configs/cloudinary.js";
 import { stripeWebHooks } from "./controllers/stripeWebhooks.js";
 import reviewRouter from "./routes/reviewRoutes.js";
 import offerRouter from "./routes/offerRoutes.js";
+import notificationRouter from "./routes/notificationRoutes.js";
 
 dotenv.config();
 
@@ -51,6 +52,7 @@ app.use("/api/rooms", roomRouter);
 app.use("/api/bookings", bookingRouter);
 app.use("/api/reviews", reviewRouter);
 app.use("/api/offers", offerRouter);
+app.use("/api/notifications", notificationRouter);
 
 const PORT = process.env.PORT || 3000;
 
