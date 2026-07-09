@@ -133,6 +133,12 @@ export const createBooking = async (req, res) => {
       selectedOffer,
     });
 
+    console.log("NEW BOOKING CREATED:", {
+      id: booking._id,
+      status: booking.status,
+      createdAt: booking.createdAt,
+    });
+
     const mailOptions = {
       from: process.env.SENDER_EMAIL,
       to: req.user.email,
