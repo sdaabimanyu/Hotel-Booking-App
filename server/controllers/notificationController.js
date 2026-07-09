@@ -2,6 +2,18 @@ import Booking from "../models/Booking.js";
 import transporter from "../configs/nodemailer.js";
 
 export const sendUpcomingBookingReminders = async (req, res) => {
+  // ==========================================
+  // VERIFY CRON REQUEST
+  // ==========================================
+
+  const authHeader = req.headers.authorization;
+
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized cron request",
+    });
+  }
   try {
     // ==========================================
     // 1. CREATE TOMORROW DATE RANGE
