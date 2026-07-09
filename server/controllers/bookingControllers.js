@@ -425,18 +425,129 @@ export const updateBookingStatus = async (req, res) => {
   try {
     const { bookingId, status } = req.body;
 
-    const booking = await Booking.findByIdAndUpdate(
-      bookingId,
-      { status },
-      { new: true },
-    );
+    // ==========================================
+    // 1. VALIDATE REQUIRED DATA
+    // ==========================================
 
-    res.json({
+    if (!bookingId || !status) {
+      return res.status(400).json({
+        success: false,
+        message: "Booking ID and status are required",
+      });
+    }
+
+    // ==========================================
+    // 2. FIND HOTEL OWNED BY LOGGED-IN USER
+    // ==========================================
+
+    const hotel = await Hotel.findOne({
+      owner: req.user._id,
+    });
+
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: "No hotel found for this owner",
+      });
+    }
+
+    // ==========================================
+    // 3. FIND BOOKING
+    // ==========================================
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    // ==========================================
+    // 4. VERIFY BOOKING BELONGS TO OWNER'S HOTEL
+    // ==========================================
+
+    if (booking.hotel.toString() !== hotel._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to update this booking",
+      });
+    }
+
+    // ==========================================
+    // 5. VALID BOOKING STATUSES
+    // ==========================================
+
+    const validStatuses = [
+      "pending",
+      "confirmed",
+      "checked-in",
+      "checked-out",
+      "cancelled",
+    ];
+
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid booking status",
+      });
+    }
+
+    // ==========================================
+    // 6. ALLOWED STATUS TRANSITIONS
+    // ==========================================
+
+    const allowedTransitions = {
+      pending: ["confirmed", "cancelled"],
+
+      confirmed: ["checked-in", "cancelled"],
+
+      "checked-in": ["checked-out"],
+
+      "checked-out": [],
+
+      cancelled: [],
+    };
+
+    const currentStatus = booking.status;
+
+    const allowedNextStatuses = allowedTransitions[currentStatus];
+
+    if (!allowedNextStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot change booking status from ${currentStatus} to ${status}`,
+      });
+    }
+
+    // ==========================================
+    // 7. UPDATE BOOKING STATUS
+    // ==========================================
+
+    booking.status = status;
+
+    await booking.save();
+
+    // ==========================================
+    // 8. POPULATE UPDATED BOOKING
+    // ==========================================
+
+    await booking.populate("room hotel user selectedOffer");
+
+    // ==========================================
+    // 9. SEND RESPONSE
+    // ==========================================
+
+    return res.json({
       success: true,
+      message: `Booking status updated to ${status}`,
       booking,
     });
   } catch (error) {
-    res.json({
+    console.log("UPDATE BOOKING STATUS ERROR:", error);
+
+    return res.status(500).json({
       success: false,
       message: error.message,
     });

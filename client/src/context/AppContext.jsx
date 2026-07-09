@@ -21,6 +21,7 @@ export const AppProvider = ({ children }) => {
   const [rooms, setRooms] = useState([]);
   const [favoriteRooms, setFavoriteRooms] = useState([]);
   const [favoriteHotels, setFavoriteHotels] = useState([]);
+  const [userProfile, setUserProfile] = useState(null);
 
   const fetchRooms = async () => {
     try {
@@ -168,6 +169,31 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  const fetchUserProfile = async () => {
+    try {
+      if (!user) return;
+
+      const token = await getToken();
+
+      const { data } = await axios.get("/api/user/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("USER PROFILE RESPONSE:", data);
+
+      if (data.success) {
+        setUserProfile(data.user);
+      }
+    } catch (error) {
+      console.log(
+        "FETCH USER PROFILE ERROR:",
+        error.response?.data || error.message,
+      );
+    }
+  };
+
   const isRoomFavorite = (roomId) => {
     return favoriteRooms.some((room) => room._id === roomId);
   };
@@ -181,23 +207,22 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    // Clerk has not finished checking authentication yet
     if (!isLoaded) {
       return;
     }
 
-    // Clerk finished, and there is no logged-in user
     if (!user) {
       setIsowner(false);
       setFavoriteRooms([]);
       setFavoriteHotels([]);
+      setUserProfile(null);
       setUserLoading(false);
       return;
     }
 
-    // Clerk finished, and user exists
     fetchUser();
     fetchFavorites();
+    fetchUserProfile();
   }, [user, isLoaded]);
 
   const value = {
@@ -209,6 +234,7 @@ export const AppProvider = ({ children }) => {
 
     isOwner,
     setIsowner,
+    userLoading,
 
     showHotelReg,
     setShowHotelReg,
@@ -224,6 +250,10 @@ export const AppProvider = ({ children }) => {
 
     favoriteHotels,
     setFavoriteHotels,
+
+    userProfile,
+    setUserProfile,
+    fetchUserProfile,
 
     fetchFavorites,
 
