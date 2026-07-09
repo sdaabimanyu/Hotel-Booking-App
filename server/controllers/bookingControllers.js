@@ -600,7 +600,11 @@ export const markBookingAsPaid = async (req, res) => {
     }
 
     // 3. FIND BOOKING
-    const booking = await Booking.findById(bookingId);
+    const booking = await Booking.findById(bookingId)
+      .populate("room")
+      .populate("hotel")
+      .populate("user")
+      .populate("selectedOffer");
 
     if (!booking) {
       return res.status(404).json({
@@ -610,7 +614,7 @@ export const markBookingAsPaid = async (req, res) => {
     }
 
     // 4. VERIFY BOOKING BELONGS TO OWNER'S HOTEL
-    if (booking.hotel.toString() !== hotel._id.toString()) {
+    if (booking.hotel._id.toString() !== hotel._id.toString()) {
       return res.status(403).json({
         success: false,
         message: "You are not authorized to update this booking",
@@ -625,6 +629,7 @@ export const markBookingAsPaid = async (req, res) => {
       });
     }
 
+    // 6. CASH PAYMENT CAN ONLY BE RECORDED AFTER CHECK-IN
     if (booking.status !== "checked-in") {
       return res.status(400).json({
         success: false,
@@ -632,17 +637,107 @@ export const markBookingAsPaid = async (req, res) => {
       });
     }
 
-    // 6. MARK BOOKING AS PAID
+    // 7. MARK BOOKING AS PAID
     booking.isPaid = true;
     booking.paymentMethod = "cash";
     booking.paidAt = new Date();
 
     await booking.save();
 
-    // 7. POPULATE UPDATED BOOKING
-    await booking.populate("room hotel user selectedOffer");
+    console.log("CASH BOOKING SAVED:", {
+      bookingId: booking._id,
+      isPaid: booking.isPaid,
+      paymentMethod: booking.paymentMethod,
+      email: booking.email,
+    });
 
-    // 8. SEND RESPONSE
+    // 8. SEND CASH PAYMENT RECEIPT EMAIL
+    try {
+      console.log("SENDING CASH RECEIPT TO:", booking.email);
+
+      const mailOptions = {
+        from: process.env.SENDER_EMAIL,
+        to: booking.email,
+        subject: "Payment Receipt - Hotel Booking",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
+            
+            <h2 style="color: #16a34a;">
+              Payment Received Successfully
+            </h2>
+
+            <p>Dear ${booking.name},</p>
+
+            <p>
+              We have successfully received your cash payment for your hotel booking.
+            </p>
+
+            <h3>Payment Details</h3>
+
+            <ul>
+              <li>
+                <strong>Booking ID:</strong>
+                ${booking._id}
+              </li>
+
+              <li>
+                <strong>Hotel:</strong>
+                ${booking.hotel.name}
+              </li>
+
+              <li>
+                <strong>Room:</strong>
+                ${booking.room.roomType}
+              </li>
+
+              <li>
+                <strong>Check-In:</strong>
+                ${new Date(booking.checkInDate).toDateString()}
+              </li>
+
+              <li>
+                <strong>Check-Out:</strong>
+                ${new Date(booking.checkOutDate).toDateString()}
+              </li>
+
+              <li>
+                <strong>Amount Paid:</strong>
+                ${process.env.CURRENCY || "$"}${booking.totalPrice.toFixed(2)}
+              </li>
+
+              <li>
+                <strong>Payment Method:</strong>
+                Cash
+              </li>
+
+              <li>
+                <strong>Payment Date:</strong>
+                ${new Date(booking.paidAt).toLocaleString()}
+              </li>
+            </ul>
+
+            <p>
+              Thank you for choosing ${booking.hotel.name}.
+            </p>
+
+            <p>
+              We hope you enjoy your stay!
+            </p>
+
+          </div>
+        `,
+      };
+
+      const emailInfo = await transporter.sendMail(mailOptions);
+
+      console.log("CASH PAYMENT RECEIPT EMAIL SENT TO:", booking.email);
+
+      console.log("EMAIL MESSAGE ID:", emailInfo.messageId);
+    } catch (emailError) {
+      console.log("CASH PAYMENT RECEIPT EMAIL ERROR:", emailError.message);
+    }
+
+    // 9. SEND SUCCESS RESPONSE
     return res.json({
       success: true,
       message: "Cash payment marked as paid successfully",
