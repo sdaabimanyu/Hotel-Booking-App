@@ -572,6 +572,92 @@ export const updateBookingStatus = async (req, res) => {
   }
 };
 
+// API TO MARK CASH / PAY AT HOTEL BOOKING AS PAID
+// PUT /api/bookings/mark-paid
+
+export const markBookingAsPaid = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+
+    // 1. VALIDATE BOOKING ID
+    if (!bookingId) {
+      return res.status(400).json({
+        success: false,
+        message: "Booking ID is required",
+      });
+    }
+
+    // 2. FIND HOTEL OWNED BY LOGGED-IN USER
+    const hotel = await Hotel.findOne({
+      owner: req.user._id,
+    });
+
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: "No hotel found for this owner",
+      });
+    }
+
+    // 3. FIND BOOKING
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    // 4. VERIFY BOOKING BELONGS TO OWNER'S HOTEL
+    if (booking.hotel.toString() !== hotel._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to update this booking",
+      });
+    }
+
+    // 5. CHECK IF ALREADY PAID
+    if (booking.isPaid) {
+      return res.status(400).json({
+        success: false,
+        message: "Booking is already paid",
+      });
+    }
+
+    if (booking.status !== "checked-in") {
+      return res.status(400).json({
+        success: false,
+        message: "Cash payment can only be recorded after guest check-in",
+      });
+    }
+
+    // 6. MARK BOOKING AS PAID
+    booking.isPaid = true;
+    booking.paymentMethod = "cash";
+    booking.paidAt = new Date();
+
+    await booking.save();
+
+    // 7. POPULATE UPDATED BOOKING
+    await booking.populate("room hotel user selectedOffer");
+
+    // 8. SEND RESPONSE
+    return res.json({
+      success: true,
+      message: "Cash payment marked as paid successfully",
+      booking,
+    });
+  } catch (error) {
+    console.log("MARK BOOKING AS PAID ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const cancelBooking = async (req, res) => {
   try {
     const { bookingId } = req.body;

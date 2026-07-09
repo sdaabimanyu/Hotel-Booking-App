@@ -1,14 +1,23 @@
 import { useEffect, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
-import { Calendar, User, CreditCard, ChevronDown } from "lucide-react";
+import {
+  Calendar,
+  User,
+  CreditCard,
+  ChevronDown,
+  Banknote,
+} from "lucide-react";
 
 export default function Bookings() {
   const { axios, getToken, currency } = useAppContext();
 
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const [updatingBookingId, setUpdatingBookingId] = useState(null);
+
+  const [markingPaidBookingId, setMarkingPaidBookingId] = useState(null);
 
   // ==========================================
   // FETCH HOTEL BOOKINGS
@@ -71,7 +80,6 @@ export default function Bookings() {
       if (data.success) {
         toast.success(data.message || "Booking status updated");
 
-        // Update only the changed booking in frontend state
         setBookings((previousBookings) =>
           previousBookings.map((booking) =>
             booking._id === bookingId
@@ -96,6 +104,57 @@ export default function Bookings() {
       );
     } finally {
       setUpdatingBookingId(null);
+    }
+  };
+
+  // ==========================================
+  // MARK CASH PAYMENT AS PAID
+  // ==========================================
+
+  const markAsPaid = async (bookingId) => {
+    try {
+      setMarkingPaidBookingId(bookingId);
+
+      const token = await getToken();
+
+      const { data } = await axios.put(
+        "/api/bookings/mark-paid",
+        {
+          bookingId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      console.log("MARK AS PAID RESPONSE:", data);
+
+      if (data.success) {
+        toast.success(data.message || "Payment marked as paid");
+
+        setBookings((previousBookings) =>
+          previousBookings.map((booking) =>
+            booking._id === bookingId
+              ? {
+                  ...booking,
+                  isPaid: true,
+                  paymentMethod: data.booking?.paymentMethod || "cash",
+                  paidAt: data.booking?.paidAt || new Date().toISOString(),
+                }
+              : booking,
+          ),
+        );
+      } else {
+        toast.error(data.message || "Failed to update payment");
+      }
+    } catch (error) {
+      console.log("MARK AS PAID ERROR:", error.response?.data || error.message);
+
+      toast.error(error.response?.data?.message || "Failed to update payment");
+    } finally {
+      setMarkingPaidBookingId(null);
     }
   };
 
@@ -197,6 +256,30 @@ export default function Bookings() {
   };
 
   // ==========================================
+  // FORMAT PAYMENT METHOD
+  // ==========================================
+
+  const formatPaymentMethod = (paymentMethod) => {
+    if (!paymentMethod) {
+      return "";
+    }
+
+    if (paymentMethod.toLowerCase() === "cash") {
+      return "Cash";
+    }
+
+    if (paymentMethod.toLowerCase() === "stripe") {
+      return "Stripe";
+    }
+
+    if (paymentMethod.toLowerCase() === "pay at hotel") {
+      return "Pay at Hotel";
+    }
+
+    return paymentMethod;
+  };
+
+  // ==========================================
   // LOADING
   // ==========================================
 
@@ -212,7 +295,9 @@ export default function Bookings() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
+      {/* ====================================== */}
       {/* HEADER */}
+      {/* ====================================== */}
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
@@ -221,7 +306,7 @@ export default function Bookings() {
           </h1>
 
           <p className="text-gray-500 text-sm mt-1">
-            Manage incoming room reservations, track check-ins, and update
+            Manage incoming room reservations, track check-ins, payments, and
             reservation status records.
           </p>
         </div>
@@ -232,7 +317,9 @@ export default function Bookings() {
         </div>
       </div>
 
+      {/* ====================================== */}
       {/* BOOKINGS */}
+      {/* ====================================== */}
 
       <div className="space-y-4">
         {bookings.length === 0 ? (
@@ -247,13 +334,22 @@ export default function Bookings() {
               booking.status === "checked-out" ||
               booking.status === "cancelled";
 
+            const isUpdatingStatus = updatingBookingId === booking._id;
+
+            const isMarkingPaid = markingPaidBookingId === booking._id;
+
+            const canMarkAsPaid =
+              !booking.isPaid && booking.status === "checked-in";
+
             return (
               <div
                 key={booking._id}
                 className="bg-white border border-gray-100 shadow-sm rounded-xl p-6 hover:shadow-md transition-all duration-200"
               >
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                  {/* ================================== */}
                   {/* GUEST + ROOM */}
+                  {/* ================================== */}
 
                   <div className="flex items-start gap-4 flex-1">
                     <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
@@ -280,9 +376,13 @@ export default function Bookings() {
                     </div>
                   </div>
 
+                  {/* ================================== */}
                   {/* DATES */}
+                  {/* ================================== */}
 
                   <div className="grid grid-cols-2 gap-x-8 gap-y-2 max-w-sm w-full lg:px-6 lg:border-x lg:border-gray-100">
+                    {/* CHECK IN */}
+
                     <div className="space-y-0.5">
                       <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
                         Check-In
@@ -301,6 +401,8 @@ export default function Bookings() {
                         )}
                       </div>
                     </div>
+
+                    {/* CHECK OUT */}
 
                     <div className="space-y-0.5">
                       <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
@@ -322,28 +424,59 @@ export default function Bookings() {
                     </div>
                   </div>
 
+                  {/* ================================== */}
                   {/* PAYMENT + STATUS */}
+                  {/* ================================== */}
 
-                  <div className="flex items-center justify-between lg:justify-end gap-6 w-full lg:w-auto pt-4 lg:pt-0 border-t lg:border-t-0 border-gray-50">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between lg:justify-end gap-5 w-full lg:w-auto pt-4 lg:pt-0 border-t lg:border-t-0 border-gray-50">
+                    {/* ================================== */}
                     {/* PAYMENT */}
+                    {/* ================================== */}
 
-                    <div className="space-y-0.5">
+                    <div className="space-y-2 min-w-[110px]">
                       <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
                         Payment
                       </span>
 
-                      <span
-                        className={`inline-flex items-center text-xs font-semibold rounded-full px-2.5 py-0.5 ${
-                          booking.isPaid
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-amber-100 text-amber-800"
-                        }`}
-                      >
-                        {booking.isPaid ? "Paid" : "Unpaid"}
-                      </span>
+                      <div>
+                        <span
+                          className={`inline-flex items-center text-xs font-semibold rounded-full px-2.5 py-0.5 ${
+                            booking.isPaid
+                              ? "bg-emerald-100 text-emerald-800"
+                              : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {booking.isPaid ? "Paid" : "Unpaid"}
+                        </span>
+                      </div>
+
+                      {/* PAYMENT METHOD */}
+
+                      {booking.isPaid && booking.paymentMethod && (
+                        <p className="text-[10px] text-gray-400">
+                          {formatPaymentMethod(booking.paymentMethod)}
+                        </p>
+                      )}
+
+                      {/* MARK AS PAID BUTTON */}
+
+                      {canMarkAsPaid && (
+                        <button
+                          type="button"
+                          disabled={isMarkingPaid}
+                          onClick={() => markAsPaid(booking._id)}
+                          className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 disabled:text-gray-400 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                        >
+                          <Banknote className="w-3.5 h-3.5" />
+
+                          {isMarkingPaid ? "Updating..." : "Mark as Paid"}
+                        </button>
+                      )}
                     </div>
 
+                    {/* ================================== */}
                     {/* BOOKING STATUS */}
+                    {/* ================================== */}
 
                     <div className="relative inline-block w-40">
                       <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">
@@ -362,7 +495,7 @@ export default function Bookings() {
                         <div className="relative">
                           <select
                             value={booking.status}
-                            disabled={updatingBookingId === booking._id}
+                            disabled={isUpdatingStatus}
                             onChange={(event) => {
                               const newStatus = event.target.value;
 
