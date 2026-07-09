@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useClerk, UserButton } from "@clerk/clerk-react";
 import { useAppContext } from "../context/AppContext";
+import { Bell } from "lucide-react";
 
 const Navbar = () => {
   const navLinks = [
@@ -15,9 +16,13 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Notification states
+  // ==========================================
+  // NOTIFICATION STATES
+  // ==========================================
+
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const { openSignIn } = useClerk();
 
@@ -33,9 +38,9 @@ const Navbar = () => {
     getToken,
   } = useAppContext();
 
-  // --------------------------------------------------
+  // ==========================================
   // HANDLE NAVBAR BACKGROUND WHEN SCROLLING
-  // --------------------------------------------------
+  // ==========================================
 
   useEffect(() => {
     const handleScroll = () => {
@@ -55,18 +60,20 @@ const Navbar = () => {
     };
   }, [location.pathname]);
 
-  // --------------------------------------------------
+  // ==========================================
   // SCROLL TO TOP WHEN ROUTE CHANGES
-  // --------------------------------------------------
+  // ==========================================
 
   useEffect(() => {
     window.scrollTo(0, 0);
+
     setIsMenuOpen(false);
+    setShowNotifications(false);
   }, [location.pathname]);
 
-  // --------------------------------------------------
+  // ==========================================
   // FETCH USER NOTIFICATIONS
-  // --------------------------------------------------
+  // ==========================================
 
   const fetchNotifications = async () => {
     try {
@@ -81,7 +88,8 @@ const Navbar = () => {
       console.log("NOTIFICATION RESPONSE:", data);
 
       if (data.success) {
-        setNotifications(data.notifications);
+        setNotifications(data.notifications || []);
+        setUnreadCount(data.unreadCount || 0);
       }
     } catch (error) {
       console.log(
@@ -91,21 +99,23 @@ const Navbar = () => {
     }
   };
 
-  // --------------------------------------------------
+  // ==========================================
   // LOAD NOTIFICATIONS
-  // --------------------------------------------------
+  // ==========================================
 
   useEffect(() => {
     if (user) {
       fetchNotifications();
     } else {
       setNotifications([]);
+      setUnreadCount(0);
+      setShowNotifications(false);
     }
   }, [user]);
 
-  // --------------------------------------------------
+  // ==========================================
   // OWNER / LIST HOTEL BUTTON
-  // --------------------------------------------------
+  // ==========================================
 
   const handleOwnerButton = () => {
     if (isOwner) {
@@ -123,9 +133,9 @@ const Navbar = () => {
           : "py-4 md:py-6"
       }`}
     >
-      {/* ==================================================
+      {/* ==========================================
           LOGO
-      ================================================== */}
+      ========================================== */}
 
       <Link to="/" className="flex items-center gap-x-2">
         <h1
@@ -137,9 +147,9 @@ const Navbar = () => {
         </h1>
       </Link>
 
-      {/* ==================================================
+      {/* ==========================================
           DESKTOP NAVIGATION
-      ================================================== */}
+      ========================================== */}
 
       <div className="hidden md:flex items-center gap-4 lg:gap-8">
         {navLinks.map((link) => (
@@ -172,49 +182,81 @@ const Navbar = () => {
         )}
       </div>
 
-      {/* ==================================================
+      {/* ==========================================
           DESKTOP RIGHT SIDE
-      ================================================== */}
+      ========================================== */}
 
-      <div className="hidden md:flex items-center gap-4">
+      <div className="hidden md:flex items-center gap-5">
         {user ? (
-          <UserButton>
-            <UserButton.MenuItems>
-              {/* MY PROFILE */}
+          <>
+            {/* ==========================================
+                NOTIFICATION BELL
+            ========================================== */}
 
-              <UserButton.Action
-                label="My Profile"
-                labelIcon={<i className="fa-solid fa-user"></i>}
-                onClick={() => navigate("/profile")}
-              />
-
-              {/* FAVORITES */}
-
-              <UserButton.Action
-                label={`My Favorites (${favoriteRooms?.length || 0})`}
-                labelIcon={<i className="fa-solid fa-heart"></i>}
-                onClick={() => navigate("/favorites")}
-              />
-
-              {/* MY BOOKINGS */}
-
-              <UserButton.Action
-                label="My Bookings"
-                labelIcon={<i className="fa-solid fa-book"></i>}
-                onClick={() => navigate("/my-bookings")}
-              />
-
-              {/* ADMIN DASHBOARD */}
-
-              {isOwner && (
-                <UserButton.Action
-                  label="Admin Dashboard"
-                  labelIcon={<i className="fa-solid fa-hotel"></i>}
-                  onClick={() => navigate("/owner")}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowNotifications((previous) => !previous)}
+                className="relative flex items-center justify-center cursor-pointer"
+              >
+                <Bell
+                  className={`w-6 h-6 ${
+                    isScrolled ? "text-gray-700" : "text-white"
+                  }`}
                 />
-              )}
-            </UserButton.MenuItems>
-          </UserButton>
+
+                {/* UNREAD COUNT BADGE */}
+
+                {unreadCount > 0 && (
+                  <span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 flex items-center justify-center bg-red-500 text-white text-xs font-semibold rounded-full">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* ==========================================
+                CLERK USER BUTTON
+            ========================================== */}
+
+            <UserButton>
+              <UserButton.MenuItems>
+                {/* MY PROFILE */}
+
+                <UserButton.Action
+                  label="My Profile"
+                  labelIcon={<i className="fa-solid fa-user"></i>}
+                  onClick={() => navigate("/profile")}
+                />
+
+                {/* FAVORITES */}
+
+                <UserButton.Action
+                  label={`My Favorites (${favoriteRooms?.length || 0})`}
+                  labelIcon={<i className="fa-solid fa-heart"></i>}
+                  onClick={() => navigate("/favorites")}
+                />
+
+                {/* MY BOOKINGS */}
+
+                <UserButton.Action
+                  label="My Bookings"
+                  labelIcon={<i className="fa-solid fa-book"></i>}
+                  onClick={() => navigate("/my-bookings")}
+                />
+
+                {/* ADMIN DASHBOARD */}
+
+                {isOwner && (
+                  <UserButton.Action
+                    label="Admin Dashboard"
+                    labelIcon={<i className="fa-solid fa-hotel"></i>}
+                    onClick={() => navigate("/owner")}
+                  />
+                )}
+              </UserButton.MenuItems>
+            </UserButton>
+          </>
         ) : (
           <button
             onClick={openSignIn}
@@ -227,11 +269,37 @@ const Navbar = () => {
         )}
       </div>
 
-      {/* ==================================================
+      {/* ==========================================
           MOBILE RIGHT SIDE
-      ================================================== */}
+      ========================================== */}
 
-      <div className="flex items-center gap-3 md:hidden">
+      <div className="flex items-center gap-4 md:hidden">
+        {/* MOBILE NOTIFICATION BELL */}
+
+        {user && (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowNotifications((previous) => !previous)}
+              className="relative flex items-center justify-center cursor-pointer"
+            >
+              <Bell
+                className={`w-6 h-6 ${
+                  isScrolled ? "text-gray-700" : "text-white"
+                }`}
+              />
+
+              {unreadCount > 0 && (
+                <span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 flex items-center justify-center bg-red-500 text-white text-xs font-semibold rounded-full">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* MOBILE USER BUTTON */}
+
         {user && (
           <UserButton>
             <UserButton.MenuItems>
@@ -290,9 +358,9 @@ const Navbar = () => {
         </svg>
       </div>
 
-      {/* ==================================================
+      {/* ==========================================
           MOBILE MENU
-      ================================================== */}
+      ========================================== */}
 
       <div
         className={`fixed top-0 left-0 w-full h-screen bg-white text-base flex flex-col md:hidden items-center justify-center gap-6 font-medium text-gray-800 transition-all duration-500 ${
