@@ -99,7 +99,7 @@ export const stripeWebHooks = async (req, res) => {
       }
 
       // ==========================================
-      // 7. UPDATE PAYMENT
+      // 7. UPDATE STRIPE PAYMENT
       // ==========================================
 
       booking.isPaid = true;
@@ -115,7 +115,7 @@ export const stripeWebHooks = async (req, res) => {
       console.log("STRIPE BOOKING UPDATED:", booking._id);
 
       // ==========================================
-      // 8. SEND PAYMENT RECEIPT EMAIL
+      // 8. SEND STRIPE PAYMENT RECEIPT EMAIL
       // ==========================================
 
       const mailOptions = {
@@ -123,52 +123,92 @@ export const stripeWebHooks = async (req, res) => {
 
         to: booking.email,
 
-        subject: "Cash Payment Receipt - Hotel Booking",
+        subject: "Stripe Payment Receipt - Hotel Booking",
 
         html: `
-    <h2>Payment Received</h2>
+          <div
+            style="
+              max-width: 650px;
+              margin: auto;
+              padding: 30px;
+              font-family: Arial, sans-serif;
+              color: #222;
+            "
+          >
+            <h2 style="color: #16a34a;">
+              Payment Received Successfully
+            </h2>
 
-    <p>Dear ${booking.name},</p>
+            <p>
+              Dear ${booking.name},
+            </p>
 
-    <p>
-      We have successfully received your cash payment.
-    </p>
+            <p>
+              We have successfully received your online payment
+              for your hotel booking.
+            </p>
 
-    <h3>Payment Receipt</h3>
+            <h3>Payment Details</h3>
 
-    <ul>
+            <ul style="line-height: 1.8;">
 
-      <li>
-        <strong>Booking ID:</strong>
-        ${booking._id}
-      </li>
+              <li>
+                <strong>Booking ID:</strong>
+                ${booking._id}
+              </li>
 
-      <li>
-        <strong>Amount Paid:</strong>
-        ${process.env.CURRENCY || "$"}${booking.totalPrice.toFixed(2)}
-      </li>
+              <li>
+                <strong>Hotel:</strong>
+                ${booking.hotel?.name || "Hotel"}
+              </li>
 
-      <li>
-        <strong>Payment Method:</strong>
-        Cash
-      </li>
+              <li>
+                <strong>Room:</strong>
+                ${booking.room?.roomType || "Room"}
+              </li>
 
-      <li>
-        <strong>Payment Date:</strong>
-        ${booking.paidAt.toDateString()}
-      </li>
+              <li>
+                <strong>Check-In:</strong>
+                ${new Date(booking.checkInDate).toDateString()}
+              </li>
 
-    </ul>
+              <li>
+                <strong>Check-Out:</strong>
+                ${new Date(booking.checkOutDate).toDateString()}
+              </li>
 
-    <p>
-      Thank you for your payment. We hope you enjoy your stay.
-    </p>
-  `,
+              <li>
+                <strong>Amount Paid:</strong>
+                ${process.env.CURRENCY || "$"}${booking.totalPrice.toFixed(2)}
+              </li>
+
+              <li>
+                <strong>Payment Method:</strong>
+                ${booking.paymentMethod}
+              </li>
+
+              <li>
+                <strong>Payment Date:</strong>
+                ${booking.paidAt.toLocaleString()}
+              </li>
+
+            </ul>
+
+            <p>
+              Thank you for choosing
+              ${booking.hotel?.name || "our hotel"}.
+            </p>
+
+            <p>
+              We hope you enjoy your stay!
+            </p>
+          </div>
+        `,
       };
 
       await transporter.sendMail(mailOptions);
 
-      console.log("CASH PAYMENT RECEIPT EMAIL SENT TO:", booking.email);
+      console.log("STRIPE PAYMENT RECEIPT EMAIL SENT TO:", booking.email);
     }
 
     // ==========================================
