@@ -112,6 +112,12 @@ export const stripeWebHooks = async (req, res) => {
 
       await booking.save();
 
+      console.log("STRIPE BOOKING UPDATED:", booking._id);
+
+      // ==========================================
+      // 8. SEND PAYMENT RECEIPT EMAIL
+      // ==========================================
+
       const mailOptions = {
         from: process.env.SENDER_EMAIL,
 
@@ -163,83 +169,6 @@ export const stripeWebHooks = async (req, res) => {
       await transporter.sendMail(mailOptions);
 
       console.log("CASH PAYMENT RECEIPT EMAIL SENT TO:", booking.email);
-
-      console.log("STRIPE BOOKING UPDATED:", booking._id);
-
-      // ==========================================
-      // 8. SEND PAYMENT RECEIPT EMAIL
-      // ==========================================
-
-      const mailOptions = {
-        from: process.env.SENDER_EMAIL,
-
-        to: booking.email,
-
-        subject: "Payment Receipt - Hotel Booking",
-
-        html: `
-          <h2>Payment Successful</h2>
-
-          <p>Dear ${booking.name},</p>
-
-          <p>
-            Your payment has been received successfully.
-          </p>
-
-          <h3>Payment Receipt</h3>
-
-          <ul>
-
-            <li>
-              <strong>Booking ID:</strong>
-              ${booking._id}
-            </li>
-
-            <li>
-              <strong>Hotel:</strong>
-              ${booking.hotel?.name || "Hotel"}
-            </li>
-
-            <li>
-              <strong>Room:</strong>
-              ${booking.room?.roomType || "Room"}
-            </li>
-
-            <li>
-              <strong>Check-In:</strong>
-              ${new Date(booking.checkInDate).toDateString()}
-            </li>
-
-            <li>
-              <strong>Check-Out:</strong>
-              ${new Date(booking.checkOutDate).toDateString()}
-            </li>
-
-            <li>
-              <strong>Amount Paid:</strong>
-              ${process.env.CURRENCY || "$"}${booking.totalPrice.toFixed(2)}
-            </li>
-
-            <li>
-              <strong>Payment Method:</strong>
-              Stripe
-            </li>
-
-          </ul>
-
-          <p>
-            Your booking is now confirmed.
-          </p>
-
-          <p>
-            Thank you for choosing our hotel.
-          </p>
-        `,
-      };
-
-      await transporter.sendMail(mailOptions);
-
-      console.log("STRIPE PAYMENT RECEIPT EMAIL SENT TO:", booking.email);
     }
 
     // ==========================================
