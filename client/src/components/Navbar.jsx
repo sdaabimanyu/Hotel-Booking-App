@@ -265,19 +265,26 @@ const Navbar = () => {
   // ==========================================
 
   const handleNotificationClick = async (notification) => {
+    console.log("NOTIFICATION CLICKED:", notification);
+
     if (!notification.isRead) {
+      console.log("MARKING AS READ:", notification._id);
+
       await markNotificationAsRead(notification._id);
     }
 
-    setShowNotifications(false);
+    console.log("RELATED BOOKING:", notification.relatedBooking);
 
     if (notification.relatedBooking) {
+      setShowNotifications(false);
       navigate("/my-bookings");
       return;
     }
 
     if (notification.relatedOffer) {
+      setShowNotifications(false);
       navigate("/offers");
+      return;
     }
   };
 
