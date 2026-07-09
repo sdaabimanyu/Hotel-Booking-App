@@ -236,3 +236,46 @@ export const getUserNotifications = async (req, res) => {
     });
   }
 };
+
+// ==========================================
+// MARK NOTIFICATION AS READ
+// ==========================================
+
+export const markNotificationAsRead = async (req, res) => {
+  try {
+    const { notificationId } = req.params;
+
+    const notification = await Notification.findOneAndUpdate(
+      {
+        _id: notificationId,
+        user: req.user._id,
+      },
+      {
+        isRead: true,
+      },
+      {
+        new: true,
+      },
+    );
+
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message: "Notification not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Notification marked as read",
+      notification,
+    });
+  } catch (error) {
+    console.log("MARK NOTIFICATION READ ERROR:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
