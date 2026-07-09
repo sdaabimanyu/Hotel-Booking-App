@@ -1,4 +1,5 @@
 import Booking from "../models/Booking.js";
+import Notification from "../models/Notification.js";
 import transporter from "../configs/nodemailer.js";
 
 export const sendUpcomingBookingReminders = async (req, res) => {
@@ -163,6 +164,21 @@ export const sendUpcomingBookingReminders = async (req, res) => {
         // 5. MARK REMINDER AS SENT
         // ==========================================
 
+        // CREATE IN-APP BOOKING REMINDER
+        await Notification.create({
+          user: booking.user,
+
+          type: "booking_reminder",
+
+          title: "Upcoming Stay Reminder",
+
+          message: `Your stay at ${
+            booking.hotel?.name || "the hotel"
+          } begins tomorrow.`,
+
+          relatedBooking: booking._id,
+        });
+
         booking.reminderSent = true;
 
         await booking.save();
@@ -187,6 +203,32 @@ export const sendUpcomingBookingReminders = async (req, res) => {
     });
   } catch (error) {
     console.log("UPCOMING REMINDER ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ==========================================
+// GET LOGGED-IN USER NOTIFICATIONS
+// ==========================================
+
+export const getUserNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find({
+      user: req.user._id,
+    }).sort({
+      createdAt: -1,
+    });
+
+    return res.status(200).json({
+      success: true,
+      notifications,
+    });
+  } catch (error) {
+    console.log("GET USER NOTIFICATIONS ERROR:", error);
 
     return res.status(500).json({
       success: false,

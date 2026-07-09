@@ -15,12 +15,23 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // Notification states
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+
   const { openSignIn } = useClerk();
 
   const location = useLocation();
 
-  const { user, navigate, isOwner, setShowHotelReg, favoriteRooms } =
-    useAppContext();
+  const {
+    user,
+    navigate,
+    isOwner,
+    setShowHotelReg,
+    favoriteRooms,
+    axios,
+    getToken,
+  } = useAppContext();
 
   // --------------------------------------------------
   // HANDLE NAVBAR BACKGROUND WHEN SCROLLING
@@ -52,6 +63,45 @@ const Navbar = () => {
     window.scrollTo(0, 0);
     setIsMenuOpen(false);
   }, [location.pathname]);
+
+  // --------------------------------------------------
+  // FETCH USER NOTIFICATIONS
+  // --------------------------------------------------
+
+  const fetchNotifications = async () => {
+    try {
+      const token = await getToken();
+
+      const { data } = await axios.get("/api/notifications/user", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("NOTIFICATION RESPONSE:", data);
+
+      if (data.success) {
+        setNotifications(data.notifications);
+      }
+    } catch (error) {
+      console.log(
+        "FETCH NOTIFICATIONS ERROR:",
+        error.response?.data?.message || error.message,
+      );
+    }
+  };
+
+  // --------------------------------------------------
+  // LOAD NOTIFICATIONS
+  // --------------------------------------------------
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+    } else {
+      setNotifications([]);
+    }
+  }, [user]);
 
   // --------------------------------------------------
   // OWNER / LIST HOTEL BUTTON
