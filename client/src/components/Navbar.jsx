@@ -441,75 +441,69 @@ const Navbar = () => {
                 notifications.map((notification) => (
                   <div
                     key={notification._id}
-                    className={`relative flex items-start gap-3 px-5 py-4 border-b border-slate-100 last:border-b-0 transition-colors ${
+                    onClick={() => {
+                      console.log("NOTIFICATION CLICKED:", notification);
+                      handleNotificationClick(notification);
+                    }}
+                    className={`relative flex items-start gap-3 px-5 py-4 pr-14 border-b border-slate-100 last:border-b-0 transition-colors cursor-pointer ${
                       notification.isRead
                         ? "bg-white hover:bg-slate-50"
                         : "bg-amber-50/60 hover:bg-amber-50"
                     }`}
                   >
-                    {/* NOTIFICATION TYPE ICON */}
-
-                    <button
-                      type="button"
-                      onClick={() => handleNotificationClick(notification)}
-                      className="flex items-start gap-3 flex-1 text-left cursor-pointer"
+                    <div
+                      className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center ${
+                        notification.isRead ? "bg-slate-100" : "bg-amber-100"
+                      }`}
                     >
-                      <div
-                        className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center ${
-                          notification.isRead ? "bg-slate-100" : "bg-amber-100"
+                      <Bell
+                        className={`w-4 h-4 ${
+                          notification.isRead
+                            ? "text-slate-500"
+                            : "text-amber-600"
                         }`}
-                      >
-                        <Bell
-                          className={`w-4 h-4 ${
+                      />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3
+                          className={`text-sm ${
                             notification.isRead
-                              ? "text-slate-500"
-                              : "text-amber-600"
+                              ? "font-medium text-slate-700"
+                              : "font-semibold text-slate-900"
                           }`}
-                        />
+                        >
+                          {notification.title}
+                        </h3>
+
+                        {!notification.isRead && (
+                          <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                        )}
                       </div>
 
-                      {/* NOTIFICATION INFORMATION */}
+                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                        {notification.message}
+                      </p>
 
-                      <div className="flex-1 min-w-0 pr-7">
-                        <div className="flex items-center gap-2">
-                          <h3
-                            className={`text-sm ${
-                              notification.isRead
-                                ? "font-medium text-slate-700"
-                                : "font-semibold text-slate-900"
-                            }`}
-                          >
-                            {notification.title}
-                          </h3>
-
-                          {!notification.isRead && (
-                            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-                          )}
-                        </div>
-
-                        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                          {notification.message}
-                        </p>
-
-                        <p className="text-[10px] text-slate-400 mt-2">
-                          {formatNotificationTime(notification.createdAt)}
-                        </p>
-                      </div>
-                    </button>
-
-                    {/* DELETE BUTTON */}
+                      <p className="text-[10px] text-slate-400 mt-2">
+                        {formatNotificationTime(notification.createdAt)}
+                      </p>
+                    </div>
 
                     <button
                       type="button"
                       onClick={(event) => {
                         event.stopPropagation();
 
+                        console.log("DELETE CLICKED:", notification._id);
+
                         deleteNotification(notification._id);
                       }}
-                      className="absolute top-4 right-4 w-7 h-7 rounded-full flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
+                      className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
                       aria-label="Delete notification"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3.5 h-3.5 pointer-events-none" />
                     </button>
                   </div>
                 ))
