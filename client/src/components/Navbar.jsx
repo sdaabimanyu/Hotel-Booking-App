@@ -324,6 +324,21 @@ const Navbar = () => {
         )}
       </div>
 
+      {user && (
+        <div className="ml-auto mr-4 md:ml-0 md:mr-0">
+          <NotificationBell
+            isScrolled={isScrolled}
+            notifications={notifications}
+            showNotifications={showNotifications}
+            setShowNotifications={setShowNotifications}
+            unreadCount={unreadCount}
+            markNotificationAsRead={markNotificationAsRead}
+            markAllNotificationsAsRead={markAllNotificationsAsRead}
+            deleteNotification={deleteNotification}
+          />
+        </div>
+      )}
+
       {/* ==========================================
           DESKTOP RIGHT SIDE
       ========================================== */}
@@ -331,17 +346,6 @@ const Navbar = () => {
       <div className="hidden md:flex items-center gap-5">
         {user ? (
           <>
-            <NotificationBell
-              isScrolled={isScrolled}
-              notifications={notifications}
-              showNotifications={showNotifications}
-              setShowNotifications={setShowNotifications}
-              unreadCount={unreadCount}
-              markNotificationAsRead={markNotificationAsRead}
-              markAllNotificationsAsRead={markAllNotificationsAsRead}
-              deleteNotification={deleteNotification}
-            />
-
             <UserButton>
               <UserButton.MenuItems>
                 <UserButton.Action
@@ -389,19 +393,6 @@ const Navbar = () => {
       ========================================== */}
 
       <div className="flex items-center gap-4 md:hidden">
-        {user && (
-          <NotificationBell
-            isScrolled={isScrolled}
-            notifications={notifications}
-            showNotifications={showNotifications}
-            setShowNotifications={setShowNotifications}
-            unreadCount={unreadCount}
-            markNotificationAsRead={markNotificationAsRead}
-            markAllNotificationsAsRead={markAllNotificationsAsRead}
-            deleteNotification={deleteNotification}
-          />
-        )}
-
         {user && (
           <UserButton>
             <UserButton.MenuItems>

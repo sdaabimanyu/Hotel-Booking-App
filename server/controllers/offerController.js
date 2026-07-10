@@ -1,14 +1,25 @@
 import Hotel from "../models/Hotel.js";
 import Offer from "../models/Offer.js";
+import User from "../models/User.js";
+import Notification from "../models/Notification.js";
 
 export const createOffer = async (req, res) => {
   try {
+    // ==========================================
+    // 1. CHECK USER ROLE
+    // ==========================================
+
     if (req.user.role !== "hotelOwner") {
-      return res.json({
+      return res.status(403).json({
         success: false,
         message: "Only hotel owners can create offers",
       });
     }
+
+    // ==========================================
+    // 2. GET OFFER DATA
+    // ==========================================
+
     const {
       title,
       description,
@@ -20,65 +31,88 @@ export const createOffer = async (req, res) => {
       image,
     } = req.body;
 
+    // ==========================================
+    // 3. VALIDATE REQUIRED FIELDS
+    // ==========================================
+
     if (!title || !description || !code || !discount || !validTill) {
-      return res.json({
+      return res.status(400).json({
         success: false,
         message: "Please fill all required fields",
       });
     }
+
+    // ==========================================
+    // 4. FIND HOTEL OWNED BY LOGGED-IN USER
+    // ==========================================
 
     const hotel = await Hotel.findOne({
       owner: req.user._id,
     });
 
     if (!hotel) {
-      return res.json({
+      return res.status(404).json({
         success: false,
         message: "Hotel not found",
       });
     }
 
+    // ==========================================
+    // 5. CHECK DUPLICATE OFFER CODE
+    // ==========================================
+
+    const normalizedCode = code.trim().toUpperCase();
+
     const existingOffer = await Offer.findOne({
       hotel: hotel._id,
-      code: code.trim().toUpperCase(),
+      code: normalizedCode,
     });
 
     if (existingOffer) {
-      return res.json({
+      return res.status(400).json({
         success: false,
         message: "Offer code already exists",
       });
     }
 
+    // ==========================================
+    // 6. VALIDATE EXPIRY DATE
+    // ==========================================
+
     const today = new Date();
+
     today.setHours(0, 0, 0, 0);
 
     const expiry = new Date(validTill);
+
     expiry.setHours(0, 0, 0, 0);
 
     if (expiry <= today) {
-      return res.json({
+      return res.status(400).json({
         success: false,
         message: "Expiry date must be in the future",
       });
     }
 
+    // ==========================================
+    // 7. VALIDATE IMAGE
+    // ==========================================
+
     if (!image) {
-      return res.json({
+      return res.status(400).json({
         success: false,
         message: "Offer image is required",
       });
     }
 
-    console.log("Hotel:", hotel);
-    console.log("User:", req.user);
-    console.log("Body:", req.body);
-    console.log("Image:", image);
+    // ==========================================
+    // 8. CREATE OFFER
+    // ==========================================
 
     const offer = await Offer.create({
       title,
       description,
-      code: code.trim().toUpperCase(),
+      code: normalizedCode,
       discount,
       discountType,
       minimumStay,
@@ -88,18 +122,57 @@ export const createOffer = async (req, res) => {
       createdBy: req.user._id,
     });
 
-    res.json({
+    // ==========================================
+    // 9. FIND ALL NORMAL USERS
+    // ==========================================
+
+    const users = await User.find({
+      role: "user",
+    }).select("_id");
+
+    console.log("USERS FOUND FOR OFFER NOTIFICATION:", users.length);
+
+    // ==========================================
+    // 10. PREPARE NOTIFICATIONS
+    // ==========================================
+
+    const notifications = users.map((user) => ({
+      user: user._id,
+
+      type: "special_offer",
+
+      title: "New Special Offer",
+
+      message: `${title} is now available at ${hotel.name}. Use code ${normalizedCode}.`,
+
+      relatedOffer: offer._id,
+    }));
+
+    // ==========================================
+    // 11. CREATE NOTIFICATIONS
+    // ==========================================
+
+    if (notifications.length > 0) {
+      await Notification.insertMany(notifications);
+    }
+
+    console.log("SPECIAL OFFER NOTIFICATIONS CREATED:", notifications.length);
+
+    // ==========================================
+    // 12. SEND RESPONSE
+    // ==========================================
+
+    return res.status(201).json({
       success: true,
       message: "Offer created successfully",
       offer,
+      notificationsCreated: notifications.length,
     });
   } catch (error) {
     console.log("========== CREATE OFFER ERROR ==========");
     console.log(error);
-    console.log(error.message);
-    console.log(error.stack);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
