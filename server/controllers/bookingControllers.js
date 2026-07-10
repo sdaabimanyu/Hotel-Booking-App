@@ -327,10 +327,16 @@ export const getHotelBookings = async (req, res) => {
       (acc, booking) => acc + booking.totalPrice,
       0,
     );
+    const currentlyOccupiedRoomIds = new Set(
+      bookings
+        .filter((booking) => booking.status === "checked-in")
+        .map((booking) => booking.room._id.toString()),
+    );
+
+    const occupiedRooms = currentlyOccupiedRoomIds.size;
+
     const occupancyRate =
-      totalRooms > 0
-        ? (((totalRooms - availableRooms) / totalRooms) * 100).toFixed(0)
-        : 0;
+      totalRooms > 0 ? ((occupiedRooms / totalRooms) * 100).toFixed(0) : 0;
 
     const rooms = await Room.find({
       hotel: hotel._id,
