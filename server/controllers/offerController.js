@@ -43,7 +43,7 @@ export const createOffer = async (req, res) => {
     }
 
     // ==========================================
-    // 4. FIND HOTEL OWNED BY LOGGED-IN USER
+    // 4. FIND HOTEL
     // ==========================================
 
     const hotel = await Hotel.findOne({
@@ -58,10 +58,14 @@ export const createOffer = async (req, res) => {
     }
 
     // ==========================================
-    // 5. CHECK DUPLICATE OFFER CODE
+    // 5. NORMALIZE OFFER CODE
     // ==========================================
 
     const normalizedCode = code.trim().toUpperCase();
+
+    // ==========================================
+    // 6. CHECK DUPLICATE OFFER CODE
+    // ==========================================
 
     const existingOffer = await Offer.findOne({
       hotel: hotel._id,
@@ -76,7 +80,7 @@ export const createOffer = async (req, res) => {
     }
 
     // ==========================================
-    // 6. VALIDATE EXPIRY DATE
+    // 7. VALIDATE EXPIRY DATE
     // ==========================================
 
     const today = new Date();
@@ -95,7 +99,7 @@ export const createOffer = async (req, res) => {
     }
 
     // ==========================================
-    // 7. VALIDATE IMAGE
+    // 8. VALIDATE IMAGE
     // ==========================================
 
     if (!image) {
@@ -106,7 +110,7 @@ export const createOffer = async (req, res) => {
     }
 
     // ==========================================
-    // 8. CREATE OFFER
+    // 9. CREATE OFFER
     // ==========================================
 
     const offer = await Offer.create({
@@ -124,39 +128,18 @@ export const createOffer = async (req, res) => {
 
     console.log("OFFER CREATED:", offer._id);
 
+    // ==========================================
+    // 10. FIND ALL NORMAL USERS
+    // ==========================================
+
     const users = await User.find({
       role: "user",
     }).select("_id");
 
     console.log("NORMAL USERS FOUND:", users.length);
 
-    if (users.length > 0) {
-      const notifications = users.map((user) => ({
-        user: user._id,
-        type: "special_offer",
-        title: "New Special Offer",
-        message: `${offer.title} - Use code ${offer.code} and save ${offer.discount}${
-          offer.discountType === "percentage" ? "%" : ""
-        }.`,
-        relatedOffer: offer._id,
-      }));
-
-      const createdNotifications = await Notification.insertMany(notifications);
-
-      console.log(
-        "SPECIAL OFFER NOTIFICATIONS CREATED:",
-        createdNotifications.length,
-      );
-    }
-
     // ==========================================
-    // 9. FIND ALL NORMAL USERS
-    // ==========================================
-
-    
-
-    // ==========================================
-    // 10. PREPARE NOTIFICATIONS
+    // 11. PREPARE NOTIFICATIONS
     // ==========================================
 
     const notifications = users.map((user) => ({
@@ -166,30 +149,36 @@ export const createOffer = async (req, res) => {
 
       title: "New Special Offer",
 
-      message: `${title} is now available at ${hotel.name}. Use code ${normalizedCode}.`,
+      message: `${offer.title} is now available at ${hotel.name}. Use code ${offer.code} and save ${offer.discount}${
+        offer.discountType === "percentage" ? "%" : ""
+      }.`,
 
       relatedOffer: offer._id,
     }));
 
     // ==========================================
-    // 11. CREATE NOTIFICATIONS
+    // 12. CREATE NOTIFICATIONS
     // ==========================================
+
+    let notificationsCreated = 0;
 
     if (notifications.length > 0) {
-      await Notification.insertMany(notifications);
+      const createdNotifications = await Notification.insertMany(notifications);
+
+      notificationsCreated = createdNotifications.length;
     }
 
-    console.log("SPECIAL OFFER NOTIFICATIONS CREATED:", notifications.length);
+    console.log("SPECIAL OFFER NOTIFICATIONS CREATED:", notificationsCreated);
 
     // ==========================================
-    // 12. SEND RESPONSE
+    // 13. SEND RESPONSE
     // ==========================================
 
     return res.status(201).json({
       success: true,
       message: "Offer created successfully",
       offer,
-      notificationsCreated: notifications.length,
+      notificationsCreated,
     });
   } catch (error) {
     console.log("========== CREATE OFFER ERROR ==========");
