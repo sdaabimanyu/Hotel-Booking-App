@@ -122,6 +122,33 @@ export const createOffer = async (req, res) => {
       createdBy: req.user._id,
     });
 
+    console.log("OFFER CREATED:", offer._id);
+
+    const users = await User.find({
+      role: "user",
+    }).select("_id");
+
+    console.log("NORMAL USERS FOUND:", users.length);
+
+    if (users.length > 0) {
+      const notifications = users.map((user) => ({
+        user: user._id,
+        type: "special_offer",
+        title: "New Special Offer",
+        message: `${offer.title} - Use code ${offer.code} and save ${offer.discount}${
+          offer.discountType === "percentage" ? "%" : ""
+        }.`,
+        relatedOffer: offer._id,
+      }));
+
+      const createdNotifications = await Notification.insertMany(notifications);
+
+      console.log(
+        "SPECIAL OFFER NOTIFICATIONS CREATED:",
+        createdNotifications.length,
+      );
+    }
+
     // ==========================================
     // 9. FIND ALL NORMAL USERS
     // ==========================================
