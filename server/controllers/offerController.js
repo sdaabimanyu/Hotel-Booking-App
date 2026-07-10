@@ -153,11 +153,7 @@ export const createOffer = async (req, res) => {
     // 9. FIND ALL NORMAL USERS
     // ==========================================
 
-    const users = await User.find({
-      role: "user",
-    }).select("_id");
-
-    console.log("USERS FOUND FOR OFFER NOTIFICATION:", users.length);
+    
 
     // ==========================================
     // 10. PREPARE NOTIFICATIONS
