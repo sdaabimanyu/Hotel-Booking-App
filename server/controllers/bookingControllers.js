@@ -319,7 +319,11 @@ export const getHotelBookings = async (req, res) => {
 
     const totalBookings = bookings.length;
 
-    const totalRevenue = bookings.reduce(
+    const paidBookings = bookings.filter(
+      (booking) => booking.isPaid && booking.status !== "cancelled",
+    );
+
+    const totalRevenue = paidBookings.reduce(
       (acc, booking) => acc + booking.totalPrice,
       0,
     );
