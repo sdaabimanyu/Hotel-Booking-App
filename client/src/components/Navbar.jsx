@@ -5,6 +5,8 @@ import { Bell, CheckCheck, Trash2, X } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 
 const Navbar = () => {
+  // console.log("NEW NAVBAR CODE IS RUNNING");
+
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Hotels", path: "/rooms" },
@@ -144,7 +146,12 @@ const Navbar = () => {
 
   const markNotificationAsRead = async (notificationId) => {
     try {
+      console.log("1. MARK READ FUNCTION STARTED");
+      console.log("2. NOTIFICATION ID:", notificationId);
+
       const token = await getToken();
+
+      console.log("3. TOKEN RECEIVED:", !!token);
 
       const { data } = await axios.patch(
         "/api/notifications/read",
@@ -158,7 +165,11 @@ const Navbar = () => {
         },
       );
 
+      console.log("4. MARK READ API RESPONSE:", data);
+
       if (data.success) {
+        console.log("5. UPDATING FRONTEND STATE");
+
         setNotifications((previousNotifications) =>
           previousNotifications.map((notification) =>
             notification._id === notificationId
@@ -175,10 +186,8 @@ const Navbar = () => {
         );
       }
     } catch (error) {
-      console.log(
-        "MARK NOTIFICATION READ ERROR:",
-        error.response?.data?.message || error.message,
-      );
+      console.log("MARK NOTIFICATION READ FULL ERROR:", error);
+      console.log("ERROR RESPONSE:", error.response?.data);
     }
   };
 
@@ -224,11 +233,12 @@ const Navbar = () => {
 
   const deleteNotification = async (notificationId) => {
     try {
+      console.log("1. DELETE FUNCTION STARTED");
+      console.log("2. DELETE NOTIFICATION ID:", notificationId);
+
       const token = await getToken();
 
-      const notificationToDelete = notifications.find(
-        (notification) => notification._id === notificationId,
-      );
+      console.log("3. DELETE TOKEN RECEIVED:", !!token);
 
       const { data } = await axios.delete(
         `/api/notifications/${notificationId}`,
@@ -239,24 +249,22 @@ const Navbar = () => {
         },
       );
 
+      console.log("4. DELETE API RESPONSE:", data);
+
       if (data.success) {
+        console.log("5. REMOVING NOTIFICATION FROM FRONTEND");
+
         setNotifications((previousNotifications) =>
           previousNotifications.filter(
             (notification) => notification._id !== notificationId,
           ),
         );
 
-        if (notificationToDelete && !notificationToDelete.isRead) {
-          setUnreadCount((previousCount) =>
-            previousCount > 0 ? previousCount - 1 : 0,
-          );
-        }
+        await fetchNotifications();
       }
     } catch (error) {
-      console.log(
-        "DELETE NOTIFICATION ERROR:",
-        error.response?.data?.message || error.message,
-      );
+      console.log("DELETE NOTIFICATION FULL ERROR:", error);
+      console.log("DELETE ERROR RESPONSE:", error.response?.data);
     }
   };
 
@@ -265,26 +273,24 @@ const Navbar = () => {
   // ==========================================
 
   const handleNotificationClick = async (notification) => {
-    console.log("NOTIFICATION CLICKED:", notification);
+    console.log("A. HANDLE FUNCTION STARTED");
 
-    if (!notification.isRead) {
-      console.log("MARKING AS READ:", notification._id);
+    try {
+      console.log("B. NOTIFICATION:", notification);
+      console.log("C. IS READ:", notification.isRead);
+      console.log("D. RELATED BOOKING:", notification.relatedBooking);
 
-      await markNotificationAsRead(notification._id);
-    }
+      if (!notification.isRead) {
+        console.log("E. ABOUT TO MARK AS READ");
 
-    console.log("RELATED BOOKING:", notification.relatedBooking);
+        await markNotificationAsRead(notification._id);
 
-    if (notification.relatedBooking) {
-      setShowNotifications(false);
-      navigate("/my-bookings");
-      return;
-    }
+        console.log("F. MARK AS READ FINISHED");
+      }
 
-    if (notification.relatedOffer) {
-      setShowNotifications(false);
-      navigate("/offers");
-      return;
+      console.log("G. HANDLE FUNCTION COMPLETED");
+    } catch (error) {
+      console.log("HANDLE CLICK ERROR:", error);
     }
   };
 
@@ -441,8 +447,11 @@ const Navbar = () => {
                 notifications.map((notification) => (
                   <div
                     key={notification._id}
-                    onClick={() => {
-                      console.log("NOTIFICATION CLICKED:", notification);
+                    onClick={(event) => {
+                      event.stopPropagation();
+
+                      console.log("CLICK WORKS");
+
                       handleNotificationClick(notification);
                     }}
                     className={`relative flex items-start gap-3 px-5 py-4 pr-14 border-b border-slate-100 last:border-b-0 transition-colors cursor-pointer ${
