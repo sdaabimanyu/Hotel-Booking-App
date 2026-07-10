@@ -270,12 +270,6 @@ export const getHotelBookings = async (req, res) => {
       isDeleted: false,
     });
 
-    const availableRooms = await Room.countDocuments({
-      hotel: hotel._id,
-      isAvailable: true,
-      isDeleted: false,
-    });
-
     const archivedRooms = await Room.countDocuments({
       hotel: hotel._id,
       isDeleted: true,
@@ -334,6 +328,8 @@ export const getHotelBookings = async (req, res) => {
     );
 
     const occupiedRooms = currentlyOccupiedRoomIds.size;
+
+    const availableRooms = totalRooms - occupiedRooms;
 
     const occupancyRate =
       totalRooms > 0 ? ((occupiedRooms / totalRooms) * 100).toFixed(0) : 0;
