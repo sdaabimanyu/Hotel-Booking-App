@@ -303,12 +303,14 @@ export const getHotelBookings = async (req, res) => {
       return checkIn.getTime() === today.getTime();
     }).length;
 
-    const todayCheckOuts = bookings.filter((booking) => {
+    const scheduledCheckOuts = bookings.filter((booking) => {
       const checkOut = new Date(booking.checkOutDate);
 
       checkOut.setHours(0, 0, 0, 0);
 
-      return checkOut.getTime() === today.getTime();
+      return (
+        booking.status === "checked-in" && checkOut.getTime() >= today.getTime()
+      );
     }).length;
 
     const totalBookings = bookings.length;
@@ -357,7 +359,7 @@ export const getHotelBookings = async (req, res) => {
     });
 
     console.log("todayCheckIns:", todayCheckIns);
-    console.log("todayCheckOuts:", todayCheckOuts);
+    console.log("SCHEDULED CHECKOUTS:", scheduledCheckOuts);
 
     res.json({
       success: true,
@@ -372,7 +374,7 @@ export const getHotelBookings = async (req, res) => {
         occupancyRate,
 
         todayCheckIns,
-        todayCheckOuts,
+        scheduledCheckOuts,
 
         bookings,
         roomOccupancy,

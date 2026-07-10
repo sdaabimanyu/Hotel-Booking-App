@@ -27,7 +27,7 @@ export default function Dashboard() {
     averageRating: 0,
     occupancyRate: 0,
     todayCheckIns: 0,
-    todayCheckOuts: 0,
+    scheduledCheckOuts: 0,
   });
 
   const fetchDashboardData = async () => {
@@ -37,6 +37,7 @@ export default function Dashboard() {
       });
 
       if (data.success) {
+        console.log("DASHBOARD RESPONSE:", data.dashboardData);
         setDashboardData(data.dashboardData);
       } else {
         toast.error(data.message);
@@ -206,7 +207,7 @@ export default function Dashboard() {
               Scheduled Check-outs
             </p>
             <h2 className="text-base sm:text-xl md:text-2xl font-bold text-gray-800 mt-0.5">
-              {dashboardData.todayCheckOuts}
+              {dashboardData.scheduledCheckOuts}
             </h2>
           </div>
           <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-md bg-rose-50 flex items-center justify-center text-rose-500 flex-shrink-0">
