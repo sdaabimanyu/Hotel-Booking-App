@@ -40,16 +40,39 @@ export const getUserNotifications = async (req, res) => {
 
 export const markNotificationAsRead = async (req, res) => {
   try {
-    const userId = req.user._id;
+    console.log("========== MARK READ CONTROLLER START ==========");
 
+    console.log("REQ USER:", req.user);
+    console.log("REQ BODY:", req.body);
+
+    const userId = req.user?._id;
     const { notificationId } = req.body;
 
+    console.log("USER ID:", userId);
+    console.log("NOTIFICATION ID:", notificationId);
+
+    if (!userId) {
+      console.log("ERROR: NO USER ID");
+
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
     if (!notificationId) {
+      console.log("ERROR: NO NOTIFICATION ID");
+
       return res.status(400).json({
         success: false,
         message: "Notification ID is required",
       });
     }
+
+    const notificationBeforeUpdate =
+      await Notification.findById(notificationId);
+
+    console.log("NOTIFICATION BEFORE UPDATE:", notificationBeforeUpdate);
 
     const notification = await Notification.findOneAndUpdate(
       {
@@ -57,19 +80,27 @@ export const markNotificationAsRead = async (req, res) => {
         user: userId,
       },
       {
-        isRead: true,
+        $set: {
+          isRead: true,
+        },
       },
       {
         new: true,
       },
     );
 
+    console.log("NOTIFICATION AFTER UPDATE:", notification);
+
     if (!notification) {
+      console.log("ERROR: NOTIFICATION NOT FOUND");
+
       return res.status(404).json({
         success: false,
         message: "Notification not found",
       });
     }
+
+    console.log("========== MARK READ SUCCESS ==========");
 
     return res.status(200).json({
       success: true,
@@ -77,7 +108,8 @@ export const markNotificationAsRead = async (req, res) => {
       notification,
     });
   } catch (error) {
-    console.log("MARK NOTIFICATION READ ERROR:", error);
+    console.log("========== MARK READ ERROR ==========");
+    console.log(error);
 
     return res.status(500).json({
       success: false,
