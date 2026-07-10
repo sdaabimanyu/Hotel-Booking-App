@@ -13,38 +13,19 @@ import {
 
 const notificationRouter = express.Router();
 
-// ==========================================
-// AUTOMATIC UPCOMING BOOKING EMAIL REMINDER
-// Called by Vercel Cron
-// Security is handled using CRON_SECRET
-// ==========================================
-
+// Automatic booking reminder
 notificationRouter.get("/upcoming-bookings", sendUpcomingBookingReminders);
 
+// Get logged-in user's notifications
 notificationRouter.get("/user", protect, getUserNotifications);
 
-// ==========================================
-// GET LOGGED-IN USER NOTIFICATIONS
-// ==========================================
-
-notificationRouter.get("/user", protect, getUserNotifications);
-
-// ==========================================
-// MARK ONE NOTIFICATION AS READ
-// ==========================================
-
+// Mark one notification as read
 notificationRouter.patch("/read", protect, markNotificationAsRead);
 
-// ==========================================
-// MARK ALL NOTIFICATIONS AS READ
-// ==========================================
-
+// Mark all notifications as read
 notificationRouter.patch("/read-all", protect, markAllNotificationsAsRead);
 
-// ==========================================
-// DELETE ONE NOTIFICATION
-// ==========================================
-
+// Delete notification
 notificationRouter.delete("/:notificationId", protect, deleteNotification);
 
 export default notificationRouter;

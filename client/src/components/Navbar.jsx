@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useClerk, UserButton } from "@clerk/clerk-react";
-import { Bell, CheckCheck, Trash2, X } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
+import NotificationBell from "./NotificationBell";
 
 const Navbar = () => {
   // console.log("NEW NAVBAR CODE IS RUNNING");
@@ -25,8 +25,6 @@ const Navbar = () => {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-
-  const notificationRef = useRef(null);
 
   const { openSignIn } = useClerk();
 
@@ -122,23 +120,6 @@ const Navbar = () => {
   // ==========================================
   // CLOSE NOTIFICATION DROPDOWN OUTSIDE CLICK
   // ==========================================
-
-  useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (
-        notificationRef.current &&
-        !notificationRef.current.contains(event.target)
-      ) {
-        setShowNotifications(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleOutsideClick);
-
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-    };
-  }, []);
 
   // ==========================================
   // MARK ONE NOTIFICATION AS READ
@@ -252,82 +233,26 @@ const Navbar = () => {
       console.log("4. DELETE API RESPONSE:", data);
 
       if (data.success) {
-        console.log("5. REMOVING NOTIFICATION FROM FRONTEND");
+        setNotifications((previousNotifications) => {
+          const deletedNotification = previousNotifications.find(
+            (notification) => notification._id === notificationId,
+          );
 
-        setNotifications((previousNotifications) =>
-          previousNotifications.filter(
+          if (deletedNotification && !deletedNotification.isRead) {
+            setUnreadCount((previousCount) =>
+              previousCount > 0 ? previousCount - 1 : 0,
+            );
+          }
+
+          return previousNotifications.filter(
             (notification) => notification._id !== notificationId,
-          ),
-        );
-
-        await fetchNotifications();
+          );
+        });
       }
     } catch (error) {
       console.log("DELETE NOTIFICATION FULL ERROR:", error);
       console.log("DELETE ERROR RESPONSE:", error.response?.data);
     }
-  };
-
-  // ==========================================
-  // HANDLE NOTIFICATION CLICK
-  // ==========================================
-
-  const handleNotificationClick = async (notification) => {
-    console.log("A. HANDLE FUNCTION STARTED");
-
-    try {
-      console.log("B. NOTIFICATION:", notification);
-      console.log("C. IS READ:", notification.isRead);
-      console.log("D. RELATED BOOKING:", notification.relatedBooking);
-
-      if (!notification.isRead) {
-        console.log("E. ABOUT TO MARK AS READ");
-
-        await markNotificationAsRead(notification._id);
-
-        console.log("F. MARK AS READ FINISHED");
-      }
-
-      console.log("G. HANDLE FUNCTION COMPLETED");
-    } catch (error) {
-      console.log("HANDLE CLICK ERROR:", error);
-    }
-  };
-
-  // ==========================================
-  // FORMAT NOTIFICATION TIME
-  // ==========================================
-
-  const formatNotificationTime = (createdAt) => {
-    const createdDate = new Date(createdAt);
-
-    const now = new Date();
-
-    const difference = now.getTime() - createdDate.getTime();
-
-    const minutes = Math.floor(difference / (1000 * 60));
-
-    const hours = Math.floor(difference / (1000 * 60 * 60));
-
-    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-
-    if (minutes < 1) {
-      return "Just now";
-    }
-
-    if (minutes < 60) {
-      return `${minutes}m ago`;
-    }
-
-    if (hours < 24) {
-      return `${hours}h ago`;
-    }
-
-    if (days < 7) {
-      return `${days}d ago`;
-    }
-
-    return createdDate.toLocaleDateString();
   };
 
   // ==========================================
@@ -340,188 +265,6 @@ const Navbar = () => {
     } else {
       setShowHotelReg(true);
     }
-  };
-
-  // ==========================================
-  // NOTIFICATION BELL + DROPDOWN COMPONENT
-  // ==========================================
-
-  const NotificationBell = () => {
-    return (
-      <div ref={notificationRef} className="relative">
-        {/* BELL BUTTON */}
-
-        <button
-          type="button"
-          onClick={() =>
-            setShowNotifications((previousValue) => !previousValue)
-          }
-          className="relative flex items-center justify-center cursor-pointer"
-          aria-label="Notifications"
-        >
-          <Bell
-            className={`w-6 h-6 transition-colors ${
-              isScrolled ? "text-gray-700" : "text-white"
-            }`}
-          />
-
-          {/* UNREAD BADGE */}
-
-          {unreadCount > 0 && (
-            <span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 flex items-center justify-center bg-red-500 text-white text-[10px] font-semibold rounded-full border-2 border-white">
-              {unreadCount > 99 ? "99+" : unreadCount}
-            </span>
-          )}
-        </button>
-
-        {/* ==========================================
-            NOTIFICATION DROPDOWN
-        ========================================== */}
-
-        {showNotifications && (
-          <div className="fixed md:absolute top-20 md:top-11 right-3 md:right-0 w-[calc(100vw-24px)] md:w-[390px] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden text-slate-800 z-[100]">
-            {/* DROPDOWN HEADER */}
-
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-              <div>
-                <h2 className="font-playfair text-xl font-semibold text-slate-900">
-                  Notifications
-                </h2>
-
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {unreadCount > 0
-                    ? `${unreadCount} unread notification${
-                        unreadCount === 1 ? "" : "s"
-                      }`
-                    : "You're all caught up"}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowNotifications(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* MARK ALL AS READ */}
-
-            {unreadCount > 0 && (
-              <div className="flex justify-end px-5 py-2 border-b border-slate-100 bg-slate-50/50">
-                <button
-                  type="button"
-                  onClick={markAllNotificationsAsRead}
-                  className="flex items-center gap-1.5 text-xs font-medium text-amber-600 hover:text-amber-700 transition-colors cursor-pointer"
-                >
-                  <CheckCheck className="w-4 h-4" />
-                  Mark all as read
-                </button>
-              </div>
-            )}
-
-            {/* ==========================================
-                NOTIFICATION LIST
-            ========================================== */}
-
-            <div className="max-h-[420px] overflow-y-auto">
-              {notifications.length === 0 ? (
-                /* EMPTY NOTIFICATIONS */
-
-                <div className="py-16 px-6 text-center">
-                  <div className="w-14 h-14 mx-auto rounded-full bg-slate-50 flex items-center justify-center mb-4">
-                    <Bell className="w-6 h-6 text-slate-300" />
-                  </div>
-
-                  <h3 className="font-playfair text-lg font-semibold text-slate-800">
-                    No notifications yet
-                  </h3>
-
-                  <p className="text-xs text-slate-400 mt-2 max-w-xs mx-auto leading-relaxed">
-                    Booking reminders, payment updates, and special offers will
-                    appear here.
-                  </p>
-                </div>
-              ) : (
-                notifications.map((notification) => (
-                  <div
-                    key={notification._id}
-                    onClick={(event) => {
-                      event.stopPropagation();
-
-                      console.log("CLICK WORKS");
-
-                      handleNotificationClick(notification);
-                    }}
-                    className={`relative flex items-start gap-3 px-5 py-4 pr-14 border-b border-slate-100 last:border-b-0 transition-colors cursor-pointer ${
-                      notification.isRead
-                        ? "bg-white hover:bg-slate-50"
-                        : "bg-amber-50/60 hover:bg-amber-50"
-                    }`}
-                  >
-                    <div
-                      className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center ${
-                        notification.isRead ? "bg-slate-100" : "bg-amber-100"
-                      }`}
-                    >
-                      <Bell
-                        className={`w-4 h-4 ${
-                          notification.isRead
-                            ? "text-slate-500"
-                            : "text-amber-600"
-                        }`}
-                      />
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3
-                          className={`text-sm ${
-                            notification.isRead
-                              ? "font-medium text-slate-700"
-                              : "font-semibold text-slate-900"
-                          }`}
-                        >
-                          {notification.title}
-                        </h3>
-
-                        {!notification.isRead && (
-                          <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-                        )}
-                      </div>
-
-                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                        {notification.message}
-                      </p>
-
-                      <p className="text-[10px] text-slate-400 mt-2">
-                        {formatNotificationTime(notification.createdAt)}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-
-                        console.log("DELETE CLICKED:", notification._id);
-
-                        deleteNotification(notification._id);
-                      }}
-                      className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
-                      aria-label="Delete notification"
-                    >
-                      <Trash2 className="w-3.5 h-3.5 pointer-events-none" />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    );
   };
 
   return (
@@ -588,7 +331,16 @@ const Navbar = () => {
       <div className="hidden md:flex items-center gap-5">
         {user ? (
           <>
-            <NotificationBell />
+            <NotificationBell
+              isScrolled={isScrolled}
+              notifications={notifications}
+              showNotifications={showNotifications}
+              setShowNotifications={setShowNotifications}
+              unreadCount={unreadCount}
+              markNotificationAsRead={markNotificationAsRead}
+              markAllNotificationsAsRead={markAllNotificationsAsRead}
+              deleteNotification={deleteNotification}
+            />
 
             <UserButton>
               <UserButton.MenuItems>
@@ -637,7 +389,18 @@ const Navbar = () => {
       ========================================== */}
 
       <div className="flex items-center gap-4 md:hidden">
-        {user && <NotificationBell />}
+        {user && (
+          <NotificationBell
+            isScrolled={isScrolled}
+            notifications={notifications}
+            showNotifications={showNotifications}
+            setShowNotifications={setShowNotifications}
+            unreadCount={unreadCount}
+            markNotificationAsRead={markNotificationAsRead}
+            markAllNotificationsAsRead={markAllNotificationsAsRead}
+            deleteNotification={deleteNotification}
+          />
+        )}
 
         {user && (
           <UserButton>
