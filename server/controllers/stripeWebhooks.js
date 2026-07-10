@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import Booking from "../models/Booking.js";
+import Notification from "../models/Notification.js";
 import transporter from "../configs/nodemailer.js";
 
 export const stripeWebHooks = async (req, res) => {
@@ -115,7 +116,32 @@ export const stripeWebHooks = async (req, res) => {
       console.log("STRIPE BOOKING UPDATED:", booking._id);
 
       // ==========================================
-      // 8. SEND STRIPE PAYMENT RECEIPT EMAIL
+      // 8. CREATE IN-APP PAYMENT NOTIFICATION
+      // ==========================================
+
+      const paymentNotification = await Notification.create({
+        user: booking.user._id,
+
+        type: "payment_receipt",
+
+        title: "Payment Successful",
+
+        message: `Your payment of ${
+          process.env.CURRENCY || "$"
+        }${booking.totalPrice.toFixed(2)} for ${
+          booking.hotel?.name || "your hotel booking"
+        } was successful.`,
+
+        relatedBooking: booking._id,
+      });
+
+      console.log(
+        "PAYMENT RECEIPT NOTIFICATION CREATED:",
+        paymentNotification._id,
+      );
+
+      // ==========================================
+      // 9. SEND STRIPE PAYMENT RECEIPT EMAIL
       // ==========================================
 
       const mailOptions = {
