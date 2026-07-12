@@ -11,7 +11,7 @@ export const addReview = async (req, res) => {
     const { bookingId, rating, comment } = req.body;
 
     // =====================================================
-    // 1. VALIDATE REQUIRED DATA
+    // VALIDATE INPUT
     // =====================================================
 
     if (!bookingId || !rating || !comment?.trim()) {
@@ -20,10 +20,6 @@ export const addReview = async (req, res) => {
         message: "Booking, rating, and comment are required",
       });
     }
-
-    // =====================================================
-    // 2. VALIDATE RATING
-    // =====================================================
 
     const numericRating = Number(rating);
 
@@ -39,7 +35,7 @@ export const addReview = async (req, res) => {
     }
 
     // =====================================================
-    // 3. FIND BOOKING
+    // FIND BOOKING
     // =====================================================
 
     const booking = await Booking.findById(bookingId);
@@ -52,40 +48,40 @@ export const addReview = async (req, res) => {
     }
 
     // =====================================================
-    // 4. ONLY BOOKING OWNER CAN REVIEW
+    // ONLY BOOKING OWNER CAN REVIEW
     // =====================================================
 
     if (booking.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
-        message: "You are not authorized to review this booking",
+        message: "Unauthorized",
       });
     }
 
     // =====================================================
-    // 5. CANCELLED BOOKINGS CANNOT BE REVIEWED
-    // =====================================================
-
-    if (booking.status === "cancelled") {
-      return res.status(400).json({
-        success: false,
-        message: "Cancelled bookings cannot be reviewed",
-      });
-    }
-
-    // =====================================================
-    // 6. ONLY CHECKED-OUT BOOKINGS CAN BE REVIEWED
+    // ONLY CHECKED-OUT BOOKINGS CAN BE REVIEWED
     // =====================================================
 
     if (booking.status !== "checked-out") {
       return res.status(400).json({
         success: false,
-        message: "You can review only after completing your stay",
+        message: "You can review only after your stay is completed",
       });
     }
 
     // =====================================================
-    // 7. CHECK IF REVIEW ALREADY EXISTS
+    // ONLY PAID BOOKINGS CAN BE REVIEWED
+    // =====================================================
+
+    if (!booking.isPaid) {
+      return res.status(400).json({
+        success: false,
+        message: "Only paid bookings can be reviewed",
+      });
+    }
+
+    // =====================================================
+    // PREVENT DUPLICATE REVIEWS
     // =====================================================
 
     const existingReview = await Review.findOne({
@@ -95,19 +91,29 @@ export const addReview = async (req, res) => {
     if (existingReview) {
       return res.status(409).json({
         success: false,
-        message: "Review already submitted for this booking",
+        message: "Review already submitted",
       });
     }
 
     // =====================================================
-    // 8. CREATE REVIEW
+    // GET USER NAME
+    // =====================================================
+
+    const userName =
+      req.user.username ||
+      req.user.firstName ||
+      req.user.name ||
+      req.user.email ||
+      "Guest";
+
+    // =====================================================
+    // CREATE REVIEW
     // =====================================================
 
     const review = await Review.create({
       user: booking.user,
 
-      userName:
-        req.user.firstName || req.user.username || req.user.email || "Guest",
+      userName,
 
       hotel: booking.hotel,
 
@@ -124,7 +130,7 @@ export const addReview = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "Review submitted successfully and is waiting for approval",
+      message: "Review submitted successfully and is awaiting approval",
       review,
     });
   } catch (error) {
@@ -132,13 +138,13 @@ export const addReview = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Failed to submit review",
+      message: error.message || "Failed to submit review",
     });
   }
 };
 
 // =========================================================
-// GET REVIEWS FOR ONE ROOM
+// GET REVIEWS FOR A ROOM
 // =========================================================
 
 export const getRoomReviews = async (req, res) => {
@@ -146,16 +152,8 @@ export const getRoomReviews = async (req, res) => {
     const reviews = await Review.find({
       room: req.params.roomId,
 
-      $or: [
-        {
-          status: "approved",
-        },
-        {
-          status: {
-            $exists: false,
-          },
-        },
-      ],
+      // Show approved reviews and old reviews without status
+      $or: [{ status: "approved" }, { status: { $exists: false } }],
     }).sort({
       createdAt: -1,
     });
@@ -164,15 +162,13 @@ export const getRoomReviews = async (req, res) => {
       reviews.length > 0
         ? Number(
             (
-              reviews.reduce(
-                (accumulator, review) => accumulator + review.rating,
-                0,
-              ) / reviews.length
+              reviews.reduce((acc, review) => acc + review.rating, 0) /
+              reviews.length
             ).toFixed(1),
           )
         : 0;
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       reviews,
       averageRating,
@@ -182,7 +178,7 @@ export const getRoomReviews = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch room reviews",
+      message: error.message || "Failed to fetch room reviews",
     });
   }
 };
@@ -213,7 +209,7 @@ export const getHotelReviews = async (req, res) => {
         createdAt: -1,
       });
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       reviews,
     });
@@ -222,28 +218,20 @@ export const getHotelReviews = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch hotel reviews",
+      message: error.message || "Failed to fetch hotel reviews",
     });
   }
 };
 
 // =========================================================
-// GET ALL PUBLIC REVIEWS
+// GET ALL PUBLIC APPROVED REVIEWS
 // =========================================================
 
 export const getAllReviews = async (req, res) => {
   try {
     const reviews = await Review.find({
-      $or: [
-        {
-          status: "approved",
-        },
-        {
-          status: {
-            $exists: false,
-          },
-        },
-      ],
+      // Show approved reviews and old reviews without status
+      $or: [{ status: "approved" }, { status: { $exists: false } }],
     })
       .populate("room", "roomType images")
       .populate("hotel", "name city address")
@@ -252,7 +240,7 @@ export const getAllReviews = async (req, res) => {
       })
       .limit(100);
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       reviews,
     });
@@ -261,7 +249,7 @@ export const getAllReviews = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch reviews",
+      message: error.message || "Failed to fetch reviews",
     });
   }
 };
@@ -272,6 +260,10 @@ export const getAllReviews = async (req, res) => {
 
 export const approveReview = async (req, res) => {
   try {
+    // =====================================================
+    // FIND HOTEL OWNED BY LOGGED-IN USER
+    // =====================================================
+
     const hotel = await Hotel.findOne({
       owner: req.user._id,
     });
@@ -282,6 +274,10 @@ export const approveReview = async (req, res) => {
         message: "Hotel not found",
       });
     }
+
+    // =====================================================
+    // FIND REVIEW BELONGING TO OWNER'S HOTEL
+    // =====================================================
 
     const review = await Review.findOne({
       _id: req.params.id,
@@ -295,11 +291,15 @@ export const approveReview = async (req, res) => {
       });
     }
 
+    // =====================================================
+    // APPROVE REVIEW
+    // =====================================================
+
     review.status = "approved";
 
     await review.save();
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: "Review approved successfully",
       review,
@@ -309,7 +309,7 @@ export const approveReview = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Failed to approve review",
+      message: error.message || "Failed to approve review",
     });
   }
 };
@@ -320,6 +320,10 @@ export const approveReview = async (req, res) => {
 
 export const rejectReview = async (req, res) => {
   try {
+    // =====================================================
+    // FIND HOTEL OWNED BY LOGGED-IN USER
+    // =====================================================
+
     const hotel = await Hotel.findOne({
       owner: req.user._id,
     });
@@ -330,6 +334,10 @@ export const rejectReview = async (req, res) => {
         message: "Hotel not found",
       });
     }
+
+    // =====================================================
+    // FIND REVIEW BELONGING TO OWNER'S HOTEL
+    // =====================================================
 
     const review = await Review.findOne({
       _id: req.params.id,
@@ -343,11 +351,15 @@ export const rejectReview = async (req, res) => {
       });
     }
 
+    // =====================================================
+    // REJECT REVIEW
+    // =====================================================
+
     review.status = "rejected";
 
     await review.save();
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: "Review rejected successfully",
       review,
@@ -357,25 +369,33 @@ export const rejectReview = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Failed to reject review",
+      message: error.message || "Failed to reject review",
     });
   }
 };
 
 // =========================================================
-// HOTEL OWNER RESPONSE
+// HOTEL OWNER RESPONSE TO REVIEW
 // =========================================================
 
 export const respondToReview = async (req, res) => {
   try {
     const { response } = req.body;
 
-    if (!response?.trim()) {
+    // =====================================================
+    // VALIDATE RESPONSE
+    // =====================================================
+
+    if (!response || !response.trim()) {
       return res.status(400).json({
         success: false,
         message: "Response is required",
       });
     }
+
+    // =====================================================
+    // FIND HOTEL OWNED BY LOGGED-IN USER
+    // =====================================================
 
     const hotel = await Hotel.findOne({
       owner: req.user._id,
@@ -387,6 +407,10 @@ export const respondToReview = async (req, res) => {
         message: "Hotel not found",
       });
     }
+
+    // =====================================================
+    // FIND REVIEW BELONGING TO OWNER'S HOTEL
+    // =====================================================
 
     const review = await Review.findOne({
       _id: req.params.id,
@@ -400,13 +424,17 @@ export const respondToReview = async (req, res) => {
       });
     }
 
+    // =====================================================
+    // ADD HOTEL OWNER RESPONSE
+    // =====================================================
+
     review.adminResponse = response.trim();
 
     review.respondedAt = new Date();
 
     await review.save();
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: "Response added successfully",
       review,
@@ -416,7 +444,7 @@ export const respondToReview = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Failed to add response",
+      message: error.message || "Failed to respond to review",
     });
   }
 };
@@ -427,6 +455,10 @@ export const respondToReview = async (req, res) => {
 
 export const deleteReview = async (req, res) => {
   try {
+    // =====================================================
+    // FIND HOTEL OWNED BY LOGGED-IN USER
+    // =====================================================
+
     const hotel = await Hotel.findOne({
       owner: req.user._id,
     });
@@ -437,6 +469,10 @@ export const deleteReview = async (req, res) => {
         message: "Hotel not found",
       });
     }
+
+    // =====================================================
+    // DELETE ONLY REVIEW BELONGING TO OWNER'S HOTEL
+    // =====================================================
 
     const review = await Review.findOneAndDelete({
       _id: req.params.id,
@@ -450,7 +486,7 @@ export const deleteReview = async (req, res) => {
       });
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: "Review deleted successfully",
     });
@@ -459,7 +495,7 @@ export const deleteReview = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Failed to delete review",
+      message: error.message || "Failed to delete review",
     });
   }
 };
