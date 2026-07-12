@@ -98,16 +98,35 @@ export default function AllRooms() {
 
   const [openFilter, setOpenFilter] = useState(false);
 
+  // =========================================================
+  // SELECTED FILTERS
+  // =========================================================
+
   const [selectedFilters, setSelectedFilters] = useState({
     roomType: [],
     priceRange: [],
+    amenities: [],
   });
 
   const [selectedSort, setSelectedSort] = useState("");
 
+  // =========================================================
+  // FILTER OPTIONS
+  // =========================================================
+
   const roomTypes = ["Single Bed", "Double Bed", "Luxury Room", "Family Suite"];
 
   const priceRange = ["0-500", "500-1000", "1000-2000", "2000-3000"];
+
+  const amenities = [
+    "Free WiFi",
+    "Room Service",
+    "Pool Access",
+    "Mountain View",
+    "Free Breakfast",
+    "Parking",
+    "Gym",
+  ];
 
   const sortBy = ["Price Low to High", "Price High to Low", "Newest First"];
 
@@ -127,12 +146,16 @@ export default function AllRooms() {
       if (checked) {
         return {
           ...prevFilters,
-          [type]: [...prevFilters[type], value],
+
+          [type]: prevFilters[type].includes(value)
+            ? prevFilters[type]
+            : [...prevFilters[type], value],
         };
       }
 
       return {
         ...prevFilters,
+
         [type]: prevFilters[type].filter((item) => item !== value),
       };
     });
@@ -173,6 +196,28 @@ export default function AllRooms() {
   };
 
   // =========================================================
+  // AMENITIES FILTER
+  // =========================================================
+
+  const matchesAmenities = (room) => {
+    if (selectedFilters.amenities.length === 0) {
+      return true;
+    }
+
+    if (!Array.isArray(room.amenities)) {
+      return false;
+    }
+
+    return selectedFilters.amenities.every((selectedAmenity) =>
+      room.amenities.some(
+        (roomAmenity) =>
+          roomAmenity.toLowerCase().trim() ===
+          selectedAmenity.toLowerCase().trim(),
+      ),
+    );
+  };
+
+  // =========================================================
   // DESTINATION FILTER
   // =========================================================
 
@@ -183,7 +228,9 @@ export default function AllRooms() {
       return true;
     }
 
-    return room.hotel?.city?.toLowerCase().includes(destination.toLowerCase());
+    return room.hotel?.city
+      ?.toLowerCase()
+      .includes(destination.toLowerCase().trim());
   };
 
   // =========================================================
@@ -224,6 +271,7 @@ export default function AllRooms() {
       (room) =>
         matchesRoomType(room) &&
         matchesPriceRange(room) &&
+        matchesAmenities(room) &&
         filteredDestination(room) &&
         filteredHotel(room),
     );
@@ -271,6 +319,7 @@ export default function AllRooms() {
     setSelectedFilters({
       roomType: [],
       priceRange: [],
+      amenities: [],
     });
 
     setSelectedSort("");
@@ -320,8 +369,6 @@ export default function AllRooms() {
               enhance your stay and create unforgettable memories.
             </p>
 
-            {/* USER PREFERENCE INFORMATION */}
-
             {user && preferredRoomType && (
               <div className="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-100 rounded-xl">
                 <i className="fa-solid fa-wand-magic-sparkles text-amber-600 text-xs"></i>
@@ -343,7 +390,7 @@ export default function AllRooms() {
             {filteredRooms.length === 0 ? (
               <div className="text-center py-20 bg-white rounded-3xl border border-slate-100 shadow-xs">
                 <p className="font-playfair text-xl text-slate-400">
-                  No rooms match your preference
+                  No rooms match your selected filters
                 </p>
               </div>
             ) : (
@@ -359,9 +406,7 @@ export default function AllRooms() {
                         : "border-slate-100"
                     }`}
                   >
-                    {/* ================================================= */}
                     {/* ROOM IMAGE */}
-                    {/* ================================================= */}
 
                     <div className="w-full md:w-[340px] h-[220px] shrink-0 rounded-2xl overflow-hidden shadow-xs relative group">
                       <img
@@ -370,8 +415,6 @@ export default function AllRooms() {
                         alt={room.hotel?.name}
                         className="w-full h-full object-cover cursor-pointer group-hover:scale-103 transition-transform duration-500 ease-out"
                       />
-
-                      {/* RECOMMENDED BADGE */}
 
                       {user && recommended && (
                         <div className="absolute top-4 left-4 bg-amber-500 text-white px-3 py-1.5 rounded-lg shadow-md flex items-center gap-1.5">
@@ -382,8 +425,6 @@ export default function AllRooms() {
                           </span>
                         </div>
                       )}
-
-                      {/* FAVORITE BUTTON */}
 
                       {user && (
                         <button
@@ -410,19 +451,13 @@ export default function AllRooms() {
                       )}
                     </div>
 
-                    {/* ================================================= */}
                     {/* ROOM INFORMATION */}
-                    {/* ================================================= */}
 
                     <div className="flex flex-col justify-between flex-1 py-1">
                       <div>
-                        {/* LOCATION */}
-
                         <p className="text-[11px] font-bold font-inter tracking-wider text-slate-600 uppercase mb-1">
                           {room.hotel?.city}
                         </p>
-
-                        {/* HOTEL NAME */}
 
                         <h2
                           onClick={() => navigate(`/rooms/${room._id}`)}
@@ -431,13 +466,9 @@ export default function AllRooms() {
                           {room.hotel?.name}
                         </h2>
 
-                        {/* ROOM TYPE */}
-
                         <p className="text-xs font-inter font-medium text-amber-600 mb-3">
                           {room.roomType}
                         </p>
-
-                        {/* RATINGS */}
 
                         <div className="flex items-center gap-3 mb-4">
                           <div className="scale-95 origin-left">
@@ -452,8 +483,6 @@ export default function AllRooms() {
                           </p>
                         </div>
 
-                        {/* ADDRESS */}
-
                         <p className="text-slate-400 font-inter text-xs flex items-center gap-2 mb-5">
                           <span className="text-slate-300 text-sm">📍</span>
 
@@ -461,8 +490,6 @@ export default function AllRooms() {
                             {room.hotel?.address}
                           </span>
                         </p>
-
-                        {/* AMENITIES */}
 
                         <div className="flex flex-wrap gap-2 mb-4">
                           {room.amenities?.slice(0, 5).map((item, index) => (
@@ -484,8 +511,6 @@ export default function AllRooms() {
                           ))}
                         </div>
                       </div>
-
-                      {/* PRICE */}
 
                       <div className="pt-4 border-t border-slate-50 flex items-baseline gap-1.5">
                         <span className="text-2xl font-bold font-inter text-slate-900">
@@ -540,7 +565,7 @@ export default function AllRooms() {
             <div
               className={`${
                 openFilter
-                  ? "max-h-[1000px] opacity-100"
+                  ? "max-h-[2000px] opacity-100"
                   : "max-h-0 lg:max-h-none opacity-0 lg:opacity-100"
               } overflow-hidden transition-all duration-500 ease-in-out font-inter`}
             >
@@ -552,10 +577,10 @@ export default function AllRooms() {
                 </p>
 
                 <div className="space-y-1">
-                  {roomTypes.map((roomType, index) => (
+                  {roomTypes.map((roomType) => (
                     <CheckBox
                       label={roomType}
-                      key={index}
+                      key={roomType}
                       selected={selectedFilters.roomType.includes(roomType)}
                       onChange={(checked) =>
                         handleFilterChange(checked, roomType, "roomType")
@@ -573,13 +598,36 @@ export default function AllRooms() {
                 </p>
 
                 <div className="space-y-1">
-                  {priceRange.map((range, index) => (
+                  {priceRange.map((range) => (
                     <CheckBox
-                      key={index}
+                      key={range}
                       label={`${currency}${range}`}
                       selected={selectedFilters.priceRange.includes(range)}
                       onChange={(checked) =>
                         handleFilterChange(checked, range, "priceRange")
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* ================================================= */}
+              {/* AMENITIES FILTER */}
+              {/* ================================================= */}
+
+              <div className="p-6 border-b border-slate-50">
+                <p className="text-xs uppercase tracking-wider font-semibold text-slate-400 mb-2">
+                  Amenities
+                </p>
+
+                <div className="space-y-1">
+                  {amenities.map((amenity) => (
+                    <CheckBox
+                      key={amenity}
+                      label={amenity}
+                      selected={selectedFilters.amenities.includes(amenity)}
+                      onChange={(checked) =>
+                        handleFilterChange(checked, amenity, "amenities")
                       }
                     />
                   ))}
@@ -594,10 +642,10 @@ export default function AllRooms() {
                 </p>
 
                 <div className="space-y-1">
-                  {sortBy.map((option, index) => (
+                  {sortBy.map((option) => (
                     <RadioButton
                       label={option}
-                      key={index}
+                      key={option}
                       selected={selectedSort === option}
                       onChange={() => handleSortChange(option)}
                     />
