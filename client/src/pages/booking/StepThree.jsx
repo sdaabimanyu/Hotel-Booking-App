@@ -19,7 +19,9 @@ export default function StepThree({ room, bookingData, setStep }) {
       ? Number(
           ((subtotal * bookingData.selectedOffer.discount) / 100).toFixed(2),
         )
-      : Number(bookingData.selectedOffer.discount.toFixed(2))
+      : Number(
+          Math.min(bookingData.selectedOffer.discount, subtotal).toFixed(2),
+        )
     : 0;
 
   const discountedPrice = Number((subtotal - discount).toFixed(2));
