@@ -457,35 +457,79 @@ export const createBooking = async (req, res) => {
 // GET /api/bookings/user
 export const getUserBookings = async (req, res) => {
   try {
-    const user = req.user._id;
+    // ==========================================
+    // 1. GET LOGGED-IN USER ID
+    // ==========================================
 
-    const bookings = await Booking.find({ user })
+    const userId = req.user._id;
+
+    // ==========================================
+    // 2. FIND ALL BOOKINGS OF THE USER
+    // ==========================================
+
+    const bookings = await Booking.find({
+      user: userId,
+    })
       .populate("room")
       .populate("hotel")
       .populate("selectedOffer")
-      .sort({ createdAt: -1 });
+      .sort({
+        createdAt: -1,
+      })
+      .lean();
 
-    const bookingsWithReviews = await Promise.all(
-      bookings.map(async (booking) => {
-        const review = await Review.findOne({
-          booking: booking._id,
-        });
+    // ==========================================
+    // 3. GET ALL BOOKING IDS
+    // ==========================================
 
-        return {
-          ...booking.toObject(),
-          reviewSubmitted: !!review,
-        };
-      }),
+    const bookingIds = bookings.map((booking) => booking._id);
+
+    // ==========================================
+    // 4. FIND REVIEWS FOR THESE BOOKINGS
+    // ==========================================
+
+    const reviews = await Review.find({
+      booking: {
+        $in: bookingIds,
+      },
+    })
+      .select("booking")
+      .lean();
+
+    // ==========================================
+    // 5. CREATE SET OF REVIEWED BOOKING IDS
+    // ==========================================
+
+    const reviewedBookingIds = new Set(
+      reviews.map((review) => review.booking.toString()),
     );
 
-    res.json({
+    // ==========================================
+    // 6. ADD reviewSubmitted TO EACH BOOKING
+    // ==========================================
+
+    const bookingsWithReviewStatus = bookings.map((booking) => ({
+      ...booking,
+
+      reviewSubmitted: reviewedBookingIds.has(booking._id.toString()),
+    }));
+
+    // ==========================================
+    // 7. SEND RESPONSE
+    // ==========================================
+
+    return res.status(200).json({
       success: true,
-      bookings: bookingsWithReviews,
+
+      bookings: bookingsWithReviewStatus,
     });
   } catch (error) {
-    res.json({
+    console.log("GET USER BOOKINGS ERROR:", error);
+
+    return res.status(500).json({
       success: false,
-      message: error.message,
+
+      message: error.message || "Failed to fetch user bookings",
     });
   }
 };
@@ -1052,43 +1096,128 @@ export const cancelBooking = async (req, res) => {
   try {
     const { bookingId } = req.body;
 
+    // ==========================================
+    // 1. VALIDATE BOOKING ID
+    // ==========================================
+
+    if (!bookingId) {
+      return res.status(400).json({
+        success: false,
+        message: "Booking ID is required",
+      });
+    }
+
+    // ==========================================
+    // 2. FIND BOOKING
+    // ==========================================
+
     const booking = await Booking.findById(bookingId);
 
     if (!booking) {
-      return res.json({
+      return res.status(404).json({
         success: false,
         message: "Booking not found",
       });
     }
 
-    // Only booking owner can cancel
+    // ==========================================
+    // 3. VERIFY BOOKING OWNER
+    // ==========================================
+
     if (booking.user.toString() !== req.user._id.toString()) {
-      return res.json({
+      return res.status(403).json({
         success: false,
-        message: "Unauthorized",
+        message: "You are not authorized to cancel this booking",
       });
     }
 
-    // Cannot cancel after check-in date
-    if (new Date() >= new Date(booking.checkInDate)) {
-      return res.json({
+    // ==========================================
+    // 4. PREVENT DUPLICATE CANCELLATION
+    // ==========================================
+
+    if (booking.status === "cancelled") {
+      return res.status(400).json({
+        success: false,
+        message: "Booking is already cancelled",
+      });
+    }
+
+    // ==========================================
+    // 5. PREVENT CANCELLING COMPLETED BOOKINGS
+    // ==========================================
+
+    if (booking.status === "checked-out") {
+      return res.status(400).json({
+        success: false,
+        message: "Completed bookings cannot be cancelled",
+      });
+    }
+
+    // ==========================================
+    // 6. PREVENT CANCELLING CHECKED-IN BOOKINGS
+    // ==========================================
+
+    if (booking.status === "checked-in") {
+      return res.status(400).json({
+        success: false,
+        message: "Checked-in bookings cannot be cancelled",
+      });
+    }
+
+    // ==========================================
+    // 7. CHECK CHECK-IN DATE
+    // ==========================================
+
+    const now = new Date();
+    const checkInDate = new Date(booking.checkInDate);
+
+    if (now >= checkInDate) {
+      return res.status(400).json({
         success: false,
         message: "Booking can no longer be cancelled",
       });
     }
 
+    // ==========================================
+    // 8. CANCEL BOOKING
+    // ==========================================
+
     booking.status = "cancelled";
 
     await booking.save();
 
-    res.json({
+    console.log("BOOKING CANCELLED:", {
+      bookingId: booking._id,
+      user: booking.user,
+      isPaid: booking.isPaid,
+      paymentMethod: booking.paymentMethod,
+      status: booking.status,
+    });
+
+    // ==========================================
+    // 9. SEND RESPONSE
+    // ==========================================
+
+    return res.status(200).json({
       success: true,
-      message: "Booking cancelled successfully",
+
+      message: booking.isPaid
+        ? "Booking cancelled successfully. Payment remains recorded."
+        : "Booking cancelled successfully",
+
+      booking: {
+        bookingId: booking._id,
+        status: booking.status,
+        isPaid: booking.isPaid,
+        paymentMethod: booking.paymentMethod,
+      },
     });
   } catch (error) {
-    res.json({
+    console.log("CANCEL BOOKING ERROR:", error);
+
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Failed to cancel booking",
     });
   }
 };
