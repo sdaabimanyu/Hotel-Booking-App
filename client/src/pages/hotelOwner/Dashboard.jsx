@@ -37,7 +37,6 @@ export default function Dashboard() {
       });
 
       if (data.success) {
-        console.log("DASHBOARD RESPONSE:", data.dashboardData);
         setDashboardData(data.dashboardData);
       } else {
         toast.error(data.message);

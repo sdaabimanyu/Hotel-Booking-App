@@ -291,6 +291,17 @@ export const getHotelBookings = async (req, res) => {
           ).toFixed(1)
         : 0;
 
+    const reviewAnalytics = [1, 2, 3, 4, 5].map((rating) => {
+      const count = reviews.filter((review) => review.rating === rating).length;
+
+      return {
+        rating,
+        count,
+      };
+    });
+
+    console.log("REVIEW ANALYTICS:", reviewAnalytics);
+
     const today = new Date();
 
     today.setHours(0, 0, 0, 0);
@@ -378,6 +389,7 @@ export const getHotelBookings = async (req, res) => {
 
         bookings,
         roomOccupancy,
+        reviewAnalytics,
       },
     });
   } catch (error) {
