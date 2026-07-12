@@ -125,7 +125,7 @@ export const createBooking = async (req, res) => {
     }
 
     // ==========================================
-    // 4. CHECK ROOM AVAILABILITY AGAIN
+    // 4. CHECK ROOM AVAILABILITY
     // ==========================================
 
     const isAvailable = await checkAvailability(
@@ -163,7 +163,6 @@ export const createBooking = async (req, res) => {
     const subtotal = Number((roomData.pricePerNight * nights).toFixed(2));
 
     let discount = 0;
-
     let validOffer = null;
 
     // ==========================================
@@ -171,11 +170,7 @@ export const createBooking = async (req, res) => {
     // ==========================================
 
     if (selectedOffer) {
-      const offer = await Offer.findOne({
-        _id: selectedOffer,
-        hotel: roomData.hotel._id,
-        isActive: true,
-      });
+      const offer = await Offer.findById(selectedOffer);
 
       if (!offer) {
         return res.status(400).json({
@@ -184,6 +179,15 @@ export const createBooking = async (req, res) => {
         });
       }
 
+      // Check whether offer is active
+      if (!offer.isActive) {
+        return res.status(400).json({
+          success: false,
+          message: "Selected offer is no longer active",
+        });
+      }
+
+      // Check whether offer has expired
       if (new Date(offer.validTill) < new Date()) {
         return res.status(400).json({
           success: false,
@@ -191,6 +195,7 @@ export const createBooking = async (req, res) => {
         });
       }
 
+      // Check minimum stay
       if (nights < offer.minimumStay) {
         return res.status(400).json({
           success: false,
@@ -198,6 +203,7 @@ export const createBooking = async (req, res) => {
         });
       }
 
+      // Calculate discount
       if (offer.discountType === "percentage") {
         discount = Number(((subtotal * offer.discount) / 100).toFixed(2));
       } else {
@@ -265,14 +271,14 @@ export const createBooking = async (req, res) => {
       discount,
       tax,
       totalPrice,
+      selectedOffer: booking.selectedOffer,
       status: booking.status,
       isPaid: booking.isPaid,
       createdAt: booking.createdAt,
     });
 
     // ==========================================
-    // 12. INCREASE OFFER USAGE ONLY AFTER
-    // BOOKING WAS SUCCESSFULLY CREATED
+    // 12. INCREASE OFFER USAGE
     // ==========================================
 
     if (validOffer) {
@@ -426,6 +432,7 @@ export const createBooking = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Booking Created Successfully",
+
       bookingId: booking._id,
 
       priceDetails: {
