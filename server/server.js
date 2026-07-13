@@ -14,6 +14,7 @@ import connectCloudinary from "./configs/cloudinary.js";
 import { stripeWebHooks } from "./controllers/stripeWebhooks.js";
 import reviewRouter from "./routes/reviewRoutes.js";
 import offerRouter from "./routes/offerRoutes.js";
+import notificationRouter from "./routes/notificationRoutes.js";
 
 dotenv.config();
 
