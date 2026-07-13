@@ -7,23 +7,58 @@ const roomSchema = new mongoose.Schema(
       ref: "Hotel",
       required: true,
     },
+
     roomType: {
       type: String,
       required: true,
     },
+
+    description: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    roomSize: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    bedType: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    view: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
     pricePerNight: {
       type: Number,
       required: true,
+      min: 0,
     },
+
     amenities: {
-      type: Array,
+      type: [String],
       required: true,
+      default: [],
     },
-    images: [{ type: String }],
+
+    images: {
+      type: [String],
+      default: [],
+    },
+
     isAvailable: {
       type: Boolean,
       default: true,
     },
+
     isDeleted: {
       type: Boolean,
       default: false,

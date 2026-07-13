@@ -7,25 +7,109 @@ import { getAuth } from "@clerk/express";
 // CREATE ROOM
 export const createRoom = async (req, res) => {
   try {
+    // ==========================================
+    // 1. GET LOGGED-IN USER
+    // ==========================================
+
     const { userId } = getAuth(req);
 
-    const hotel = await Hotel.findOne({ owner: userId });
+    // ==========================================
+    // 2. FIND OWNER'S HOTEL
+    // ==========================================
+
+    const hotel = await Hotel.findOne({
+      owner: userId,
+    });
 
     if (!hotel) {
-      return res.json({
+      return res.status(404).json({
         success: false,
         message: "No Hotel Found",
       });
     }
 
-    const { roomType, pricePerNight, amenities } = req.body;
+    // ==========================================
+    // 3. GET ROOM DATA
+    // ==========================================
 
-    if (!req.files || req.files.length === 0) {
-      return res.json({
+    const {
+      roomType,
+      description,
+      roomSize,
+      bedType,
+      view,
+      pricePerNight,
+      amenities,
+    } = req.body;
+
+    // ==========================================
+    // 4. VALIDATE REQUIRED DATA
+    // ==========================================
+
+    if (
+      !roomType ||
+      !description ||
+      !roomSize ||
+      !bedType ||
+      !view ||
+      !pricePerNight ||
+      !amenities
+    ) {
+      return res.status(400).json({
         success: false,
-        message: "No images uploaded",
+        message: "Please provide all required room details",
       });
     }
+
+    // ==========================================
+    // 5. VALIDATE PRICE
+    // ==========================================
+
+    const roomPrice = Number(pricePerNight);
+
+    if (Number.isNaN(roomPrice) || roomPrice <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid room price",
+      });
+    }
+
+    // ==========================================
+    // 6. PARSE AMENITIES
+    // ==========================================
+
+    let parsedAmenities;
+
+    try {
+      parsedAmenities = JSON.parse(amenities);
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid amenities data",
+      });
+    }
+
+    if (!Array.isArray(parsedAmenities) || parsedAmenities.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please select at least one amenity",
+      });
+    }
+
+    // ==========================================
+    // 7. VALIDATE IMAGES
+    // ==========================================
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please upload at least one room image",
+      });
+    }
+
+    // ==========================================
+    // 8. UPLOAD IMAGES TO CLOUDINARY
+    // ==========================================
 
     const imageUrls = [];
 
@@ -39,24 +123,45 @@ export const createRoom = async (req, res) => {
       imageUrls.push(result.secure_url);
     }
 
-    await Room.create({
+    // ==========================================
+    // 9. CREATE ROOM
+    // ==========================================
+
+    const room = await Room.create({
       hotel: hotel._id,
-      roomType,
-      pricePerNight: Number(pricePerNight),
-      amenities: JSON.parse(amenities),
+
+      roomType: roomType.trim(),
+
+      description: description.trim(),
+
+      roomSize: roomSize.trim(),
+
+      bedType: bedType.trim(),
+
+      view: view.trim(),
+
+      pricePerNight: roomPrice,
+
+      amenities: parsedAmenities,
+
       images: imageUrls,
     });
 
-    return res.json({
+    // ==========================================
+    // 10. SUCCESS RESPONSE
+    // ==========================================
+
+    return res.status(201).json({
       success: true,
       message: "Room created successfully",
+      room,
     });
   } catch (error) {
-    console.log(JSON.stringify(error, null, 2));
+    console.log("CREATE ROOM ERROR:", error);
 
-    return res.json({
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Failed to create room",
     });
   }
 };

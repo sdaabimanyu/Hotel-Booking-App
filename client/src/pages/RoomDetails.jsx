@@ -249,17 +249,83 @@ export default function RoomDetails() {
           <div className="col-span-1 lg:col-span-7 space-y-12">
             <div>
               <h3 className="text-2xl md:text-3xl font-playfair font-normal text-slate-950 mb-4">
-                Experience Luxury Uncompromised
+                About This Room
               </h3>
+
               <p className="text-slate-600 font-light leading-relaxed font-inter">
-                Guests will be allocated on the preferred floors according to
-                real-time availability. This beautifully configured space
-                features private master suites conveying an authentic city
-                resort pulse. Rates dynamically adjust according to occupancy
-                profiles; ensure targeted visitor configuration details are
-                registered below to obtain accurate pricing metrics for group
-                reservations.
+                {room.description ||
+                  "Discover a comfortable and relaxing stay designed to provide an exceptional guest experience."}
               </p>
+            </div>
+
+            {/* ROOM SPECIFICATIONS */}
+
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">
+                Room Details
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* ROOM SIZE */}
+
+                <div className="bg-white border border-slate-100 shadow-sm rounded-xl p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                      <i className="fa-solid fa-ruler-combined"></i>
+                    </div>
+
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">
+                        Room Size
+                      </p>
+
+                      <p className="text-sm font-medium text-slate-900 mt-1">
+                        {room.roomSize || "Not specified"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BED TYPE */}
+
+                <div className="bg-white border border-slate-100 shadow-sm rounded-xl p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                      <i className="fa-solid fa-bed"></i>
+                    </div>
+
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">
+                        Bed Type
+                      </p>
+
+                      <p className="text-sm font-medium text-slate-900 mt-1">
+                        {room.bedType || "Not specified"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ROOM VIEW */}
+
+                <div className="bg-white border border-slate-100 shadow-sm rounded-xl p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                      <i className="fa-solid fa-mountain-sun"></i>
+                    </div>
+
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">
+                        Room View
+                      </p>
+
+                      <p className="text-sm font-medium text-slate-900 mt-1">
+                        {room.view || "Not specified"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Elevated Bespoke Amenities Grid */}

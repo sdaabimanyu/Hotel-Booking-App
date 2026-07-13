@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
@@ -21,34 +21,39 @@ export default function Reviews() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Stores which review currently has the response box open
+  // Which review currently has the response box open
   const [respondingReviewId, setRespondingReviewId] = useState(null);
 
-  // Stores admin response text
+  // Admin response text
   const [responseText, setResponseText] = useState("");
 
-  // Prevent multiple moderation requests
-  const [actionLoading, setActionLoading] = useState(false);
+  // Stores the review currently being processed
+  const [actionLoadingId, setActionLoadingId] = useState(null);
 
   // =========================================================
   // FETCH HOTEL REVIEWS
   // =========================================================
 
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     try {
+      const token = await getToken();
+
       const { data } = await axios.get("/api/reviews/hotel", {
         headers: {
-          Authorization: `Bearer ${await getToken()}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (data.success) {
-        setReviews(data.reviews);
+        setReviews(data.reviews || []);
       } else {
-        toast.error(data.message);
+        toast.error(data.message || "Failed to fetch reviews");
       }
     } catch (error) {
-      console.log("FETCH REVIEWS ERROR:", error);
+      console.log(
+        "FETCH REVIEWS ERROR:",
+        error.response?.data || error.message,
+      );
 
       toast.error(
         error.response?.data?.message ||
@@ -58,11 +63,11 @@ export default function Reviews() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [axios, getToken]);
 
   useEffect(() => {
     fetchReviews();
-  }, []);
+  }, [fetchReviews]);
 
   // =========================================================
   // APPROVE REVIEW
@@ -70,27 +75,41 @@ export default function Reviews() {
 
   const approveReview = async (reviewId) => {
     try {
-      setActionLoading(true);
+      setActionLoadingId(reviewId);
+
+      const token = await getToken();
 
       const { data } = await axios.patch(
         `/api/reviews/${reviewId}/approve`,
         {},
         {
           headers: {
-            Authorization: `Bearer ${await getToken()}`,
+            Authorization: `Bearer ${token}`,
           },
         },
       );
 
       if (data.success) {
-        toast.success(data.message);
+        toast.success(data.message || "Review approved successfully");
 
-        await fetchReviews();
+        setReviews((previousReviews) =>
+          previousReviews.map((review) =>
+            review._id === reviewId
+              ? {
+                  ...review,
+                  status: "approved",
+                }
+              : review,
+          ),
+        );
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      console.log("APPROVE REVIEW ERROR:", error);
+      console.log(
+        "APPROVE REVIEW ERROR:",
+        error.response?.data || error.message,
+      );
 
       toast.error(
         error.response?.data?.message ||
@@ -98,7 +117,7 @@ export default function Reviews() {
           "Failed to approve review",
       );
     } finally {
-      setActionLoading(false);
+      setActionLoadingId(null);
     }
   };
 
@@ -108,27 +127,41 @@ export default function Reviews() {
 
   const rejectReview = async (reviewId) => {
     try {
-      setActionLoading(true);
+      setActionLoadingId(reviewId);
+
+      const token = await getToken();
 
       const { data } = await axios.patch(
         `/api/reviews/${reviewId}/reject`,
         {},
         {
           headers: {
-            Authorization: `Bearer ${await getToken()}`,
+            Authorization: `Bearer ${token}`,
           },
         },
       );
 
       if (data.success) {
-        toast.success(data.message);
+        toast.success(data.message || "Review rejected successfully");
 
-        await fetchReviews();
+        setReviews((previousReviews) =>
+          previousReviews.map((review) =>
+            review._id === reviewId
+              ? {
+                  ...review,
+                  status: "rejected",
+                }
+              : review,
+          ),
+        );
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      console.log("REJECT REVIEW ERROR:", error);
+      console.log(
+        "REJECT REVIEW ERROR:",
+        error.response?.data || error.message,
+      );
 
       toast.error(
         error.response?.data?.message ||
@@ -136,7 +169,7 @@ export default function Reviews() {
           "Failed to reject review",
       );
     } finally {
-      setActionLoading(false);
+      setActionLoadingId(null);
     }
   };
 
@@ -146,8 +179,6 @@ export default function Reviews() {
 
   const openResponseBox = (review) => {
     setRespondingReviewId(review._id);
-
-    // If admin already responded, show existing response
     setResponseText(review.adminResponse || "");
   };
 
@@ -165,36 +196,54 @@ export default function Reviews() {
   // =========================================================
 
   const respondToReview = async (reviewId) => {
-    if (!responseText.trim()) {
+    const trimmedResponse = responseText.trim();
+
+    if (!trimmedResponse) {
       return toast.error("Please enter a response");
     }
 
     try {
-      setActionLoading(true);
+      setActionLoadingId(reviewId);
+
+      const token = await getToken();
 
       const { data } = await axios.patch(
         `/api/reviews/${reviewId}/respond`,
         {
-          response: responseText,
+          response: trimmedResponse,
         },
         {
           headers: {
-            Authorization: `Bearer ${await getToken()}`,
+            Authorization: `Bearer ${token}`,
           },
         },
       );
 
       if (data.success) {
-        toast.success(data.message);
+        toast.success(data.message || "Response added successfully");
+
+        setReviews((previousReviews) =>
+          previousReviews.map((review) =>
+            review._id === reviewId
+              ? {
+                  ...review,
+                  adminResponse: data.review?.adminResponse || trimmedResponse,
+                  respondedAt:
+                    data.review?.respondedAt || new Date().toISOString(),
+                }
+              : review,
+          ),
+        );
 
         closeResponseBox();
-
-        await fetchReviews();
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      console.log("RESPOND REVIEW ERROR:", error);
+      console.log(
+        "RESPOND REVIEW ERROR:",
+        error.response?.data || error.message,
+      );
 
       toast.error(
         error.response?.data?.message ||
@@ -202,7 +251,7 @@ export default function Reviews() {
           "Failed to respond to review",
       );
     } finally {
-      setActionLoading(false);
+      setActionLoadingId(null);
     }
   };
 
@@ -226,23 +275,34 @@ export default function Reviews() {
     }
 
     try {
-      setActionLoading(true);
+      setActionLoadingId(reviewId);
+
+      const token = await getToken();
 
       const { data } = await axios.delete(`/api/reviews/${reviewId}`, {
         headers: {
-          Authorization: `Bearer ${await getToken()}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (data.success) {
-        toast.success(data.message);
+        toast.success(data.message || "Review deleted successfully");
 
-        await fetchReviews();
+        setReviews((previousReviews) =>
+          previousReviews.filter((review) => review._id !== reviewId),
+        );
+
+        if (respondingReviewId === reviewId) {
+          closeResponseBox();
+        }
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      console.log("DELETE REVIEW ERROR:", error);
+      console.log(
+        "DELETE REVIEW ERROR:",
+        error.response?.data || error.message,
+      );
 
       toast.error(
         error.response?.data?.message ||
@@ -250,16 +310,16 @@ export default function Reviews() {
           "Failed to delete review",
       );
     } finally {
-      setActionLoading(false);
+      setActionLoadingId(null);
     }
   };
 
   // =========================================================
-  // STATUS
+  // GET REVIEW STATUS
   // =========================================================
 
   const getReviewStatus = (review) => {
-    // Old reviews may not have status
+    // Support old reviews that were created before status existed
     return review.status || "approved";
   };
 
@@ -302,37 +362,45 @@ export default function Reviews() {
 
   const totalReviews = reviews.length;
 
-  const averageRating =
-    totalReviews > 0
-      ? (
-          reviews.reduce((acc, item) => acc + item.rating, 0) / totalReviews
-        ).toFixed(1)
-      : "0.0";
-
   const pendingReviews = reviews.filter(
     (review) => getReviewStatus(review) === "pending",
   ).length;
 
-  const approvedReviews = reviews.filter(
+  const approvedReviewsList = reviews.filter(
     (review) => getReviewStatus(review) === "approved",
-  ).length;
+  );
+
+  const approvedReviews = approvedReviewsList.length;
 
   const rejectedReviews = reviews.filter(
     (review) => getReviewStatus(review) === "rejected",
   ).length;
+
+  // Only approved reviews should affect the public average rating
+  const averageRating =
+    approvedReviewsList.length > 0
+      ? (
+          approvedReviewsList.reduce(
+            (total, review) => total + Number(review.rating || 0),
+            0,
+          ) / approvedReviewsList.length
+        ).toFixed(1)
+      : "0.0";
 
   // =========================================================
   // STARS
   // =========================================================
 
   const renderStars = (rating) => {
+    const numericRating = Number(rating) || 0;
+
     return (
       <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
             className={`w-4 h-4 ${
-              star <= rating
+              star <= numericRating
                 ? "fill-amber-400 text-amber-400"
                 : "text-gray-200 fill-gray-100"
             }`}
@@ -379,8 +447,6 @@ export default function Reviews() {
       {/* SUMMARY CARDS */}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {/* TOTAL */}
-
         <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
           <p className="text-sm text-gray-500">Total Reviews</p>
 
@@ -388,8 +454,6 @@ export default function Reviews() {
             {totalReviews}
           </p>
         </div>
-
-        {/* PENDING */}
 
         <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
           <p className="text-sm text-gray-500">Pending</p>
@@ -399,8 +463,6 @@ export default function Reviews() {
           </p>
         </div>
 
-        {/* APPROVED */}
-
         <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
           <p className="text-sm text-gray-500">Approved</p>
 
@@ -408,8 +470,6 @@ export default function Reviews() {
             {approvedReviews}
           </p>
         </div>
-
-        {/* REJECTED */}
 
         <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
           <p className="text-sm text-gray-500">Rejected</p>
@@ -429,7 +489,7 @@ export default function Reviews() {
           </h2>
 
           <p className="text-gray-500 text-sm mt-1">
-            Average rating from all submitted reviews.
+            Average rating from approved guest reviews.
           </p>
         </div>
 
@@ -461,6 +521,8 @@ export default function Reviews() {
           reviews.map((review) => {
             const status = getReviewStatus(review);
 
+            const isCurrentReviewLoading = actionLoadingId === review._id;
+
             return (
               <div
                 key={review._id}
@@ -473,10 +535,10 @@ export default function Reviews() {
                     {/* LEFT */}
 
                     <div className="flex items-start gap-4 flex-1">
-                      {/* USER AVATAR */}
+                      {/* AVATAR */}
 
                       <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
-                        {review.userName?.charAt(0).toUpperCase() || "G"}
+                        {review.userName?.charAt(0)?.toUpperCase() || "G"}
                       </div>
 
                       <div className="flex-1">
@@ -504,18 +566,20 @@ export default function Reviews() {
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
 
-                            {new Date(review.createdAt).toLocaleDateString(
-                              undefined,
-                              {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              },
-                            )}
+                            {review.createdAt
+                              ? new Date(review.createdAt).toLocaleDateString(
+                                  undefined,
+                                  {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  },
+                                )
+                              : "Date unavailable"}
                           </span>
                         </div>
 
-                        {/* REVIEW */}
+                        {/* COMMENT */}
 
                         <p className="text-gray-600 text-sm leading-relaxed mt-4 max-w-3xl">
                           "{review.comment}"
@@ -529,7 +593,7 @@ export default function Reviews() {
                       <div className="w-full md:w-32 h-24 rounded-xl overflow-hidden border border-gray-100 shrink-0">
                         <img
                           src={review.room.images[0]}
-                          alt={review.room.roomType}
+                          alt={review.room.roomType || "Hotel room"}
                           className="w-full h-full object-cover"
                         />
                       </div>
@@ -566,30 +630,36 @@ export default function Reviews() {
                   {respondingReviewId === review._id && (
                     <div className="mt-6 ml-0 md:ml-14">
                       <textarea
-                        rows="4"
+                        rows={4}
                         value={responseText}
-                        onChange={(e) => setResponseText(e.target.value)}
+                        onChange={(event) =>
+                          setResponseText(event.target.value)
+                        }
                         placeholder="Write your response to this guest..."
                         className="w-full border border-gray-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                       />
 
                       <div className="flex justify-end gap-3 mt-3">
                         <button
+                          type="button"
                           onClick={closeResponseBox}
-                          disabled={actionLoading}
-                          className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50"
+                          disabled={isCurrentReviewLoading}
+                          className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
                         >
                           Cancel
                         </button>
 
                         <button
+                          type="button"
                           onClick={() => respondToReview(review._id)}
-                          disabled={actionLoading}
+                          disabled={isCurrentReviewLoading}
                           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
                         >
                           <Send className="w-4 h-4" />
 
-                          {actionLoading ? "Sending..." : "Send Response"}
+                          {isCurrentReviewLoading
+                            ? "Sending..."
+                            : "Send Response"}
                         </button>
                       </div>
                     </div>
@@ -599,24 +669,25 @@ export default function Reviews() {
                 {/* MODERATION ACTIONS */}
 
                 <div className="border-t border-gray-100 bg-gray-50/50 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
-                  {/* LEFT ACTIONS */}
-
                   <div className="flex flex-wrap gap-2">
                     {status !== "approved" && (
                       <button
+                        type="button"
                         onClick={() => approveReview(review._id)}
-                        disabled={actionLoading}
+                        disabled={isCurrentReviewLoading}
                         className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 border border-green-200 rounded-lg text-sm font-medium hover:bg-green-100 disabled:opacity-50"
                       >
                         <Check className="w-4 h-4" />
-                        Approve
+
+                        {isCurrentReviewLoading ? "Processing..." : "Approve"}
                       </button>
                     )}
 
                     {status !== "rejected" && (
                       <button
+                        type="button"
                         onClick={() => rejectReview(review._id)}
-                        disabled={actionLoading}
+                        disabled={isCurrentReviewLoading}
                         className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm font-medium hover:bg-red-100 disabled:opacity-50"
                       >
                         <X className="w-4 h-4" />
@@ -625,8 +696,9 @@ export default function Reviews() {
                     )}
 
                     <button
+                      type="button"
                       onClick={() => openResponseBox(review)}
-                      disabled={actionLoading}
+                      disabled={isCurrentReviewLoading}
                       className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-sm font-medium hover:bg-blue-100 disabled:opacity-50"
                     >
                       <Reply className="w-4 h-4" />
@@ -638,8 +710,9 @@ export default function Reviews() {
                   {/* DELETE */}
 
                   <button
+                    type="button"
                     onClick={() => deleteReview(review._id)}
-                    disabled={actionLoading}
+                    disabled={isCurrentReviewLoading}
                     className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition disabled:opacity-50"
                   >
                     <Trash2 className="w-4 h-4" />
