@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const inquirySchema = new mongoose.Schema(
   {
     booking: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Booking",
       required: true,
     },
@@ -15,7 +15,7 @@ const inquirySchema = new mongoose.Schema(
     },
 
     hotel: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Hotel",
       required: true,
     },

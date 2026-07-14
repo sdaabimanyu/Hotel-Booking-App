@@ -13,6 +13,7 @@ const notificationSchema = new mongoose.Schema(
       enum: [
         "booking_reminder",
         "booking_confirmation",
+        "booking_update",
         "payment_receipt",
         "special_offer",
       ],
@@ -22,11 +23,13 @@ const notificationSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
+      trim: true,
     },
 
     message: {
       type: String,
       required: true,
+      trim: true,
     },
 
     isRead: {

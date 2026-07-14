@@ -15,7 +15,7 @@ import {
 const roomRouter = express.Router();
 
 // CREATE ROOM
-roomRouter.post("/", upload.array("images", 4), protect, createRoom);
+roomRouter.post("/", protect, upload.array("images", 4), createRoom);
 
 // GET ALL PUBLIC ROOMS
 roomRouter.get("/", getRooms);

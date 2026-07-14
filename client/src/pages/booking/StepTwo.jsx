@@ -67,9 +67,17 @@ export default function StepTwo({
 
       const meetsMinimumStay = nights >= minimumStay;
 
-      return isActive && isNotExpired && meetsMinimumStay;
+      const offerHotelId =
+        typeof offer.hotel === "object" ? offer.hotel._id : offer.hotel;
+
+      const roomHotelId =
+        typeof room.hotel === "object" ? room.hotel._id : room.hotel;
+
+      const belongsToHotel = offerHotelId === roomHotelId;
+
+      return belongsToHotel && isActive && isNotExpired && meetsMinimumStay;
     });
-  }, [offers, nights]);
+  }, [offers, nights, room.hotel]);
 
   // =========================================================
   // CALCULATE BOOKING PRICE
@@ -134,6 +142,8 @@ export default function StepTwo({
         "/api/offers/apply",
         {
           code: promoCode,
+          hotelId: room.hotel._id,
+          nights,
         },
         {
           headers: {

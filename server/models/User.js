@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const userSchema = mongoose.Schema(
+const userSchema = new mongoose.Schema(
   {
     _id: {
       type: String,
@@ -10,11 +10,14 @@ const userSchema = mongoose.Schema(
     username: {
       type: String,
       required: true,
+      trim: true,
     },
 
     email: {
       type: String,
       required: true,
+      trim: true,
+      lowercase: true,
     },
 
     image: {
@@ -31,47 +34,50 @@ const userSchema = mongoose.Schema(
     recentSearchedCities: [
       {
         type: String,
-        required: true,
+        trim: true,
       },
     ],
 
-    // PERSONAL PROFILE INFORMATION
     profile: {
       phone: {
         type: String,
         default: "",
+        trim: true,
       },
 
       address: {
         type: String,
         default: "",
+        trim: true,
       },
 
       city: {
         type: String,
         default: "",
+        trim: true,
       },
 
       country: {
         type: String,
         default: "",
+        trim: true,
       },
     },
 
-    // BOOKING PREFERENCES
     bookingPreferences: {
       preferredRoomType: {
         type: String,
         default: "",
+        trim: true,
       },
 
       preferredGuests: {
         type: Number,
         default: 1,
+        min: 1,
       },
     },
 
-    // FAVORITE HOTELS
     favoriteHotels: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -79,7 +85,6 @@ const userSchema = mongoose.Schema(
       },
     ],
 
-    // FAVORITE ROOMS
     favoriteRooms: [
       {
         type: mongoose.Schema.Types.ObjectId,

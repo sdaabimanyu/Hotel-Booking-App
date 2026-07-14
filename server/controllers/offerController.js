@@ -215,6 +215,13 @@ export const getOwnerOffers = async (req, res) => {
       owner: req.user._id,
     });
 
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: "Hotel not found",
+      });
+    }
+
     const offers = await Offer.find({
       hotel: hotel._id,
     }).sort({ createdAt: -1 });
@@ -258,12 +265,20 @@ export const getOfferById = async (req, res) => {
 
 export const updateOffer = async (req, res) => {
   try {
+    // ==========================================
+    // 1. CHECK USER ROLE
+    // ==========================================
+
     if (req.user.role !== "hotelOwner") {
-      return res.json({
+      return res.status(403).json({
         success: false,
         message: "Only hotel owners can update offers",
       });
     }
+
+    // ==========================================
+    // 2. FIND OFFER OWNED BY LOGGED-IN OWNER
+    // ==========================================
 
     const offer = await Offer.findOne({
       _id: req.params.id,
@@ -271,11 +286,15 @@ export const updateOffer = async (req, res) => {
     });
 
     if (!offer) {
-      return res.json({
+      return res.status(404).json({
         success: false,
         message: "Offer not found",
       });
     }
+
+    // ==========================================
+    // 3. GET UPDATED DATA
+    // ==========================================
 
     const {
       title,
@@ -288,29 +307,162 @@ export const updateOffer = async (req, res) => {
       image,
     } = req.body;
 
-    offer.title = title;
-    offer.description = description;
-    offer.code = code.trim().toUpperCase();
-    offer.discount = discount;
+    // ==========================================
+    // 4. VALIDATE REQUIRED FIELDS
+    // ==========================================
+
+    if (
+      !title ||
+      !description ||
+      !code ||
+      discount === undefined ||
+      !discountType ||
+      !minimumStay ||
+      !validTill
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill all required fields",
+      });
+    }
+
+    // ==========================================
+    // 5. NORMALIZE OFFER CODE
+    // ==========================================
+
+    const normalizedCode = code.trim().toUpperCase();
+
+    // ==========================================
+    // 6. CHECK DUPLICATE CODE
+    // EXCLUDE CURRENT OFFER
+    // ==========================================
+
+    const existingOffer = await Offer.findOne({
+      _id: {
+        $ne: offer._id,
+      },
+      hotel: offer.hotel,
+      code: normalizedCode,
+    });
+
+    if (existingOffer) {
+      return res.status(400).json({
+        success: false,
+        message: "Offer code already exists",
+      });
+    }
+
+    // ==========================================
+    // 7. VALIDATE DISCOUNT
+    // ==========================================
+
+    const discountValue = Number(discount);
+
+    if (Number.isNaN(discountValue) || discountValue <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid discount",
+      });
+    }
+
+    if (discountType === "percentage" && discountValue > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Percentage discount cannot exceed 100%",
+      });
+    }
+
+    // ==========================================
+    // 8. VALIDATE DISCOUNT TYPE
+    // ==========================================
+
+    if (!["percentage", "fixed"].includes(discountType)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid discount type",
+      });
+    }
+
+    // ==========================================
+    // 9. VALIDATE MINIMUM STAY
+    // ==========================================
+
+    const minimumStayValue = Number(minimumStay);
+
+    if (Number.isNaN(minimumStayValue) || minimumStayValue < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Minimum stay must be at least one night",
+      });
+    }
+
+    // ==========================================
+    // 10. VALIDATE EXPIRY DATE
+    // ==========================================
+
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+
+    const expiry = new Date(validTill);
+
+    if (Number.isNaN(expiry.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid expiry date",
+      });
+    }
+
+    expiry.setHours(0, 0, 0, 0);
+
+    if (expiry <= today) {
+      return res.status(400).json({
+        success: false,
+        message: "Expiry date must be in the future",
+      });
+    }
+
+    // ==========================================
+    // 11. UPDATE OFFER
+    // ==========================================
+
+    offer.title = title.trim();
+
+    offer.description = description.trim();
+
+    offer.code = normalizedCode;
+
+    offer.discount = discountValue;
+
     offer.discountType = discountType;
-    offer.minimumStay = minimumStay;
+
+    offer.minimumStay = minimumStayValue;
+
     offer.validTill = validTill;
 
     if (image) {
       offer.image = image;
     }
 
+    // ==========================================
+    // 12. SAVE OFFER
+    // ==========================================
+
     await offer.save();
 
-    res.json({
+    // ==========================================
+    // 13. SUCCESS RESPONSE
+    // ==========================================
+
+    return res.status(200).json({
       success: true,
       message: "Offer updated successfully",
       offer,
     });
   } catch (error) {
-    console.log(error);
+    console.log("UPDATE OFFER ERROR:", error);
 
-    res.json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -320,7 +472,7 @@ export const updateOffer = async (req, res) => {
 export const deleteOffer = async (req, res) => {
   try {
     if (req.user.role !== "hotelOwner") {
-      return res.json({
+      return res.status(403).json({
         success: false,
         message: "Only hotel owners can delete offers",
       });
@@ -331,20 +483,20 @@ export const deleteOffer = async (req, res) => {
     });
 
     if (!offer) {
-      return res.json({
+      return res.status(404).json({
         success: false,
         message: "Offer not found",
       });
     }
 
-    res.json({
+    return res.status(200).json({
       success: true,
       message: "Offer deleted successfully",
     });
   } catch (error) {
     console.log(error);
 
-    res.json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -392,35 +544,90 @@ export const toggleOfferStatus = async (req, res) => {
 
 export const applyOfferCode = async (req, res) => {
   try {
-    const { code } = req.body;
+    const { code, hotelId, nights } = req.body;
+
+    // ==========================================
+    // 1. VALIDATE REQUIRED DATA
+    // ==========================================
+
+    if (!code || !hotelId || !nights) {
+      return res.status(400).json({
+        success: false,
+        message: "Offer code, hotel and number of nights are required",
+      });
+    }
+
+    // ==========================================
+    // 2. VALIDATE NUMBER OF NIGHTS
+    // ==========================================
+
+    const stayNights = Number(nights);
+
+    if (Number.isNaN(stayNights) || stayNights < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid number of nights",
+      });
+    }
+
+    // ==========================================
+    // 3. NORMALIZE OFFER CODE
+    // ==========================================
+
+    const normalizedCode = code.trim().toUpperCase();
+
+    // ==========================================
+    // 4. FIND OFFER FOR SELECTED HOTEL
+    // ==========================================
 
     const offer = await Offer.findOne({
-      code: code.toUpperCase(),
+      code: normalizedCode,
+      hotel: hotelId,
       isActive: true,
     });
 
     if (!offer) {
-      return res.json({
+      return res.status(404).json({
         success: false,
-        message: "Invalid Offer Code",
+        message: "Invalid offer code for this hotel",
       });
     }
+
+    // ==========================================
+    // 5. CHECK EXPIRY
+    // ==========================================
 
     if (new Date(offer.validTill) < new Date()) {
-      return res.json({
+      return res.status(400).json({
         success: false,
-        message: "Offer Expired",
+        message: "Offer has expired",
       });
     }
 
-    res.json({
+    // ==========================================
+    // 6. CHECK MINIMUM STAY
+    // ==========================================
+
+    if (stayNights < Number(offer.minimumStay)) {
+      return res.status(400).json({
+        success: false,
+        message: `This offer requires a minimum stay of ${offer.minimumStay} nights`,
+      });
+    }
+
+    // ==========================================
+    // 7. SUCCESS RESPONSE
+    // ==========================================
+
+    return res.status(200).json({
       success: true,
+      message: "Offer applied successfully",
       offer,
     });
   } catch (error) {
-    console.log(error);
+    console.log("APPLY OFFER CODE ERROR:", error);
 
-    res.json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });

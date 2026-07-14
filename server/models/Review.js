@@ -7,9 +7,11 @@ const reviewSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
     userName: {
       type: String,
       required: true,
+      trim: true,
     },
 
     hotel: {
@@ -28,6 +30,7 @@ const reviewSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Booking",
       required: true,
+      unique: true,
     },
 
     rating: {
@@ -40,6 +43,7 @@ const reviewSchema = new mongoose.Schema(
     comment: {
       type: String,
       required: true,
+      trim: true,
     },
 
     status: {
@@ -51,6 +55,7 @@ const reviewSchema = new mongoose.Schema(
     adminResponse: {
       type: String,
       default: "",
+      trim: true,
     },
 
     respondedAt: {
@@ -58,7 +63,11 @@ const reviewSchema = new mongoose.Schema(
       default: null,
     },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+  },
 );
 
-export default mongoose.model("Review", reviewSchema);
+const Review = mongoose.model("Review", reviewSchema);
+
+export default Review;

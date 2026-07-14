@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const roomSchema = new mongoose.Schema(
   {
     hotel: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Hotel",
       required: true,
     },
@@ -11,6 +11,7 @@ const roomSchema = new mongoose.Schema(
     roomType: {
       type: String,
       required: true,
+      trim: true,
     },
 
     description: {
@@ -45,7 +46,6 @@ const roomSchema = new mongoose.Schema(
 
     amenities: {
       type: [String],
-      required: true,
       default: [],
     },
 

@@ -357,6 +357,12 @@ const Navbar = () => {
                   onClick={() => navigate("/my-bookings")}
                 />
 
+                <UserButton.Action
+                  label="My Inquiries"
+                  labelIcon={<i className="fa-solid fa-message"></i>}
+                  onClick={() => navigate("/my-inquiries")}
+                />
+
                 {isOwner && (
                   <UserButton.Action
                     label="Admin Dashboard"
@@ -403,6 +409,12 @@ const Navbar = () => {
                 label="My Bookings"
                 labelIcon={<i className="fa-solid fa-book"></i>}
                 onClick={() => navigate("/my-bookings")}
+              />
+
+              <UserButton.Action
+                label="My Inquiries"
+                labelIcon={<i className="fa-solid fa-message"></i>}
+                onClick={() => navigate("/my-inquiries")}
               />
 
               {isOwner && (

@@ -24,6 +24,7 @@ const offerSchema = new mongoose.Schema(
     discount: {
       type: Number,
       required: true,
+      min: 0,
     },
 
     discountType: {
@@ -35,6 +36,7 @@ const offerSchema = new mongoose.Schema(
     minimumStay: {
       type: Number,
       default: 1,
+      min: 1,
     },
 
     validTill: {
@@ -55,6 +57,7 @@ const offerSchema = new mongoose.Schema(
     usedCount: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     hotel: {
@@ -71,6 +74,16 @@ const offerSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+  },
+);
+
+offerSchema.index(
+  {
+    hotel: 1,
+    code: 1,
+  },
+  {
+    unique: true,
   },
 );
 

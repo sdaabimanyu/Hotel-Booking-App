@@ -1,10 +1,14 @@
+import mongoose from "mongoose";
+import Hotel from "../models/Hotel.js";
+import Room from "../models/Room.js";
+
 // GET BASIC USER DATA
 export const getUserData = async (req, res) => {
   try {
     const role = req.user.role;
-    const recentSearchedCities = req.user.recentSearchedCities;
+    const recentSearchedCities = req.user.recentSearchedCities || [];
 
-    res.json({
+    return res.status(200).json({
       success: true,
       role,
       recentSearchedCities,
@@ -12,7 +16,7 @@ export const getUserData = async (req, res) => {
   } catch (error) {
     console.log("GET USER DATA ERROR:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -24,7 +28,7 @@ export const getUserProfile = async (req, res) => {
   try {
     const user = req.user;
 
-    res.json({
+    return res.status(200).json({
       success: true,
 
       user: {
@@ -51,7 +55,7 @@ export const getUserProfile = async (req, res) => {
   } catch (error) {
     console.log("GET USER PROFILE ERROR:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -72,21 +76,42 @@ export const updateUserProfile = async (req, res) => {
 
     const user = req.user;
 
+    // ==========================================
+    // VALIDATE PREFERRED GUEST COUNT
+    // ==========================================
+
+    const guestCount = Number(preferredGuests || 1);
+
+    if (!Number.isInteger(guestCount) || guestCount < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Preferred guests must be at least 1",
+      });
+    }
+
+    // ==========================================
+    // UPDATE PROFILE
+    // ==========================================
+
     user.profile = {
-      phone: phone || "",
-      address: address || "",
-      city: city || "",
-      country: country || "",
+      phone: phone?.trim() || "",
+      address: address?.trim() || "",
+      city: city?.trim() || "",
+      country: country?.trim() || "",
     };
 
+    // ==========================================
+    // UPDATE BOOKING PREFERENCES
+    // ==========================================
+
     user.bookingPreferences = {
-      preferredRoomType: preferredRoomType || "",
-      preferredGuests: Number(preferredGuests) || 1,
+      preferredRoomType: preferredRoomType?.trim() || "",
+      preferredGuests: guestCount,
     };
 
     await user.save();
 
-    res.json({
+    return res.status(200).json({
       success: true,
       message: "Profile updated successfully",
 
@@ -105,7 +130,7 @@ export const updateUserProfile = async (req, res) => {
   } catch (error) {
     console.log("UPDATE USER PROFILE ERROR:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -117,25 +142,52 @@ export const storeRecentSearchedCities = async (req, res) => {
   try {
     const { recentSearchedCity } = req.body;
 
+    // ==========================================
+    // VALIDATE CITY
+    // ==========================================
+
+    if (typeof recentSearchedCity !== "string" || !recentSearchedCity.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "City is required",
+      });
+    }
+
     const user = req.user;
 
-    if (user.recentSearchedCities.length < 3) {
-      user.recentSearchedCities.push(recentSearchedCity);
-    } else {
-      user.recentSearchedCities.shift();
-      user.recentSearchedCities.push(recentSearchedCity);
-    }
+    const normalizedCity = recentSearchedCity.trim();
+
+    // ==========================================
+    // REMOVE DUPLICATE CITY
+    // ==========================================
+
+    const recentCities = (user.recentSearchedCities || []).filter(
+      (city) => city.toLowerCase() !== normalizedCity.toLowerCase(),
+    );
+
+    // ==========================================
+    // ADD NEWEST CITY
+    // ==========================================
+
+    recentCities.push(normalizedCity);
+
+    // ==========================================
+    // KEEP ONLY LAST 3 CITIES
+    // ==========================================
+
+    user.recentSearchedCities = recentCities.slice(-3);
 
     await user.save();
 
-    res.json({
+    return res.status(200).json({
       success: true,
       message: "City added",
+      recentSearchedCities: user.recentSearchedCities,
     });
   } catch (error) {
     console.log("STORE RECENT SEARCH ERROR:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -147,10 +199,36 @@ export const toggleFavoriteHotel = async (req, res) => {
   try {
     const { hotelId } = req.body;
 
+    // ==========================================
+    // VALIDATE HOTEL ID
+    // ==========================================
+
     if (!hotelId) {
       return res.status(400).json({
         success: false,
         message: "Hotel ID is required",
+      });
+    }
+
+    if (!mongoose.isValidObjectId(hotelId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid hotel ID",
+      });
+    }
+
+    // ==========================================
+    // VERIFY HOTEL EXISTS
+    // ==========================================
+
+    const hotelExists = await Hotel.exists({
+      _id: hotelId,
+    });
+
+    if (!hotelExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Hotel not found",
       });
     }
 
@@ -160,6 +238,10 @@ export const toggleFavoriteHotel = async (req, res) => {
 
     const isFavorite = favoriteHotels.some((id) => id.toString() === hotelId);
 
+    // ==========================================
+    // REMOVE FAVORITE
+    // ==========================================
+
     if (isFavorite) {
       user.favoriteHotels = favoriteHotels.filter(
         (id) => id.toString() !== hotelId,
@@ -167,18 +249,22 @@ export const toggleFavoriteHotel = async (req, res) => {
 
       await user.save();
 
-      return res.json({
+      return res.status(200).json({
         success: true,
         message: "Hotel removed from favorites",
         isFavorite: false,
       });
     }
 
+    // ==========================================
+    // ADD FAVORITE
+    // ==========================================
+
     user.favoriteHotels.push(hotelId);
 
     await user.save();
 
-    res.json({
+    return res.status(200).json({
       success: true,
       message: "Hotel added to favorites",
       isFavorite: true,
@@ -186,7 +272,7 @@ export const toggleFavoriteHotel = async (req, res) => {
   } catch (error) {
     console.log("TOGGLE FAVORITE HOTEL ERROR:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -198,10 +284,36 @@ export const toggleFavoriteRoom = async (req, res) => {
   try {
     const { roomId } = req.body;
 
+    // ==========================================
+    // VALIDATE ROOM ID
+    // ==========================================
+
     if (!roomId) {
       return res.status(400).json({
         success: false,
         message: "Room ID is required",
+      });
+    }
+
+    if (!mongoose.isValidObjectId(roomId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid room ID",
+      });
+    }
+
+    // ==========================================
+    // VERIFY ROOM EXISTS
+    // ==========================================
+
+    const roomExists = await Room.exists({
+      _id: roomId,
+    });
+
+    if (!roomExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Room not found",
       });
     }
 
@@ -211,6 +323,10 @@ export const toggleFavoriteRoom = async (req, res) => {
 
     const isFavorite = favoriteRooms.some((id) => id.toString() === roomId);
 
+    // ==========================================
+    // REMOVE FAVORITE
+    // ==========================================
+
     if (isFavorite) {
       user.favoriteRooms = favoriteRooms.filter(
         (id) => id.toString() !== roomId,
@@ -218,18 +334,22 @@ export const toggleFavoriteRoom = async (req, res) => {
 
       await user.save();
 
-      return res.json({
+      return res.status(200).json({
         success: true,
         message: "Room removed from favorites",
         isFavorite: false,
       });
     }
 
+    // ==========================================
+    // ADD FAVORITE
+    // ==========================================
+
     user.favoriteRooms.push(roomId);
 
     await user.save();
 
-    res.json({
+    return res.status(200).json({
       success: true,
       message: "Room added to favorites",
       isFavorite: true,
@@ -237,7 +357,7 @@ export const toggleFavoriteRoom = async (req, res) => {
   } catch (error) {
     console.log("TOGGLE FAVORITE ROOM ERROR:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -260,7 +380,7 @@ export const getFavorites = async (req, res) => {
       },
     ]);
 
-    res.json({
+    return res.status(200).json({
       success: true,
       favoriteHotels: req.user.favoriteHotels || [],
       favoriteRooms: req.user.favoriteRooms || [],
@@ -268,7 +388,7 @@ export const getFavorites = async (req, res) => {
   } catch (error) {
     console.log("GET FAVORITES ERROR:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });

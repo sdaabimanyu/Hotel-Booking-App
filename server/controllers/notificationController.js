@@ -9,12 +9,16 @@ export const sendUpcomingBookingReminders = async (req, res) => {
 
   const authHeader = req.headers.authorization;
 
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (
+    !process.env.CRON_SECRET ||
+    authHeader !== `Bearer ${process.env.CRON_SECRET}`
+  ) {
     return res.status(401).json({
       success: false,
       message: "Unauthorized cron request",
     });
   }
+
   try {
     // ==========================================
     // 1. CREATE TOMORROW DATE RANGE
@@ -29,9 +33,6 @@ export const sendUpcomingBookingReminders = async (req, res) => {
     const tomorrowEnd = new Date(tomorrowStart);
 
     tomorrowEnd.setHours(23, 59, 59, 999);
-
-    console.log("REMINDER START:", tomorrowStart);
-    console.log("REMINDER END:", tomorrowEnd);
 
     // ==========================================
     // 2. FIND TOMORROW'S BOOKINGS
@@ -52,16 +53,28 @@ export const sendUpcomingBookingReminders = async (req, res) => {
       .populate("hotel")
       .populate("room");
 
-    console.log("UPCOMING BOOKINGS FOUND:", bookings.length);
-
-    // ==========================================
-    // 3. SEND REMINDER EMAILS
-    // ==========================================
-
     let sentCount = 0;
+
+    // ==========================================
+    // 3. PROCESS EACH BOOKING
+    // ==========================================
 
     for (const booking of bookings) {
       try {
+        // ==========================================
+        // VALIDATE EMAIL
+        // ==========================================
+
+        if (!booking.email) {
+          console.log("REMINDER SKIPPED - NO EMAIL:", booking._id);
+
+          continue;
+        }
+
+        // ==========================================
+        // 4. CREATE EMAIL
+        // ==========================================
+
         const mailOptions = {
           from: process.env.SENDER_EMAIL,
 
@@ -87,7 +100,7 @@ export const sendUpcomingBookingReminders = async (req, res) => {
               </h2>
 
               <p>
-                Dear ${booking.name},
+                Dear ${booking.name || "Guest"},
               </p>
 
               <p>
@@ -155,29 +168,39 @@ export const sendUpcomingBookingReminders = async (req, res) => {
         };
 
         // ==========================================
-        // 4. SEND EMAIL
+        // 5. SEND EMAIL
         // ==========================================
 
         await transporter.sendMail(mailOptions);
 
         // ==========================================
-        // 5. MARK REMINDER AS SENT
+        // 6. CREATE IN-APP NOTIFICATION
         // ==========================================
 
-        // CREATE IN-APP BOOKING REMINDER
-        await Notification.create({
-          user: booking.user,
+        try {
+          await Notification.create({
+            user: booking.user,
 
-          type: "booking_reminder",
+            type: "booking_reminder",
 
-          title: "Upcoming Stay Reminder",
+            title: "Upcoming Stay Reminder",
 
-          message: `Your stay at ${
-            booking.hotel?.name || "the hotel"
-          } begins tomorrow.`,
+            message: `Your stay at ${
+              booking.hotel?.name || "the hotel"
+            } begins tomorrow.`,
 
-          relatedBooking: booking._id,
-        });
+            relatedBooking: booking._id,
+          });
+        } catch (notificationError) {
+          console.log(
+            "REMINDER NOTIFICATION ERROR:",
+            notificationError.message,
+          );
+        }
+
+        // ==========================================
+        // 7. MARK REMINDER AS SENT
+        // ==========================================
 
         booking.reminderSent = true;
 
@@ -192,7 +215,7 @@ export const sendUpcomingBookingReminders = async (req, res) => {
     }
 
     // ==========================================
-    // 6. SEND RESPONSE
+    // 8. SEND RESPONSE
     // ==========================================
 
     return res.status(200).json({

@@ -49,6 +49,15 @@ app.post(
   stripeWebHooks,
 );
 
+// CLERK WEBHOOK
+app.post(
+  "/api/clerk",
+  express.raw({
+    type: "application/json",
+  }),
+  clerkWebhooks,
+);
+
 // =========================================================
 // GLOBAL MIDDLEWARE
 // =========================================================
@@ -57,11 +66,7 @@ app.use(express.json());
 
 app.use(clerkMiddleware());
 
-// =========================================================
-// WEBHOOK ROUTES
-// =========================================================
 
-app.use("/api/clerk", clerkWebhooks);
 
 // =========================================================
 // HEALTH CHECK

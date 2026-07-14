@@ -11,16 +11,26 @@ import Notification from "../models/Notification.js";
 // Function to Check Availability of Room
 const checkAvailability = async (checkInDate, checkOutDate, room) => {
   try {
-    const bookings = await Booking.find({
+    const conflictingBooking = await Booking.findOne({
       room,
-      checkInDate: { $lte: checkOutDate },
-      checkOutDate: { $gte: checkInDate },
+
+      status: {
+        $ne: "cancelled",
+      },
+
+      checkInDate: {
+        $lt: new Date(checkOutDate),
+      },
+
+      checkOutDate: {
+        $gt: new Date(checkInDate),
+      },
     });
 
-    const isAvailable = bookings.length === 0;
-    return isAvailable;
+    return !conflictingBooking;
   } catch (error) {
-    console.error(error.message);
+    console.error("CHECK AVAILABILITY ERROR:", error);
+    throw error;
   }
 };
 
@@ -177,6 +187,13 @@ export const createBooking = async (req, res) => {
         return res.status(400).json({
           success: false,
           message: "Selected offer is invalid",
+        });
+      }
+
+      if (offer.hotel.toString() !== roomData.hotel._id.toString()) {
+        return res.status(400).json({
+          success: false,
+          message: "Selected offer does not belong to this hotel",
         });
       }
 
@@ -794,7 +811,17 @@ export const stripePayment = async (req, res) => {
   try {
     const { bookingId } = req.body;
 
-    const booking = await Booking.findById(bookingId);
+    const booking = await Booking.findOne({
+      _id: bookingId,
+      user: req.user._id,
+    });
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found or unauthorized",
+      });
+    }
 
     console.log("BOOKING:", booking);
 
@@ -810,6 +837,20 @@ export const stripePayment = async (req, res) => {
 
     const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
     console.log("CREATING STRIPE SESSION...");
+
+    if (booking.isPaid) {
+      return res.status(400).json({
+        success: false,
+        message: "Booking has already been paid",
+      });
+    }
+
+    if (booking.status === "cancelled") {
+      return res.status(400).json({
+        success: false,
+        message: "Cancelled bookings cannot be paid",
+      });
+    }
 
     const session = await stripeInstance.checkout.sessions.create({
       line_items: [
