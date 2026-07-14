@@ -1,5 +1,4 @@
 import React from "react";
-import dashboardIcon from "../../assets/dashboard.png";
 import { NavLink } from "react-router-dom";
 
 export default function Sidebar() {
@@ -23,6 +22,11 @@ export default function Sidebar() {
       name: "Bookings",
       path: "/owner/bookings",
       icon: <i className="fa-solid fa-calendar-check"></i>,
+    },
+    {
+      name: "Inquiries",
+      path: "/owner/inquiries",
+      icon: <i className="fa-solid fa-message"></i>,
     },
     {
       name: "Reviews",

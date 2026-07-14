@@ -644,119 +644,124 @@ export default function Bookings() {
         )}
       </div>
       {editingBooking && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4">
-          <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl p-6 md:p-8">
-            <div className="flex items-start justify-between gap-4 mb-6">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
+            {/* STICKY MODAL HEADER */}
+            <div className="flex items-start justify-between gap-4 p-6 border-b border-gray-100 shrink-0">
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900">
+                <h2 className="text-xl font-bold text-gray-900">
                   Edit Booking
                 </h2>
-
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-0.5">
                   Modify reservation details for this guest.
                 </p>
               </div>
-
               <button
                 type="button"
                 onClick={() => setEditingBooking(null)}
                 disabled={updatingBooking}
-                className="text-gray-400 hover:text-gray-700 text-2xl cursor-pointer"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-50 text-xl cursor-pointer transition-colors"
               >
                 ×
               </button>
             </div>
 
-            <form onSubmit={handleModifyBooking} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Check-In Date
-                </label>
+            {/* SCROLLABLE MODAL BODY */}
+            <form
+              onSubmit={handleModifyBooking}
+              className="flex flex-col flex-1 overflow-hidden"
+            >
+              <div className="p-6 space-y-4 overflow-y-auto max-h-full">
+                {/* Check-In Date */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                    Check-In Date
+                  </label>
+                  <input
+                    type="date"
+                    value={editBookingData.checkInDate}
+                    onChange={(e) =>
+                      setEditBookingData((prev) => ({
+                        ...prev,
+                        checkInDate: e.target.value,
+                      }))
+                    }
+                    className="w-full border border-gray-200 focus:border-blue-500 rounded-xl p-3 text-sm outline-none transition-all shadow-xs"
+                  />
+                </div>
 
-                <input
-                  type="date"
-                  value={editBookingData.checkInDate}
-                  onChange={(e) =>
-                    setEditBookingData((prev) => ({
-                      ...prev,
-                      checkInDate: e.target.value,
-                    }))
-                  }
-                  className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:border-blue-500"
-                />
+                {/* Check-Out Date */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                    Check-Out Date
+                  </label>
+                  <input
+                    type="date"
+                    value={editBookingData.checkOutDate}
+                    min={editBookingData.checkInDate}
+                    onChange={(e) =>
+                      setEditBookingData((prev) => ({
+                        ...prev,
+                        checkOutDate: e.target.value,
+                      }))
+                    }
+                    className="w-full border border-gray-200 focus:border-blue-500 rounded-xl p-3 text-sm outline-none transition-all shadow-xs"
+                  />
+                </div>
+
+                {/* Number of Guests */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                    Number of Guests
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={editBookingData.guests}
+                    onChange={(e) =>
+                      setEditBookingData((prev) => ({
+                        ...prev,
+                        guests: e.target.value,
+                      }))
+                    }
+                    className="w-full border border-gray-200 focus:border-blue-500 rounded-xl p-3 text-sm outline-none transition-all shadow-xs"
+                  />
+                </div>
+
+                {/* Special Request */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                    Special Request
+                  </label>
+                  <textarea
+                    rows="3"
+                    value={editBookingData.specialRequest}
+                    onChange={(e) =>
+                      setEditBookingData((prev) => ({
+                        ...prev,
+                        specialRequest: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter guest special request"
+                    className="w-full border border-gray-200 focus:border-blue-500 rounded-xl p-3 text-sm outline-none transition-all shadow-xs resize-none"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Check-Out Date
-                </label>
-
-                <input
-                  type="date"
-                  value={editBookingData.checkOutDate}
-                  min={editBookingData.checkInDate}
-                  onChange={(e) =>
-                    setEditBookingData((prev) => ({
-                      ...prev,
-                      checkOutDate: e.target.value,
-                    }))
-                  }
-                  className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Number of Guests
-                </label>
-
-                <input
-                  type="number"
-                  min="1"
-                  value={editBookingData.guests}
-                  onChange={(e) =>
-                    setEditBookingData((prev) => ({
-                      ...prev,
-                      guests: e.target.value,
-                    }))
-                  }
-                  className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Special Request
-                </label>
-
-                <textarea
-                  rows="4"
-                  value={editBookingData.specialRequest}
-                  onChange={(e) =>
-                    setEditBookingData((prev) => ({
-                      ...prev,
-                      specialRequest: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter guest special request"
-                  className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:border-blue-500 resize-none"
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+              {/* STICKY MODAL FOOTER */}
+              <div className="flex justify-end gap-3 p-4 bg-gray-50 border-t border-gray-100 shrink-0 rounded-b-2xl">
                 <button
                   type="button"
                   onClick={() => setEditingBooking(null)}
                   disabled={updatingBooking}
-                  className="px-5 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="px-4 py-2.5 border border-gray-200 bg-white text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
-
                 <button
                   type="submit"
                   disabled={updatingBooking}
-                  className="px-5 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors cursor-pointer"
+                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-xl shadow-xs transition-colors cursor-pointer"
                 >
                   {updatingBooking ? "Updating..." : "Update Booking"}
                 </button>

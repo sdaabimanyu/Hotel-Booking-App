@@ -12,6 +12,13 @@ export default function MyBookings() {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
 
+  // Inquiry States
+  const [showInquiryModal, setShowInquiryModal] = useState(false);
+  const [inquiryBooking, setInquiryBooking] = useState(null);
+  const [inquirySubject, setInquirySubject] = useState("");
+  const [inquiryMessage, setInquiryMessage] = useState("");
+  const [sendingInquiry, setSendingInquiry] = useState(false);
+
   // =========================================================
   // FETCH USER BOOKINGS
   // =========================================================
@@ -199,6 +206,92 @@ export default function MyBookings() {
           error.message ||
           "Failed to cancel booking",
       );
+    }
+  };
+
+  // =========================================================
+  // OPEN INQUIRY MODAL
+  // =========================================================
+
+  const openInquiryModal = (booking) => {
+    setInquiryBooking(booking);
+    setInquirySubject("");
+    setInquiryMessage("");
+    setShowInquiryModal(true);
+  };
+
+  // =========================================================
+  // CLOSE INQUIRY MODAL
+  // =========================================================
+
+  const closeInquiryModal = () => {
+    if (sendingInquiry) return;
+
+    setShowInquiryModal(false);
+    setInquiryBooking(null);
+    setInquirySubject("");
+    setInquiryMessage("");
+  };
+
+  // =========================================================
+  // SEND BOOKING INQUIRY
+  // =========================================================
+
+  const submitInquiry = async (e) => {
+    e.preventDefault();
+
+    if (!inquiryBooking) {
+      return toast.error("Booking not selected");
+    }
+
+    if (!inquirySubject.trim()) {
+      return toast.error("Please enter an inquiry subject");
+    }
+
+    if (!inquiryMessage.trim()) {
+      return toast.error("Please enter your inquiry message");
+    }
+
+    try {
+      setSendingInquiry(true);
+
+      const token = await getToken();
+
+      const { data } = await axios.post(
+        "/api/inquiries",
+        {
+          bookingId: inquiryBooking._id,
+          subject: inquirySubject.trim(),
+          message: inquiryMessage.trim(),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (data.success) {
+        toast.success(data.message || "Inquiry sent successfully");
+
+        // Clean up inputs and close modal directly to bypass the sending state restriction
+        setShowInquiryModal(false);
+        setInquiryBooking(null);
+        setInquirySubject("");
+        setInquiryMessage("");
+      } else {
+        toast.error(data.message || "Failed to send inquiry");
+      }
+    } catch (error) {
+      console.log("SEND INQUIRY ERROR:", error);
+
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to send inquiry",
+      );
+    } finally {
+      setSendingInquiry(false);
     }
   };
 
@@ -455,9 +548,18 @@ export default function MyBookings() {
                       {/* ================================================= */}
 
                       <div className="w-full shrink-0 max-w-[180px] lg:max-w-none">
-                        {/* ================================================= */}
+                        {/* INQUIRY BUTTON */}
+                        {!isCancelled && (
+                          <button
+                            type="button"
+                            onClick={() => openInquiryModal(booking)}
+                            className="w-full py-2.5 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-bold tracking-wide transition duration-200 mb-2"
+                          >
+                            Booking Inquiry
+                          </button>
+                        )}
+
                         {/* CANCEL BUTTON */}
-                        {/* ================================================= */}
 
                         {!isCancelled &&
                           !isCheckedIn &&
@@ -471,27 +573,21 @@ export default function MyBookings() {
                             </button>
                           )}
 
-                        {/* ================================================= */}
                         {/* CANCELLED BOOKING */}
-                        {/* ================================================= */}
 
                         {isCancelled ? (
                           <div className="w-full text-center py-2.5 bg-red-50 border border-red-100 rounded-xl text-xs font-bold font-inter text-red-600">
                             Reservation Cancelled
                           </div>
                         ) : booking.reviewSubmitted ? (
-                          /* ================================================= */
                           /* REVIEW ALREADY SUBMITTED */
-                          /* ================================================= */
 
                           <div className="w-full text-center py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold font-inter text-emerald-600 flex items-center justify-center gap-1.5">
                             <span>✓</span>
                             Review Submitted
                           </div>
                         ) : isCheckedOut ? (
-                          /* ================================================= */
                           /* CHECKED-OUT BOOKING */
-                          /* ================================================= */
 
                           <button
                             onClick={() => openReviewModal(booking)}
@@ -500,9 +596,7 @@ export default function MyBookings() {
                             Write Stay Experience
                           </button>
                         ) : !booking.isPaid ? (
-                          /* ================================================= */
                           /* UNPAID BOOKING */
-                          /* ================================================= */
 
                           <button
                             onClick={() => handlePayment(booking._id)}
@@ -511,17 +605,13 @@ export default function MyBookings() {
                             Complete Secure Payment
                           </button>
                         ) : isCheckedIn ? (
-                          /* ================================================= */
                           /* CURRENTLY CHECKED IN */
-                          /* ================================================= */
 
                           <div className="w-full text-center py-2.5 text-emerald-600 font-inter text-xs font-semibold">
                             Stay currently in progress
                           </div>
                         ) : isConfirmed || isPending ? (
-                          /* ================================================= */
                           /* UPCOMING / PENDING STAY */
-                          /* ================================================= */
 
                           <div className="w-full text-center py-2.5 text-slate-400 font-inter text-xs font-medium italic">
                             Review unlocks after check-out
@@ -589,15 +679,14 @@ export default function MyBookings() {
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="Elaborate on your experience regarding amenities, ambiance, and care..."
-                  className="w-full bg-slate-50 border border-slate-100 text-slate-700 text-sm p-4 rounded-xl outline-hidden focus:border-amber-300 focus:bg-white placeholder:text-slate-400 transition resize-none leading-relaxed"
+                  className="w-full bg-slate-50 border border-slate-100 text-slate-700 text-sm p-4 rounded-xl outline-hidden focus:border-amber-300 focus:bg-white transition resize-none leading-relaxed"
                 />
               </div>
             </div>
 
-            {/* MODAL BUTTONS */}
-
             <div className="flex justify-end gap-3 mt-8 font-inter">
               <button
+                type="button"
                 onClick={closeReviewModal}
                 className="px-5 py-3 border border-slate-200 text-slate-500 hover:bg-slate-50 rounded-xl text-xs font-bold tracking-wide transition duration-200"
               >
@@ -605,12 +694,85 @@ export default function MyBookings() {
               </button>
 
               <button
+                type="button"
                 onClick={submitReview}
-                className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold tracking-wide shadow-md shadow-slate-900/10 transition duration-200"
+                className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold tracking-wide shadow-md transition duration-200"
               >
-                Publish Review
+                Submit Review
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* BOOKING INQUIRY MODAL */}
+      {/* ========================================================= */}
+
+      {showInquiryModal && inquiryBooking && (
+        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl border border-slate-100/80">
+            <h2 className="text-3xl font-medium font-playfair text-slate-900 tracking-tight mb-2">
+              Booking Inquiry
+            </h2>
+
+            <p className="text-xs font-inter text-slate-400 mb-6">
+              Send a question regarding your reservation at{" "}
+              {inquiryBooking.hotel?.name}.
+            </p>
+
+            <form onSubmit={submitInquiry}>
+              <div className="space-y-5 font-inter">
+                <div>
+                  <label className="block text-xs uppercase tracking-wider font-semibold text-slate-500 mb-2">
+                    Subject
+                  </label>
+
+                  <input
+                    type="text"
+                    value={inquirySubject}
+                    onChange={(e) => setInquirySubject(e.target.value)}
+                    placeholder="Example: Early check-in request"
+                    maxLength={150}
+                    className="w-full bg-slate-50 border border-slate-100 text-slate-700 p-3.5 rounded-xl outline-none focus:border-amber-300 focus:bg-white transition text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider font-semibold text-slate-500 mb-2">
+                    Message
+                  </label>
+
+                  <textarea
+                    rows={5}
+                    value={inquiryMessage}
+                    onChange={(e) => setInquiryMessage(e.target.value)}
+                    placeholder="Enter your question or request..."
+                    maxLength={1000}
+                    className="w-full bg-slate-50 border border-slate-100 text-slate-700 text-sm p-4 rounded-xl outline-none focus:border-amber-300 focus:bg-white transition resize-none leading-relaxed"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-8 font-inter">
+                <button
+                  type="button"
+                  onClick={closeInquiryModal}
+                  disabled={sendingInquiry}
+                  className="px-5 py-3 border border-slate-200 text-slate-500 hover:bg-slate-50 rounded-xl text-xs font-bold tracking-wide transition duration-200 disabled:opacity-50"
+                >
+                  Dismiss
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={sendingInquiry}
+                  className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold tracking-wide shadow-md transition duration-200 disabled:opacity-50"
+                >
+                  {sendingInquiry ? "Sending..." : "Send Inquiry"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

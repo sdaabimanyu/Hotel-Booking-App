@@ -16,6 +16,7 @@ import bookingRouter from "./routes/bookingRoutes.js";
 import reviewRouter from "./routes/reviewRoutes.js";
 import offerRouter from "./routes/offerRoutes.js";
 import notificationRouter from "./routes/notificationRoutes.js";
+import inquiryRouter from "./routes/inquiryRoutes.js";
 
 dotenv.config();
 
@@ -87,6 +88,8 @@ app.use("/api/reviews", reviewRouter);
 app.use("/api/offers", offerRouter);
 
 app.use("/api/notifications", notificationRouter);
+
+app.use("/api/inquiries", inquiryRouter);
 
 // =========================================================
 // PORT
