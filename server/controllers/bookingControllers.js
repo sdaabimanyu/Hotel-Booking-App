@@ -1290,3 +1290,321 @@ export const cancelBooking = async (req, res) => {
     });
   }
 };
+
+// =========================================================
+// UPDATE / MODIFY BOOKING BY HOTEL OWNER
+// PUT /api/bookings/modify
+// =========================================================
+
+export const modifyBooking = async (req, res) => {
+  try {
+    const { bookingId, checkInDate, checkOutDate, guests, specialRequest } =
+      req.body;
+
+    // =====================================================
+    // 1. VALIDATE REQUIRED DATA
+    // =====================================================
+
+    if (!bookingId || !checkInDate || !checkOutDate || !guests) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide all required booking information",
+      });
+    }
+
+    // =====================================================
+    // 2. FIND HOTEL OWNED BY LOGGED-IN USER
+    // =====================================================
+
+    const hotel = await Hotel.findOne({
+      owner: req.user._id,
+    });
+
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: "No hotel found for this owner",
+      });
+    }
+
+    // =====================================================
+    // 3. FIND BOOKING
+    // =====================================================
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    // =====================================================
+    // 4. VERIFY BOOKING BELONGS TO OWNER'S HOTEL
+    // =====================================================
+
+    if (booking.hotel.toString() !== hotel._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to modify this booking",
+      });
+    }
+
+    // =====================================================
+    // 5. ONLY PENDING / CONFIRMED BOOKINGS CAN BE MODIFIED
+    // =====================================================
+
+    if (!["pending", "confirmed"].includes(booking.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `${booking.status} bookings cannot be modified`,
+      });
+    }
+
+    // =====================================================
+    // 6. PAID BOOKINGS CANNOT BE MODIFIED
+    // =====================================================
+
+    if (booking.isPaid) {
+      return res.status(400).json({
+        success: false,
+        message: "Paid bookings cannot be modified",
+      });
+    }
+
+    // =====================================================
+    // 7. VALIDATE DATES
+    // =====================================================
+
+    const newCheckIn = new Date(checkInDate);
+    const newCheckOut = new Date(checkOutDate);
+
+    if (
+      Number.isNaN(newCheckIn.getTime()) ||
+      Number.isNaN(newCheckOut.getTime())
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid booking dates",
+      });
+    }
+
+    if (newCheckOut <= newCheckIn) {
+      return res.status(400).json({
+        success: false,
+        message: "Check-out date must be after check-in date",
+      });
+    }
+
+    // =====================================================
+    // 8. VALIDATE GUEST COUNT
+    // =====================================================
+
+    const guestCount = Number(guests);
+
+    if (Number.isNaN(guestCount) || guestCount < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid number of guests",
+      });
+    }
+
+    // =====================================================
+    // 9. FIND ROOM
+    // =====================================================
+
+    const room = await Room.findById(booking.room);
+
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        message: "Room not found",
+      });
+    }
+
+    // =====================================================
+    // 10. CHECK DATE CONFLICT
+    //
+    // IMPORTANT:
+    // EXCLUDE THE CURRENT BOOKING USING $ne
+    // =====================================================
+
+    const conflictingBooking = await Booking.findOne({
+      _id: {
+        $ne: booking._id,
+      },
+
+      room: booking.room,
+
+      status: {
+        $ne: "cancelled",
+      },
+
+      checkInDate: {
+        $lt: newCheckOut,
+      },
+
+      checkOutDate: {
+        $gt: newCheckIn,
+      },
+    });
+
+    if (conflictingBooking) {
+      return res.status(409).json({
+        success: false,
+        message: "Room is not available for the selected dates",
+      });
+    }
+
+    // =====================================================
+    // 11. CALCULATE NUMBER OF NIGHTS
+    // =====================================================
+
+    const timeDifference = newCheckOut.getTime() - newCheckIn.getTime();
+
+    const nights = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+
+    if (nights < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Booking must be for at least one night",
+      });
+    }
+
+    // =====================================================
+    // 12. CALCULATE SUBTOTAL
+    // =====================================================
+
+    const subtotal = Number((room.pricePerNight * nights).toFixed(2));
+
+    let discount = 0;
+
+    // =====================================================
+    // 13. REVALIDATE EXISTING OFFER
+    // =====================================================
+
+    if (booking.selectedOffer) {
+      const offer = await Offer.findById(booking.selectedOffer);
+
+      const offerIsValid =
+        offer &&
+        offer.isActive &&
+        new Date(offer.validTill) >= new Date() &&
+        nights >= offer.minimumStay;
+
+      if (offerIsValid) {
+        if (offer.discountType === "percentage") {
+          discount = Number(
+            ((subtotal * Number(offer.discount)) / 100).toFixed(2),
+          );
+        } else {
+          discount = Number(
+            Math.min(Number(offer.discount), subtotal).toFixed(2),
+          );
+        }
+      } else {
+        // Remove offer if new dates no longer qualify
+        booking.selectedOffer = null;
+      }
+    }
+
+    // =====================================================
+    // 14. CALCULATE PRICE AFTER DISCOUNT
+    // =====================================================
+
+    const discountedPrice = Number(Math.max(subtotal - discount, 0).toFixed(2));
+
+    // =====================================================
+    // 15. CALCULATE TAX
+    // =====================================================
+
+    const tax = Number((discountedPrice * 0.12).toFixed(2));
+
+    // =====================================================
+    // 16. CALCULATE NEW TOTAL
+    // =====================================================
+
+    const totalPrice = Number((discountedPrice + tax).toFixed(2));
+
+    // =====================================================
+    // 17. UPDATE BOOKING
+    // =====================================================
+
+    booking.checkInDate = newCheckIn;
+
+    booking.checkOutDate = newCheckOut;
+
+    booking.guests = guestCount;
+
+    booking.specialRequest = specialRequest?.trim() || "";
+
+    booking.totalPrice = totalPrice;
+
+    // Since dates changed, allow reminder cron to send again
+    booking.reminderSent = false;
+
+    // IMPORTANT:
+    // Some older bookings do not contain name, email, and phone.
+    // Disable full-document validation when modifying those bookings.
+    await booking.save({
+      validateBeforeSave: false,
+    });
+
+    // =====================================================
+    // 18. POPULATE UPDATED BOOKING
+    // =====================================================
+
+    await booking.populate("room hotel user selectedOffer");
+
+    // =====================================================
+    // 19. CREATE USER NOTIFICATION
+    // =====================================================
+
+    try {
+      await Notification.create({
+        user: booking.user._id || booking.user,
+
+        type: "booking_update",
+
+        title: "Booking Updated",
+
+        message: `Your booking dates have been updated to ${newCheckIn.toDateString()} - ${newCheckOut.toDateString()}.`,
+
+        relatedBooking: booking._id,
+      });
+    } catch (notificationError) {
+      console.log(
+        "BOOKING UPDATE NOTIFICATION ERROR:",
+        notificationError.message,
+      );
+    }
+
+    // =====================================================
+    // 20. SUCCESS RESPONSE
+    // =====================================================
+
+    return res.status(200).json({
+      success: true,
+
+      message: "Booking modified successfully",
+
+      booking,
+
+      priceDetails: {
+        nights,
+        subtotal,
+        discount,
+        tax,
+        totalPrice,
+      },
+    });
+  } catch (error) {
+    console.log("MODIFY BOOKING ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to modify booking",
+    });
+  }
+};

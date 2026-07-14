@@ -19,6 +19,17 @@ export default function Bookings() {
 
   const [markingPaidBookingId, setMarkingPaidBookingId] = useState(null);
 
+  const [editingBooking, setEditingBooking] = useState(null);
+
+  const [editBookingData, setEditBookingData] = useState({
+    checkInDate: "",
+    checkOutDate: "",
+    guests: 1,
+    specialRequest: "",
+  });
+
+  const [updatingBooking, setUpdatingBooking] = useState(false);
+
   // ==========================================
   // FETCH HOTEL BOOKINGS
   // ==========================================
@@ -293,6 +304,92 @@ export default function Bookings() {
     );
   }
 
+  const openEditBookingModal = (booking) => {
+    setEditingBooking(booking);
+
+    setEditBookingData({
+      checkInDate: booking.checkInDate
+        ? new Date(booking.checkInDate).toISOString().split("T")[0]
+        : "",
+
+      checkOutDate: booking.checkOutDate
+        ? new Date(booking.checkOutDate).toISOString().split("T")[0]
+        : "",
+
+      guests: booking.guests || 1,
+
+      specialRequest: booking.specialRequest || "",
+    });
+  };
+
+  const handleModifyBooking = async (e) => {
+    e.preventDefault();
+
+    if (!editingBooking) {
+      return;
+    }
+
+    if (
+      !editBookingData.checkInDate ||
+      !editBookingData.checkOutDate ||
+      !editBookingData.guests
+    ) {
+      return toast.error("Please fill all required booking details");
+    }
+
+    const checkIn = new Date(editBookingData.checkInDate);
+
+    const checkOut = new Date(editBookingData.checkOutDate);
+
+    if (checkOut <= checkIn) {
+      return toast.error("Check-out date must be after check-in date");
+    }
+
+    try {
+      setUpdatingBooking(true);
+
+      const token = await getToken();
+
+      const { data } = await axios.put(
+        "/api/bookings/modify",
+        {
+          bookingId: editingBooking._id,
+
+          checkInDate: editBookingData.checkInDate,
+
+          checkOutDate: editBookingData.checkOutDate,
+
+          guests: Number(editBookingData.guests),
+
+          specialRequest: editBookingData.specialRequest,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (data.success) {
+        toast.success(data.message || "Booking updated successfully");
+
+        setEditingBooking(null);
+
+        await fetchBookings();
+      } else {
+        toast.error(data.message || "Failed to update booking");
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to update booking",
+      );
+    } finally {
+      setUpdatingBooking(false);
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       {/* ====================================== */}
@@ -472,6 +569,17 @@ export default function Bookings() {
                           {isMarkingPaid ? "Updating..." : "Mark as Paid"}
                         </button>
                       )}
+
+                      {["pending", "confirmed"].includes(booking.status) &&
+                        !booking.isPaid && (
+                          <button
+                            type="button"
+                            onClick={() => openEditBookingModal(booking)}
+                            className="px-4 py-2 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors text-sm font-medium cursor-pointer"
+                          >
+                            Edit Booking
+                          </button>
+                        )}
                     </div>
 
                     {/* ================================== */}
@@ -535,6 +643,128 @@ export default function Bookings() {
           })
         )}
       </div>
+      {editingBooking && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl p-6 md:p-8">
+            <div className="flex items-start justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  Edit Booking
+                </h2>
+
+                <p className="text-sm text-gray-500 mt-1">
+                  Modify reservation details for this guest.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setEditingBooking(null)}
+                disabled={updatingBooking}
+                className="text-gray-400 hover:text-gray-700 text-2xl cursor-pointer"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleModifyBooking} className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Check-In Date
+                </label>
+
+                <input
+                  type="date"
+                  value={editBookingData.checkInDate}
+                  onChange={(e) =>
+                    setEditBookingData((prev) => ({
+                      ...prev,
+                      checkInDate: e.target.value,
+                    }))
+                  }
+                  className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Check-Out Date
+                </label>
+
+                <input
+                  type="date"
+                  value={editBookingData.checkOutDate}
+                  min={editBookingData.checkInDate}
+                  onChange={(e) =>
+                    setEditBookingData((prev) => ({
+                      ...prev,
+                      checkOutDate: e.target.value,
+                    }))
+                  }
+                  className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Number of Guests
+                </label>
+
+                <input
+                  type="number"
+                  min="1"
+                  value={editBookingData.guests}
+                  onChange={(e) =>
+                    setEditBookingData((prev) => ({
+                      ...prev,
+                      guests: e.target.value,
+                    }))
+                  }
+                  className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Special Request
+                </label>
+
+                <textarea
+                  rows="4"
+                  value={editBookingData.specialRequest}
+                  onChange={(e) =>
+                    setEditBookingData((prev) => ({
+                      ...prev,
+                      specialRequest: e.target.value,
+                    }))
+                  }
+                  placeholder="Enter guest special request"
+                  className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:border-blue-500 resize-none"
+                />
+              </div>
+
+              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setEditingBooking(null)}
+                  disabled={updatingBooking}
+                  className="px-5 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={updatingBooking}
+                  className="px-5 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors cursor-pointer"
+                >
+                  {updatingBooking ? "Updating..." : "Update Booking"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

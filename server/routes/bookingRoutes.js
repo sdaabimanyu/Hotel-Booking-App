@@ -9,6 +9,7 @@ import {
   stripePayment,
   updateBookingStatus,
   markBookingAsPaid,
+  modifyBooking,
 } from "../controllers/bookingControllers.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -26,6 +27,8 @@ bookingRouter.get("/hotel", protect, getHotelBookings);
 bookingRouter.put("/status", protect, updateBookingStatus);
 
 bookingRouter.put("/mark-paid", protect, markBookingAsPaid);
+
+bookingRouter.put("/modify", protect, modifyBooking);
 
 bookingRouter.post("/cancel", protect, cancelBooking);
 
