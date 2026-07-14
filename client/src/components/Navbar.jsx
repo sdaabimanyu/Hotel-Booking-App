@@ -5,8 +5,6 @@ import { useAppContext } from "../context/AppContext";
 import NotificationBell from "./NotificationBell";
 
 const Navbar = () => {
-  // console.log("NEW NAVBAR CODE IS RUNNING");
-
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Hotels", path: "/rooms" },
@@ -89,8 +87,6 @@ const Navbar = () => {
         },
       });
 
-      console.log("NOTIFICATION RESPONSE:", data);
-
       if (data.success) {
         setNotifications(data.notifications || []);
         setUnreadCount(data.unreadCount || 0);
@@ -127,12 +123,7 @@ const Navbar = () => {
 
   const markNotificationAsRead = async (notificationId) => {
     try {
-      console.log("1. MARK READ FUNCTION STARTED");
-      console.log("2. NOTIFICATION ID:", notificationId);
-
       const token = await getToken();
-
-      console.log("3. TOKEN RECEIVED:", !!token);
 
       const { data } = await axios.patch(
         "/api/notifications/read",

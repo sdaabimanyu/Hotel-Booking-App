@@ -383,13 +383,18 @@ export const getRoomById = async (req, res) => {
 // UPDATE ROOM
 // =========================================================
 
+// UPDATE ROOM
 export const updateRoom = async (req, res) => {
   try {
+    // ==========================================
+    // 1. GET LOGGED-IN USER
+    // ==========================================
+
     const { userId } = getAuth(req);
 
-    // =========================================================
-    // 1. FIND OWNER HOTEL
-    // =========================================================
+    // ==========================================
+    // 2. FIND OWNER'S HOTEL
+    // ==========================================
 
     const hotel = await Hotel.findOne({
       owner: userId,
@@ -398,13 +403,13 @@ export const updateRoom = async (req, res) => {
     if (!hotel) {
       return res.status(404).json({
         success: false,
-        message: "No Hotel Found",
+        message: "Hotel not found",
       });
     }
 
-    // =========================================================
-    // 2. FIND OWNER'S ROOM
-    // =========================================================
+    // ==========================================
+    // 3. FIND ROOM
+    // ==========================================
 
     const room = await Room.findOne({
       _id: req.params.id,
@@ -419,9 +424,9 @@ export const updateRoom = async (req, res) => {
       });
     }
 
-    // =========================================================
-    // 3. GET UPDATE DATA
-    // =========================================================
+    // ==========================================
+    // 4. GET UPDATED DATA
+    // ==========================================
 
     const {
       roomType,
@@ -433,134 +438,80 @@ export const updateRoom = async (req, res) => {
       amenities,
     } = req.body;
 
-    // =========================================================
-    // 4. UPDATE ROOM TYPE
-    // =========================================================
+    // ==========================================
+    // 5. VALIDATE REQUIRED DATA
+    // ==========================================
 
-    if (roomType !== undefined) {
-      if (!roomType.trim()) {
-        return res.status(400).json({
-          success: false,
-          message: "Room type cannot be empty",
-        });
-      }
-
-      room.roomType = roomType.trim();
+    if (
+      !roomType ||
+      !description ||
+      !roomSize ||
+      !bedType ||
+      !view ||
+      !pricePerNight ||
+      !amenities
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide all required room details",
+      });
     }
 
-    // =========================================================
-    // 5. UPDATE DESCRIPTION
-    // =========================================================
+    // ==========================================
+    // 6. VALIDATE PRICE
+    // ==========================================
 
-    if (description !== undefined) {
-      if (!description.trim()) {
-        return res.status(400).json({
-          success: false,
-          message: "Description cannot be empty",
-        });
-      }
+    const roomPrice = Number(pricePerNight);
 
-      room.description = description.trim();
+    if (Number.isNaN(roomPrice) || roomPrice <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid room price",
+      });
     }
 
-    // =========================================================
-    // 6. UPDATE ROOM SIZE
-    // =========================================================
+    // ==========================================
+    // 7. VALIDATE AMENITIES
+    // ==========================================
 
-    if (roomSize !== undefined) {
-      if (!roomSize.trim()) {
-        return res.status(400).json({
-          success: false,
-          message: "Room size cannot be empty",
-        });
-      }
-
-      room.roomSize = roomSize.trim();
+    if (!Array.isArray(amenities) || amenities.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide at least one amenity",
+      });
     }
 
-    // =========================================================
-    // 7. UPDATE BED TYPE
-    // =========================================================
+    // ==========================================
+    // 8. UPDATE ROOM
+    // ==========================================
 
-    if (bedType !== undefined) {
-      if (!bedType.trim()) {
-        return res.status(400).json({
-          success: false,
-          message: "Bed type cannot be empty",
-        });
-      }
+    room.roomType = roomType.trim();
 
-      room.bedType = bedType.trim();
-    }
+    room.description = description.trim();
 
-    // =========================================================
-    // 8. UPDATE VIEW
-    // =========================================================
+    room.roomSize = roomSize.trim();
 
-    if (view !== undefined) {
-      if (!view.trim()) {
-        return res.status(400).json({
-          success: false,
-          message: "Room view cannot be empty",
-        });
-      }
+    room.bedType = bedType.trim();
 
-      room.view = view.trim();
-    }
+    room.view = view.trim();
 
-    // =========================================================
-    // 9. UPDATE PRICE
-    // =========================================================
+    room.pricePerNight = roomPrice;
 
-    if (pricePerNight !== undefined) {
-      const roomPrice = Number(pricePerNight);
+    room.amenities = amenities.map((item) => item.trim()).filter(Boolean);
 
-      if (Number.isNaN(roomPrice) || roomPrice <= 0) {
-        return res.status(400).json({
-          success: false,
-          message: "Please provide a valid room price",
-        });
-      }
-
-      room.pricePerNight = roomPrice;
-    }
-
-    // =========================================================
-    // 10. UPDATE AMENITIES
-    // =========================================================
-
-    if (amenities !== undefined) {
-      let parsedAmenities;
-
-      try {
-        parsedAmenities =
-          typeof amenities === "string" ? JSON.parse(amenities) : amenities;
-      } catch (error) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid amenities data",
-        });
-      }
-
-      if (!Array.isArray(parsedAmenities) || parsedAmenities.length === 0) {
-        return res.status(400).json({
-          success: false,
-          message: "Please select at least one amenity",
-        });
-      }
-
-      room.amenities = parsedAmenities;
-    }
-
-    // =========================================================
-    // 11. SAVE ROOM
-    // =========================================================
+    // ==========================================
+    // 9. SAVE ROOM
+    // ==========================================
 
     await room.save();
 
+    // ==========================================
+    // 10. SUCCESS RESPONSE
+    // ==========================================
+
     return res.status(200).json({
       success: true,
-      message: "Room Updated Successfully",
+      message: "Room updated successfully",
       room,
     });
   } catch (error) {
@@ -568,7 +519,7 @@ export const updateRoom = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Failed to update room",
     });
   }
 };
