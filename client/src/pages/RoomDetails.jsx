@@ -390,7 +390,7 @@ export default function RoomDetails() {
                     min={new Date().toISOString().split("T")[0]}
                     type="date"
                     id="CheckInDate"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 font-medium outline-none focus:border-slate-950 transition-all [color-scheme:light]"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 font-medium outline-none focus:border-slate-950 transition-all scheme-light"
                     required
                   />
                 </div>
@@ -408,7 +408,7 @@ export default function RoomDetails() {
                     disabled={!checkInDate}
                     type="date"
                     id="CheckOutDate"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 font-medium outline-none focus:border-slate-950 transition-all [color-scheme:light] disabled:opacity-50"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 font-medium outline-none focus:border-slate-950 transition-all scheme-light disabled:opacity-50"
                     required
                   />
                 </div>

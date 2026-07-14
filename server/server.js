@@ -1,17 +1,18 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import connectDB from "./configs/db.js";
 import { clerkMiddleware } from "@clerk/express";
 
+import connectDB from "./configs/db.js";
+import connectCloudinary from "./configs/cloudinary.js";
+
 import clerkWebhooks from "./controllers/clerkWebHooks.js";
+import { stripeWebHooks } from "./controllers/stripeWebhooks.js";
+
 import userRouter from "./routes/userRoutes.js";
 import hotelRouter from "./routes/hotelRoutes.js";
 import roomRouter from "./routes/roomRoutes.js";
 import bookingRouter from "./routes/bookingRoutes.js";
-
-import connectCloudinary from "./configs/cloudinary.js";
-import { stripeWebHooks } from "./controllers/stripeWebhooks.js";
 import reviewRouter from "./routes/reviewRoutes.js";
 import offerRouter from "./routes/offerRoutes.js";
 import notificationRouter from "./routes/notificationRoutes.js";
@@ -19,6 +20,10 @@ import notificationRouter from "./routes/notificationRoutes.js";
 dotenv.config();
 
 const app = express();
+
+// =========================================================
+// CORS
+// =========================================================
 
 app.use(
   cors({
@@ -30,35 +35,73 @@ app.use(
   }),
 );
 
-// API to listen to Stripe Webhooks
+// =========================================================
+// STRIPE WEBHOOK
+// IMPORTANT: MUST BE BEFORE express.json()
+// =========================================================
+
 app.post(
   "/api/stripe",
-  express.raw({ type: "application/json" }),
+  express.raw({
+    type: "application/json",
+  }),
   stripeWebHooks,
 );
 
+// =========================================================
+// GLOBAL MIDDLEWARE
+// =========================================================
+
 app.use(express.json());
+
 app.use(clerkMiddleware());
+
+// =========================================================
+// WEBHOOK ROUTES
+// =========================================================
 
 app.use("/api/clerk", clerkWebhooks);
 
+// =========================================================
+// HEALTH CHECK
+// =========================================================
+
 app.get("/", (req, res) => {
-  res.send("Hotel app server working");
+  res.status(200).send("Hotel app server working");
 });
 
+// =========================================================
+// API ROUTES
+// =========================================================
+
 app.use("/api/user", userRouter);
+
 app.use("/api/hotels", hotelRouter);
+
 app.use("/api/rooms", roomRouter);
+
 app.use("/api/bookings", bookingRouter);
+
 app.use("/api/reviews", reviewRouter);
+
 app.use("/api/offers", offerRouter);
+
 app.use("/api/notifications", notificationRouter);
 
+// =========================================================
+// PORT
+// =========================================================
+
 const PORT = process.env.PORT || 3000;
+
+// =========================================================
+// START SERVER
+// =========================================================
 
 const startServer = async () => {
   try {
     await connectDB();
+
     connectCloudinary();
 
     app.listen(PORT, () => {
@@ -66,6 +109,8 @@ const startServer = async () => {
     });
   } catch (error) {
     console.log("Server startup error:", error.message);
+
+    process.exit(1);
   }
 };
 

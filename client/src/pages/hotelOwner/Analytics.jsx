@@ -93,7 +93,7 @@ export default function Analytics() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         {/* TOTAL REVENUE */}
 
-        <div className="bg-white rounded-2xl border border-gray-100 p-7 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between min-h-[125px] gap-x-4">
+        <div className="bg-white rounded-2xl border border-gray-100 p-7 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between min-h-31.25 gap-x-4">
           <div className="space-y-1.5 min-w-0">
             <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider truncate">
               Total Revenue
@@ -112,7 +112,7 @@ export default function Analytics() {
 
         {/* TOTAL BOOKINGS */}
 
-        <div className="bg-white rounded-2xl border border-gray-100 p-7 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between min-h-[125px] gap-x-4">
+        <div className="bg-white rounded-2xl border border-gray-100 p-7 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between min-h-31.25 gap-x-4">
           <div className="space-y-1.5 min-w-0">
             <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider truncate">
               Total Bookings
@@ -130,7 +130,7 @@ export default function Analytics() {
 
         {/* OCCUPANCY RATE */}
 
-        <div className="bg-white rounded-2xl border border-gray-100 p-7 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between min-h-[125px] gap-x-4">
+        <div className="bg-white rounded-2xl border border-gray-100 p-7 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between min-h-31.25 gap-x-4">
           <div className="space-y-1.5 min-w-0">
             <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider truncate">
               Occupancy Rate
@@ -148,7 +148,7 @@ export default function Analytics() {
 
         {/* AVERAGE RATING */}
 
-        <div className="bg-white rounded-2xl border border-gray-100 p-7 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between min-h-[125px] gap-x-4">
+        <div className="bg-white rounded-2xl border border-gray-100 p-7 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between min-h-31.25 gap-x-4">
           <div className="space-y-1.5 min-w-0">
             <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider truncate">
               Average Rating

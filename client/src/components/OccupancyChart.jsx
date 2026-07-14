@@ -9,10 +9,10 @@ import {
   LabelList,
 } from "recharts";
 
-export default function OccupancyChart({ data }) {
+export default function OccupancyChart({ data = [] }) {
   return (
     <div className="bg-white rounded-xl border shadow-sm h-85 p-6">
-      <h2 className="text-2xl font-semibold mb-5">Occupancy By Room</h2>
+      <h2 className="text-2xl font-semibold mb-5">Bookings By Room</h2>
 
       <ResponsiveContainer width="100%" height={250}>
         <BarChart
@@ -27,7 +27,7 @@ export default function OccupancyChart({ data }) {
         >
           <CartesianGrid strokeDasharray="3 3" />
 
-          <XAxis type="number" domain={[0, 100]} />
+          <XAxis type="number" allowDecimals={false} />
 
           <YAxis
             type="category"
@@ -36,18 +36,20 @@ export default function OccupancyChart({ data }) {
             tick={{ fontSize: 14 }}
           />
 
-          <Tooltip />
+          <Tooltip formatter={(value) => [value, "Bookings"]} />
 
           <Bar
-            dataKey="occupancy"
+            dataKey="bookings"
             fill="#2563eb"
             radius={[0, 8, 8, 0]}
             barSize={12}
           >
             <LabelList
-              dataKey="occupancy"
+              dataKey="bookings"
               position="right"
-              formatter={(value) => `${value}%`}
+              formatter={(value) =>
+                `${value} ${value === 1 ? "booking" : "bookings"}`
+              }
             />
           </Bar>
         </BarChart>

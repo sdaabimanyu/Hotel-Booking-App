@@ -78,7 +78,7 @@ export default function Dashboard() {
               {dashboardData.totalBookings}
             </h2>
           </div>
-          <div className="p-1 sm:p-2 bg-blue-50 text-blue-600 rounded-md flex-shrink-0">
+          <div className="p-1 sm:p-2 bg-blue-50 text-blue-600 rounded-md shrink-0">
             <CalendarCheck className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
           </div>
         </div>
@@ -96,7 +96,7 @@ export default function Dashboard() {
               {dashboardData.totalRevenue?.toLocaleString()}
             </h2>
           </div>
-          <div className="p-1 sm:p-2 bg-emerald-50 text-emerald-600 rounded-md flex-shrink-0">
+          <div className="p-1 sm:p-2 bg-emerald-50 text-emerald-600 rounded-md shrink-0">
             <DollarSign className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
           </div>
         </div>
@@ -111,7 +111,7 @@ export default function Dashboard() {
               {dashboardData.totalRooms}
             </h2>
           </div>
-          <div className="p-1 sm:p-2 bg-purple-50 text-purple-600 rounded-md flex-shrink-0">
+          <div className="p-1 sm:p-2 bg-purple-50 text-purple-600 rounded-md shrink-0">
             <Bed className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
           </div>
         </div>
@@ -126,7 +126,7 @@ export default function Dashboard() {
               {dashboardData.occupancyRate}%
             </h2>
           </div>
-          <div className="p-1 sm:p-2 bg-indigo-50 text-indigo-600 rounded-md flex-shrink-0">
+          <div className="p-1 sm:p-2 bg-indigo-50 text-indigo-600 rounded-md shrink-0">
             <Percent className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
           </div>
         </div>
@@ -141,7 +141,7 @@ export default function Dashboard() {
               {dashboardData.availableRooms}
             </h2>
           </div>
-          <div className="p-1 sm:p-2 bg-teal-50 text-teal-600 rounded-md flex-shrink-0">
+          <div className="p-1 sm:p-2 bg-teal-50 text-teal-600 rounded-md shrink-0">
             <CheckCircle className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
           </div>
         </div>
@@ -156,7 +156,7 @@ export default function Dashboard() {
               {dashboardData.totalReviews}
             </h2>
           </div>
-          <div className="p-1 sm:p-2 bg-amber-50 text-amber-600 rounded-md flex-shrink-0">
+          <div className="p-1 sm:p-2 bg-amber-50 text-amber-600 rounded-md shrink-0">
             <Star className="w-3.5 h-3.5 sm:w-5 sm:h-5 fill-amber-500 text-amber-500" />
           </div>
         </div>
@@ -174,7 +174,7 @@ export default function Dashboard() {
               </span>
             </h2>
           </div>
-          <div className="p-1 sm:p-2 bg-orange-50 text-orange-500 rounded-md flex-shrink-0">
+          <div className="p-1 sm:p-2 bg-orange-50 text-orange-500 rounded-md shrink-0">
             <Star className="w-3.5 h-3.5 sm:w-5 sm:h-5 fill-orange-400 text-orange-400" />
           </div>
         </div>
@@ -193,7 +193,7 @@ export default function Dashboard() {
               {dashboardData.todayCheckIns}
             </h2>
           </div>
-          <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-md bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
+          <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-md bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
             <LogIn className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
         </div>
@@ -209,7 +209,7 @@ export default function Dashboard() {
               {dashboardData.scheduledCheckOuts}
             </h2>
           </div>
-          <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-md bg-rose-50 flex items-center justify-center text-rose-500 flex-shrink-0">
+          <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-md bg-rose-50 flex items-center justify-center text-rose-500 shrink-0">
             <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
         </div>
@@ -301,7 +301,7 @@ export default function Dashboard() {
             Booking Trends
           </h3>
           <div className="w-full overflow-x-auto">
-            <div className="min-w-[400px] md:min-w-full w-full">
+            <div className="min-w-100 md:min-w-full w-full">
               <BookingChart bookings={dashboardData.bookings} />
             </div>
           </div>

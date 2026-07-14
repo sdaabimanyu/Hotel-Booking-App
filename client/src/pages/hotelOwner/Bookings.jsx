@@ -433,7 +433,7 @@ export default function Bookings() {
                     {/* PAYMENT */}
                     {/* ================================== */}
 
-                    <div className="space-y-2 min-w-[110px]">
+                    <div className="space-y-2 min-w-27.5">
                       <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
                         Payment
                       </span>

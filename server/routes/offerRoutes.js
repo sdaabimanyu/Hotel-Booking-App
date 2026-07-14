@@ -15,22 +15,45 @@ import { protect } from "../middleware/authMiddleware.js";
 
 const offerRouter = express.Router();
 
-// Public
+// =========================================================
+// PUBLIC ROUTES
+// =========================================================
+
+// GET ALL OFFERS
 offerRouter.get("/", getOffers);
 
-// Owner
-offerRouter.get("/owner", protect, getOwnerOffers);
+// =========================================================
+// USER ROUTES
+// =========================================================
 
-// Public
-offerRouter.get("/:id", getOfferById);
-
-// User
+// APPLY OFFER CODE
 offerRouter.post("/apply", protect, applyOfferCode);
 
-// Hotel Owner
+// =========================================================
+// HOTEL OWNER ROUTES
+// =========================================================
+
+// GET OWNER OFFERS
+offerRouter.get("/owner", protect, getOwnerOffers);
+
+// CREATE OFFER
 offerRouter.post("/", protect, createOffer);
+
+// UPDATE OFFER
 offerRouter.put("/:id", protect, updateOffer);
+
+// DELETE OFFER
 offerRouter.delete("/:id", protect, deleteOffer);
+
+// TOGGLE OFFER STATUS
 offerRouter.patch("/:id/toggle", protect, toggleOfferStatus);
+
+// =========================================================
+// DYNAMIC PUBLIC ROUTES
+// KEEP THESE AFTER FIXED ROUTES
+// =========================================================
+
+// GET SINGLE OFFER
+offerRouter.get("/:id", getOfferById);
 
 export default offerRouter;

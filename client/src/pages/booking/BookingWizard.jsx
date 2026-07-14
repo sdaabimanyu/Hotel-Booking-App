@@ -153,7 +153,7 @@ export default function BookingWizard() {
               </span>
 
               {step === stepItem.id && (
-                <div className="w-8 h-[2px] bg-amber-600 rounded-full mt-0.5 animate-pulse" />
+                <div className="w-8 h-0.5 bg-amber-600 rounded-full mt-0.5 animate-pulse" />
               )}
             </div>
           ))}

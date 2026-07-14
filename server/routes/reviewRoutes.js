@@ -1,4 +1,5 @@
 import express from "express";
+
 import {
   addReview,
   approveReview,
@@ -9,28 +10,33 @@ import {
   rejectReview,
   respondToReview,
 } from "../controllers/reviewController.js";
+
 import { protect } from "../middleware/authMiddleware.js";
 
 const reviewRouter = express.Router();
 
+// ADD REVIEW
 reviewRouter.post("/", protect, addReview);
 
-reviewRouter.get("/room/:roomId", getRoomReviews);
-
-reviewRouter.get("/hotel", protect, getHotelReviews);
-
-reviewRouter.patch("/:id/approve", protect, approveReview);
-
-reviewRouter.patch("/:id/reject", protect, rejectReview);
-
-reviewRouter.patch("/:id/respond", protect, respondToReview);
-
-reviewRouter.delete("/:id", protect, deleteReview);
-
+// GET PUBLIC REVIEWS
 reviewRouter.get("/", getAllReviews);
 
-reviewRouter.get("/test", (req, res) => {
-  res.send("Review Route Working");
-});
+// GET ROOM REVIEWS
+reviewRouter.get("/room/:roomId", getRoomReviews);
+
+// GET HOTEL OWNER REVIEWS
+reviewRouter.get("/hotel", protect, getHotelReviews);
+
+// APPROVE REVIEW
+reviewRouter.patch("/:id/approve", protect, approveReview);
+
+// REJECT REVIEW
+reviewRouter.patch("/:id/reject", protect, rejectReview);
+
+// RESPOND TO REVIEW
+reviewRouter.patch("/:id/respond", protect, respondToReview);
+
+// DELETE REVIEW
+reviewRouter.delete("/:id", protect, deleteReview);
 
 export default reviewRouter;

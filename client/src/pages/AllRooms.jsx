@@ -408,7 +408,7 @@ export default function AllRooms() {
                   >
                     {/* ROOM IMAGE */}
 
-                    <div className="w-full md:w-[340px] h-[220px] shrink-0 rounded-2xl overflow-hidden shadow-xs relative group">
+                    <div className="w-full md:w-85 h-55 shrink-0 rounded-2xl overflow-hidden shadow-xs relative group">
                       <img
                         onClick={() => navigate(`/rooms/${room._id}`)}
                         src={room.images?.[0]}
@@ -565,7 +565,7 @@ export default function AllRooms() {
             <div
               className={`${
                 openFilter
-                  ? "max-h-[2000px] opacity-100"
+                  ? "max-h-500 opacity-100"
                   : "max-h-0 lg:max-h-none opacity-0 lg:opacity-100"
               } overflow-hidden transition-all duration-500 ease-in-out font-inter`}
             >

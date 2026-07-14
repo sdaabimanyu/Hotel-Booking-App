@@ -4,18 +4,17 @@ import Review from "../models/Review.js";
 import { cloudinary } from "../configs/cloudinary.js";
 import { getAuth } from "@clerk/express";
 
+// =========================================================
 // CREATE ROOM
+// =========================================================
+
 export const createRoom = async (req, res) => {
   try {
-    // ==========================================
-    // 1. GET LOGGED-IN USER
-    // ==========================================
-
     const { userId } = getAuth(req);
 
-    // ==========================================
-    // 2. FIND OWNER'S HOTEL
-    // ==========================================
+    // =========================================================
+    // 1. FIND OWNER'S HOTEL
+    // =========================================================
 
     const hotel = await Hotel.findOne({
       owner: userId,
@@ -28,9 +27,9 @@ export const createRoom = async (req, res) => {
       });
     }
 
-    // ==========================================
-    // 3. GET ROOM DATA
-    // ==========================================
+    // =========================================================
+    // 2. GET ROOM DATA
+    // =========================================================
 
     const {
       roomType,
@@ -42,9 +41,9 @@ export const createRoom = async (req, res) => {
       amenities,
     } = req.body;
 
-    // ==========================================
-    // 4. VALIDATE REQUIRED DATA
-    // ==========================================
+    // =========================================================
+    // 3. VALIDATE REQUIRED DATA
+    // =========================================================
 
     if (
       !roomType ||
@@ -61,9 +60,9 @@ export const createRoom = async (req, res) => {
       });
     }
 
-    // ==========================================
-    // 5. VALIDATE PRICE
-    // ==========================================
+    // =========================================================
+    // 4. VALIDATE PRICE
+    // =========================================================
 
     const roomPrice = Number(pricePerNight);
 
@@ -74,14 +73,15 @@ export const createRoom = async (req, res) => {
       });
     }
 
-    // ==========================================
-    // 6. PARSE AMENITIES
-    // ==========================================
+    // =========================================================
+    // 5. PARSE AMENITIES
+    // =========================================================
 
     let parsedAmenities;
 
     try {
-      parsedAmenities = JSON.parse(amenities);
+      parsedAmenities =
+        typeof amenities === "string" ? JSON.parse(amenities) : amenities;
     } catch (error) {
       return res.status(400).json({
         success: false,
@@ -96,9 +96,9 @@ export const createRoom = async (req, res) => {
       });
     }
 
-    // ==========================================
-    // 7. VALIDATE IMAGES
-    // ==========================================
+    // =========================================================
+    // 6. VALIDATE IMAGES
+    // =========================================================
 
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
@@ -107,9 +107,9 @@ export const createRoom = async (req, res) => {
       });
     }
 
-    // ==========================================
-    // 8. UPLOAD IMAGES TO CLOUDINARY
-    // ==========================================
+    // =========================================================
+    // 7. UPLOAD IMAGES
+    // =========================================================
 
     const imageUrls = [];
 
@@ -123,9 +123,9 @@ export const createRoom = async (req, res) => {
       imageUrls.push(result.secure_url);
     }
 
-    // ==========================================
-    // 9. CREATE ROOM
-    // ==========================================
+    // =========================================================
+    // 8. CREATE ROOM
+    // =========================================================
 
     const room = await Room.create({
       hotel: hotel._id,
@@ -147,10 +147,6 @@ export const createRoom = async (req, res) => {
       images: imageUrls,
     });
 
-    // ==========================================
-    // 10. SUCCESS RESPONSE
-    // ==========================================
-
     return res.status(201).json({
       success: true,
       message: "Room created successfully",
@@ -166,7 +162,10 @@ export const createRoom = async (req, res) => {
   }
 };
 
-// GET ALL ROOMS
+// =========================================================
+// GET ALL PUBLIC ROOMS
+// =========================================================
+
 export const getRooms = async (req, res) => {
   try {
     const rooms = await Room.find({
@@ -174,151 +173,464 @@ export const getRooms = async (req, res) => {
       isDeleted: false,
     })
       .populate("hotel")
-      .sort({ createdAt: -1 })
+      .sort({
+        createdAt: -1,
+      })
       .lean();
 
     const roomsWithReviews = await Promise.all(
       rooms.map(async (room) => {
         const reviews = await Review.find({
           room: room._id,
-          $or: [{ status: "approved" }, { status: { $exists: false } }],
+
+          $or: [
+            {
+              status: "approved",
+            },
+            {
+              status: {
+                $exists: false,
+              },
+            },
+          ],
         });
 
         const reviewCount = reviews.length;
 
         const averageRating =
           reviewCount > 0
-            ? reviews.reduce((total, review) => total + review.rating, 0) /
-              reviewCount
+            ? reviews.reduce(
+                (total, review) => total + Number(review.rating || 0),
+                0,
+              ) / reviewCount
             : 0;
 
         return {
           ...room,
+
           reviewCount,
-          averageRating,
+
+          averageRating: Number(averageRating.toFixed(1)),
         };
       }),
     );
 
-    res.json({
+    return res.status(200).json({
       success: true,
       rooms: roomsWithReviews,
     });
   } catch (error) {
     console.log("GET ROOMS ERROR:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
 
-// OWNER ROOMS
+// =========================================================
+// GET OWNER ROOMS
+// =========================================================
+
 export const getOwnerRooms = async (req, res) => {
   try {
     const { userId } = getAuth(req);
 
-    const hotel = await Hotel.findOne({ owner: userId });
+    const hotel = await Hotel.findOne({
+      owner: userId,
+    });
+
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: "No Hotel Found",
+      });
+    }
 
     const rooms = await Room.find({
       hotel: hotel._id,
       isDeleted: false,
-    }).populate("hotel");
+    })
+      .populate("hotel")
+      .sort({
+        createdAt: -1,
+      });
 
-    res.json({
+    return res.status(200).json({
       success: true,
       rooms,
     });
   } catch (error) {
-    res.json({
+    console.log("GET OWNER ROOMS ERROR:", error);
+
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
 
-// TOGGLE
+// =========================================================
+// TOGGLE ROOM AVAILABILITY
+// =========================================================
+
 export const toggleRoomAvailability = async (req, res) => {
   try {
+    const { userId } = getAuth(req);
+
     const { roomId } = req.body;
 
-    const room = await Room.findById(roomId);
+    if (!roomId) {
+      return res.status(400).json({
+        success: false,
+        message: "Room ID is required",
+      });
+    }
+
+    // =========================================================
+    // FIND OWNER HOTEL
+    // =========================================================
+
+    const hotel = await Hotel.findOne({
+      owner: userId,
+    });
+
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: "No Hotel Found",
+      });
+    }
+
+    // =========================================================
+    // FIND ROOM BELONGING TO OWNER
+    // =========================================================
+
+    const room = await Room.findOne({
+      _id: roomId,
+      hotel: hotel._id,
+      isDeleted: false,
+    });
+
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        message: "Room not found",
+      });
+    }
+
+    // =========================================================
+    // TOGGLE AVAILABILITY
+    // =========================================================
 
     room.isAvailable = !room.isAvailable;
 
     await room.save();
 
-    res.json({
+    return res.status(200).json({
       success: true,
-      message: "Room availability updated",
+
+      message: room.isAvailable
+        ? "Room is now available"
+        : "Room is now unavailable",
+
+      room,
     });
   } catch (error) {
-    res.json({
+    console.log("TOGGLE ROOM AVAILABILITY ERROR:", error);
+
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
 
+// =========================================================
 // GET SINGLE ROOM
+// =========================================================
+
 export const getRoomById = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id);
+    const room = await Room.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    }).populate("hotel");
 
-    res.json({
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        message: "Room not found",
+      });
+    }
+
+    return res.status(200).json({
       success: true,
       room,
     });
   } catch (error) {
-    res.json({
+    console.log("GET ROOM BY ID ERROR:", error);
+
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
 
+// =========================================================
 // UPDATE ROOM
+// =========================================================
+
 export const updateRoom = async (req, res) => {
   try {
-    const { roomType, pricePerNight, amenities } = req.body;
+    const { userId } = getAuth(req);
 
-    const room = await Room.findByIdAndUpdate(
-      req.params.id,
-      {
-        roomType,
-        pricePerNight,
-        amenities,
-      },
-      { new: true },
-    );
+    // =========================================================
+    // 1. FIND OWNER HOTEL
+    // =========================================================
 
-    res.json({
+    const hotel = await Hotel.findOne({
+      owner: userId,
+    });
+
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: "No Hotel Found",
+      });
+    }
+
+    // =========================================================
+    // 2. FIND OWNER'S ROOM
+    // =========================================================
+
+    const room = await Room.findOne({
+      _id: req.params.id,
+      hotel: hotel._id,
+      isDeleted: false,
+    });
+
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        message: "Room not found",
+      });
+    }
+
+    // =========================================================
+    // 3. GET UPDATE DATA
+    // =========================================================
+
+    const {
+      roomType,
+      description,
+      roomSize,
+      bedType,
+      view,
+      pricePerNight,
+      amenities,
+    } = req.body;
+
+    // =========================================================
+    // 4. UPDATE ROOM TYPE
+    // =========================================================
+
+    if (roomType !== undefined) {
+      if (!roomType.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Room type cannot be empty",
+        });
+      }
+
+      room.roomType = roomType.trim();
+    }
+
+    // =========================================================
+    // 5. UPDATE DESCRIPTION
+    // =========================================================
+
+    if (description !== undefined) {
+      if (!description.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Description cannot be empty",
+        });
+      }
+
+      room.description = description.trim();
+    }
+
+    // =========================================================
+    // 6. UPDATE ROOM SIZE
+    // =========================================================
+
+    if (roomSize !== undefined) {
+      if (!roomSize.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Room size cannot be empty",
+        });
+      }
+
+      room.roomSize = roomSize.trim();
+    }
+
+    // =========================================================
+    // 7. UPDATE BED TYPE
+    // =========================================================
+
+    if (bedType !== undefined) {
+      if (!bedType.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Bed type cannot be empty",
+        });
+      }
+
+      room.bedType = bedType.trim();
+    }
+
+    // =========================================================
+    // 8. UPDATE VIEW
+    // =========================================================
+
+    if (view !== undefined) {
+      if (!view.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Room view cannot be empty",
+        });
+      }
+
+      room.view = view.trim();
+    }
+
+    // =========================================================
+    // 9. UPDATE PRICE
+    // =========================================================
+
+    if (pricePerNight !== undefined) {
+      const roomPrice = Number(pricePerNight);
+
+      if (Number.isNaN(roomPrice) || roomPrice <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Please provide a valid room price",
+        });
+      }
+
+      room.pricePerNight = roomPrice;
+    }
+
+    // =========================================================
+    // 10. UPDATE AMENITIES
+    // =========================================================
+
+    if (amenities !== undefined) {
+      let parsedAmenities;
+
+      try {
+        parsedAmenities =
+          typeof amenities === "string" ? JSON.parse(amenities) : amenities;
+      } catch (error) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid amenities data",
+        });
+      }
+
+      if (!Array.isArray(parsedAmenities) || parsedAmenities.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Please select at least one amenity",
+        });
+      }
+
+      room.amenities = parsedAmenities;
+    }
+
+    // =========================================================
+    // 11. SAVE ROOM
+    // =========================================================
+
+    await room.save();
+
+    return res.status(200).json({
       success: true,
-      room,
       message: "Room Updated Successfully",
+      room,
     });
   } catch (error) {
-    res.json({
+    console.log("UPDATE ROOM ERROR:", error);
+
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
+
+// =========================================================
+// ARCHIVE ROOM
+// =========================================================
 
 export const deleteRoom = async (req, res) => {
   try {
-    await Room.findByIdAndUpdate(req.params.id, {
-      isDeleted: true,
-      isAvailable: false,
+    const { userId } = getAuth(req);
+
+    // =========================================================
+    // 1. FIND OWNER HOTEL
+    // =========================================================
+
+    const hotel = await Hotel.findOne({
+      owner: userId,
     });
 
-    res.json({
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: "No Hotel Found",
+      });
+    }
+
+    // =========================================================
+    // 2. FIND OWNER'S ROOM
+    // =========================================================
+
+    const room = await Room.findOne({
+      _id: req.params.id,
+      hotel: hotel._id,
+      isDeleted: false,
+    });
+
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        message: "Room not found",
+      });
+    }
+
+    // =========================================================
+    // 3. ARCHIVE ROOM
+    // =========================================================
+
+    room.isDeleted = true;
+
+    room.isAvailable = false;
+
+    await room.save();
+
+    return res.status(200).json({
       success: true,
       message: "Room archived successfully",
     });
   } catch (error) {
-    res.json({
+    console.log("DELETE ROOM ERROR:", error);
+
+    return res.status(500).json({
       success: false,
       message: error.message,
     });

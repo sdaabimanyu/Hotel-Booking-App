@@ -6,6 +6,7 @@ import transporter from "../configs/nodemailer.js";
 import stripe from "stripe";
 import Review from "../models/Review.js";
 import Offer from "../models/Offer.js";
+import Notification from "../models/Notification.js";
 
 // Function to Check Availability of Room
 const checkAvailability = async (checkInDate, checkOutDate, room) => {
@@ -179,7 +180,6 @@ export const createBooking = async (req, res) => {
         });
       }
 
-      // Check whether offer is active
       if (!offer.isActive) {
         return res.status(400).json({
           success: false,
@@ -187,7 +187,6 @@ export const createBooking = async (req, res) => {
         });
       }
 
-      // Check whether offer has expired
       if (new Date(offer.validTill) < new Date()) {
         return res.status(400).json({
           success: false,
@@ -195,7 +194,6 @@ export const createBooking = async (req, res) => {
         });
       }
 
-      // Check minimum stay
       if (nights < offer.minimumStay) {
         return res.status(400).json({
           success: false,
@@ -203,7 +201,6 @@ export const createBooking = async (req, res) => {
         });
       }
 
-      // Calculate discount
       if (offer.discountType === "percentage") {
         discount = Number(((subtotal * offer.discount) / 100).toFixed(2));
       } else {
@@ -290,7 +287,29 @@ export const createBooking = async (req, res) => {
     }
 
     // ==========================================
-    // 13. SEND BOOKING CONFIRMATION EMAIL
+    // 13. CREATE IN-APP BOOKING NOTIFICATION
+    // ==========================================
+
+    try {
+      const bookingNotification = await Notification.create({
+        user: booking.user,
+
+        type: "booking_confirmation",
+
+        title: "Booking Created",
+
+        message: `Your booking at ${roomData.hotel.name} for ${roomData.roomType} has been created successfully and is currently pending confirmation.`,
+
+        relatedBooking: booking._id,
+      });
+
+      console.log("BOOKING NOTIFICATION CREATED:", bookingNotification._id);
+    } catch (notificationError) {
+      console.log("BOOKING NOTIFICATION ERROR:", notificationError.message);
+    }
+
+    // ==========================================
+    // 14. SEND BOOKING CONFIRMATION EMAIL
     // ==========================================
 
     const mailOptions = {
@@ -426,11 +445,12 @@ export const createBooking = async (req, res) => {
     }
 
     // ==========================================
-    // 14. SEND RESPONSE
+    // 15. SEND RESPONSE
     // ==========================================
 
     return res.status(201).json({
       success: true,
+
       message: "Booking Created Successfully",
 
       bookingId: booking._id,
@@ -536,82 +556,80 @@ export const getUserBookings = async (req, res) => {
 
 export const getHotelBookings = async (req, res) => {
   try {
-    console.log("===== GET HOTEL BOOKINGS CONTROLLER HIT =====");
-
-    const hotels = await Hotel.find();
-
-    console.log("ALL HOTELS:", hotels);
-
-    console.log("req.user =", req.user);
+    // =========================================================
+    // 1. FIND LOGGED-IN HOTEL OWNER'S HOTEL
+    // =========================================================
 
     const hotel = await Hotel.findOne({
       owner: req.user._id,
     });
 
-    console.log("MATCHED HOTEL:", hotel);
-
     if (!hotel) {
-      return res.json({
+      return res.status(404).json({
         success: false,
         message: "No Hotel Found",
       });
     }
-    const allRooms = await Room.find({
-      hotel: hotel._id,
-    });
 
-    console.log("ROOMS FOUND:", allRooms.length);
-    console.log(
-      allRooms.map((room) => ({
-        id: room._id,
-        roomType: room.roomType,
-        isDeleted: room.isDeleted,
-        isAvailable: room.isAvailable,
-      })),
-    );
-    const bookings = await Booking.find({ hotel: hotel._id })
-      .populate("room hotel user selectedOffer")
-      .sort({ createdAt: -1 });
+    // =========================================================
+    // 2. GET ALL ACTIVE ROOMS
+    // =========================================================
 
-    console.log(
-      "BOOKINGS STATUS DEBUG:",
-      bookings.map((booking) => ({
-        id: booking._id,
-        createdAt: booking.createdAt,
-        checkInDate: booking.checkInDate,
-        checkOutDate: booking.checkOutDate,
-        status: booking.status,
-      })),
-    );
-
-    const totalRooms = await Room.countDocuments({
+    const rooms = await Room.find({
       hotel: hotel._id,
       isDeleted: false,
     });
+
+    // =========================================================
+    // 3. GET ALL HOTEL BOOKINGS
+    // =========================================================
+
+    const bookings = await Booking.find({
+      hotel: hotel._id,
+    })
+      .populate("room")
+      .populate("hotel")
+      .populate("user")
+      .populate("selectedOffer")
+      .sort({ createdAt: -1 });
+
+    // =========================================================
+    // 4. ROOM ANALYTICS
+    // =========================================================
+
+    const totalRooms = rooms.length;
 
     const archivedRooms = await Room.countDocuments({
       hotel: hotel._id,
       isDeleted: true,
     });
 
-    const totalReviews = await Review.countDocuments({
-      hotel: hotel._id,
-    });
+    // =========================================================
+    // 5. REVIEW ANALYTICS
+    // =========================================================
 
     const reviews = await Review.find({
       hotel: hotel._id,
     });
 
+    const totalReviews = reviews.length;
+
     const averageRating =
-      reviews.length > 0
-        ? (
-            reviews.reduce((sum, review) => sum + review.rating, 0) /
-            reviews.length
-          ).toFixed(1)
+      totalReviews > 0
+        ? Number(
+            (
+              reviews.reduce(
+                (sum, review) => sum + Number(review.rating || 0),
+                0,
+              ) / totalReviews
+            ).toFixed(1),
+          )
         : 0;
 
     const reviewAnalytics = [1, 2, 3, 4, 5].map((rating) => {
-      const count = reviews.filter((review) => review.rating === rating).length;
+      const count = reviews.filter(
+        (review) => Number(review.rating) === rating,
+      ).length;
 
       return {
         rating,
@@ -619,104 +637,155 @@ export const getHotelBookings = async (req, res) => {
       };
     });
 
-    console.log("REVIEW ANALYTICS:", reviewAnalytics);
+    // =========================================================
+    // 6. CREATE TODAY DATE RANGE
+    // =========================================================
 
-    const today = new Date();
+    const todayStart = new Date();
 
-    today.setHours(0, 0, 0, 0);
+    todayStart.setHours(0, 0, 0, 0);
+
+    const todayEnd = new Date();
+
+    todayEnd.setHours(23, 59, 59, 999);
+
+    // =========================================================
+    // 7. TODAY CHECK-INS
+    // =========================================================
 
     const todayCheckIns = bookings.filter((booking) => {
-      const checkIn = new Date(booking.checkInDate);
-
-      checkIn.setHours(0, 0, 0, 0);
-
-      return checkIn.getTime() === today.getTime();
-    }).length;
-
-    const scheduledCheckOuts = bookings.filter((booking) => {
-      const checkOut = new Date(booking.checkOutDate);
-
-      checkOut.setHours(0, 0, 0, 0);
+      const checkInDate = new Date(booking.checkInDate);
 
       return (
-        booking.status === "checked-in" && checkOut.getTime() >= today.getTime()
+        booking.status === "checked-in" &&
+        checkInDate >= todayStart &&
+        checkInDate <= todayEnd
       );
     }).length;
 
+    // =========================================================
+    // 8. TODAY SCHEDULED CHECK-OUTS
+    // =========================================================
+
+    const scheduledCheckOuts = bookings.filter((booking) => {
+      const checkOutDate = new Date(booking.checkOutDate);
+
+      return (
+        booking.status === "checked-in" &&
+        checkOutDate >= todayStart &&
+        checkOutDate <= todayEnd
+      );
+    }).length;
+
+    // =========================================================
+    // 9. TOTAL BOOKINGS
+    // =========================================================
+
     const totalBookings = bookings.length;
 
+    // =========================================================
+    // 10. TOTAL REVENUE
+    // =========================================================
+
     const paidBookings = bookings.filter(
-      (booking) => booking.isPaid && booking.status !== "cancelled",
+      (booking) => booking.isPaid === true && booking.status !== "cancelled",
     );
 
     const totalRevenue = paidBookings.reduce(
-      (acc, booking) => acc + booking.totalPrice,
+      (total, booking) => total + Number(booking.totalPrice || 0),
       0,
     );
+
+    // =========================================================
+    // 11. CURRENTLY OCCUPIED ROOMS
+    // =========================================================
+
     const currentlyOccupiedRoomIds = new Set(
       bookings
-        .filter((booking) => booking.status === "checked-in")
+        .filter(
+          (booking) => booking.status === "checked-in" && booking.room?._id,
+        )
         .map((booking) => booking.room._id.toString()),
     );
 
     const occupiedRooms = currentlyOccupiedRoomIds.size;
 
-    const availableRooms = totalRooms - occupiedRooms;
+    // =========================================================
+    // 12. AVAILABLE ROOMS
+    // =========================================================
+
+    const availableRooms = Math.max(totalRooms - occupiedRooms, 0);
+
+    // =========================================================
+    // 13. CURRENT OCCUPANCY RATE
+    // =========================================================
 
     const occupancyRate =
-      totalRooms > 0 ? ((occupiedRooms / totalRooms) * 100).toFixed(0) : 0;
+      totalRooms > 0
+        ? Number(((occupiedRooms / totalRooms) * 100).toFixed(0))
+        : 0;
 
-    const rooms = await Room.find({
-      hotel: hotel._id,
-      isDeleted: false,
-    });
+    // =========================================================
+    // 14. ROOM BOOKING ANALYTICS
+    // =========================================================
+
+    const nonCancelledBookings = bookings.filter(
+      (booking) => booking.status !== "cancelled",
+    );
 
     const roomOccupancy = rooms.map((room) => {
-      const roomBookings = bookings.filter(
-        (booking) => booking.room._id.toString() === room._id.toString(),
+      const roomBookings = nonCancelledBookings.filter(
+        (booking) => booking.room?._id?.toString() === room._id.toString(),
       );
 
-      const occupied = roomBookings.length;
-
-      const occupancy =
-        roomBookings.length > 0 ? Math.min(roomBookings.length * 20, 100) : 0;
-
       return {
+        roomId: room._id,
         roomType: room.roomType,
-        occupancy,
-        bookings: occupied,
+        bookings: roomBookings.length,
       };
     });
 
-    console.log("todayCheckIns:", todayCheckIns);
-    console.log("SCHEDULED CHECKOUTS:", scheduledCheckOuts);
+    // =========================================================
+    // 15. SEND DASHBOARD DATA
+    // =========================================================
 
-    res.json({
+    return res.status(200).json({
       success: true,
+
       dashboardData: {
         totalBookings,
+
         totalRevenue,
+
         totalRooms,
+
         availableRooms,
+
         archivedRooms,
+
         totalReviews,
+
         averageRating,
+
         occupancyRate,
 
         todayCheckIns,
+
         scheduledCheckOuts,
 
         bookings,
+
         roomOccupancy,
+
         reviewAnalytics,
       },
     });
   } catch (error) {
     console.log("GET HOTEL BOOKINGS ERROR:", error);
 
-    res.json({
+    return res.status(500).json({
       success: false,
-      message: "Failed to fetch bookings",
+      message: error.message || "Failed to fetch hotel dashboard",
     });
   }
 };
