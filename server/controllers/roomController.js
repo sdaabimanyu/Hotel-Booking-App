@@ -236,11 +236,12 @@ export const getRooms = async (req, res) => {
 export const getOwnerRooms = async (req, res) => {
   try {
     const { userId } = getAuth(req);
-
+    console.log("========== OWNER ROOMS ==========");
+    console.log("REQ USER:", req.user);
     const hotel = await Hotel.findOne({
       owner: userId,
     });
-
+    console.log("HOTEL FOUND:", hotel);
     if (!hotel) {
       return res.status(404).json({
         success: false,
@@ -256,7 +257,8 @@ export const getOwnerRooms = async (req, res) => {
       .sort({
         createdAt: -1,
       });
-
+    console.log("ROOM COUNT:", rooms.length);
+    console.log("ROOMS:", rooms);
     return res.status(200).json({
       success: true,
       rooms,

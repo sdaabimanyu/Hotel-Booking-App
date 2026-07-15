@@ -577,9 +577,14 @@ export const getHotelBookings = async (req, res) => {
     // 1. FIND LOGGED-IN HOTEL OWNER'S HOTEL
     // =========================================================
 
+    console.log("========== OWNER BOOKINGS ==========");
+    console.log("REQ USER:", req.user);
+
     const hotel = await Hotel.findOne({
       owner: req.user._id,
     });
+
+    console.log("HOTEL FOUND:", hotel);
 
     if (!hotel) {
       return res.status(404).json({
@@ -609,6 +614,8 @@ export const getHotelBookings = async (req, res) => {
       .populate("user")
       .populate("selectedOffer")
       .sort({ createdAt: -1 });
+
+    console.log("BOOKING COUNT:", bookings.length);
 
     // =========================================================
     // 4. ROOM ANALYTICS

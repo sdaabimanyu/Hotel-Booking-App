@@ -86,9 +86,14 @@ export const getUserInquiries = async (req, res) => {
 
 export const getHotelInquiries = async (req, res) => {
   try {
+    console.log("========== OWNER INQUIRIES ==========");
+    console.log("REQ USER:", req.user);
+
     const hotel = await Hotel.findOne({
       owner: req.user._id,
     });
+
+    console.log("HOTEL FOUND:", hotel);
 
     if (!hotel) {
       return res.status(404).json({
@@ -103,6 +108,8 @@ export const getHotelInquiries = async (req, res) => {
       .populate("booking")
       .populate("user", "username email")
       .sort({ createdAt: -1 });
+
+    console.log("INQUIRY COUNT:", inquiries.length);
 
     return res.status(200).json({
       success: true,
