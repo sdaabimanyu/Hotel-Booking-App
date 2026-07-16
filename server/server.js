@@ -30,7 +30,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://hotel-booking-app-nine-rho.vercel.app",
+      "https://el-hotel-booking-app.netlify.app",
     ],
     credentials: true,
   }),
@@ -65,8 +65,6 @@ app.post(
 app.use(express.json());
 
 app.use(clerkMiddleware());
-
-
 
 // =========================================================
 // HEALTH CHECK
