@@ -1,3 +1,5 @@
+import User from "../models/User";
+
 export const protect = async (req, res, next) => {
   try {
     console.log("AUTH:", req.auth());
