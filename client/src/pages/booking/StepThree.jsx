@@ -33,6 +33,8 @@ export default function StepThree({ room, bookingData, setStep }) {
       setLoading(true);
       const token = await getToken();
 
+      console.log("TOKEN:", token);
+
       // Create booking first
       const bookingRes = await axios.post(
         "/api/bookings/book",
