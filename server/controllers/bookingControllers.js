@@ -815,6 +815,8 @@ export const getHotelBookings = async (req, res) => {
 };
 
 export const stripePayment = async (req, res) => {
+  console.log("===== STRIPE PAYMENT =====");
+  console.log("req.user:", req.user);
   try {
     const { bookingId } = req.body;
 
