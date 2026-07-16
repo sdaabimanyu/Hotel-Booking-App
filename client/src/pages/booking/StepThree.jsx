@@ -67,6 +67,8 @@ export default function StepThree({ room, bookingData, setStep }) {
 
       console.log("NEW BOOKING ID:", bookingRes.data.bookingId);
 
+      console.log("Booking Response:", bookingRes.data);
+
       const stripeRes = await axios.post(
         "/api/bookings/stripe-payment",
         {
@@ -79,9 +81,14 @@ export default function StepThree({ room, bookingData, setStep }) {
         },
       );
 
+      console.log("Stripe Response:", stripeRes.data);
+
       if (stripeRes.data.success) {
+        console.log("Redirecting to:", stripeRes.data.url);
         setLoading(false);
         window.location.href = stripeRes.data.url;
+      } else {
+        console.log("Stripe Error:", stripeRes.data);
       }
     } catch (error) {
       console.log(error);
