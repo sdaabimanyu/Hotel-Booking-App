@@ -453,24 +453,17 @@ export const createBooking = async (req, res) => {
       `,
     };
 
-    try {
-      console.log("BEFORE EMAIL:", new Date());
+    // Send email in background (don't wait)
+    transporter
+      .sendMail(mailOptions)
+      .then(() => {
+        console.log("BOOKING CONFIRMATION EMAIL SENT TO:", email);
+      })
+      .catch((err) => {
+        console.log("BOOKING CONFIRMATION EMAIL ERROR:", err.message);
+      });
 
-      await transporter.sendMail(mailOptions);
-
-      console.log("AFTER EMAIL:", new Date());
-      console.log("BOOKING CONFIRMATION EMAIL SENT TO:", email);
-    } catch (emailError) {
-      console.log("AFTER EMAIL:", new Date());
-      console.log("BOOKING CONFIRMATION EMAIL ERROR:", emailError.message);
-    }
-
-    console.log("RETURN RESPONSE:", new Date());
-
-    // ==========================================
-    // 15. SEND RESPONSE
-    // ==========================================
-
+    // Return immediately
     return res.status(201).json({
       success: true,
       message: "Booking Created Successfully",
