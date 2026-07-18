@@ -2,6 +2,11 @@ import User from "../models/User.js";
 
 export const protect = async (req, res, next) => {
   try {
+    console.log("========== PROTECT ==========");
+    console.log("PATH:", req.originalUrl);
+    console.log("AUTH HEADER:", req.headers.authorization);
+
+ 
     console.log("AUTH:", req.auth());
 
     const { userId } = req.auth();
