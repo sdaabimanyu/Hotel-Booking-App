@@ -454,12 +454,18 @@ export const createBooking = async (req, res) => {
     };
 
     try {
+      console.log("BEFORE EMAIL:", new Date());
+
       await transporter.sendMail(mailOptions);
 
+      console.log("AFTER EMAIL:", new Date());
       console.log("BOOKING CONFIRMATION EMAIL SENT TO:", email);
     } catch (emailError) {
+      console.log("AFTER EMAIL:", new Date());
       console.log("BOOKING CONFIRMATION EMAIL ERROR:", emailError.message);
     }
+
+    console.log("RETURN RESPONSE:", new Date());
 
     // ==========================================
     // 15. SEND RESPONSE
@@ -467,11 +473,8 @@ export const createBooking = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-
       message: "Booking Created Successfully",
-
       bookingId: booking._id,
-
       priceDetails: {
         nights,
         subtotal,
