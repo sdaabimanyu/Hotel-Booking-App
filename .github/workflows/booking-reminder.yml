@@ -1,0 +1,19 @@
+name: Upcoming Booking Reminder
+
+on:
+  schedule:
+    # Runs every day at 2:30 AM UTC (8:00 AM IST)
+    - cron: "30 2 * * *"
+
+  workflow_dispatch:
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call Reminder API
+        run: |
+          curl -X GET \
+          "${{ secrets.REMINDER_API_URL }}" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
