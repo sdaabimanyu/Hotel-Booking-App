@@ -1,5 +1,11 @@
 # 🏨 EL Hotel
 
+![React](https://img.shields.io/badge/React-19-blue?logo=react)
+![Node.js](https://img.shields.io/badge/Node.js-Express-green?logo=node.js)
+![MongoDB](https://img.shields.io/badge/MongoDB-Database-green?logo=mongodb)
+![Stripe](https://img.shields.io/badge/Stripe-Payments-635BFF?logo=stripe)
+![License](https://img.shields.io/badge/License-MIT-yellow)
+
 A full-stack **Hotel Booking Web Application** built using the **MERN Stack** that allows users to search hotels,
 book rooms, make secure online payments, receive email notifications, and manage bookings. Hotel owners can register hotels,
 manage rooms, monitor bookings, create offers, and track booking statuses through an admin dashboard.
@@ -8,14 +14,17 @@ manage rooms, monitor bookings, create offers, and track booking statuses throug
 
 ## 🌐 Live Demo
 
-### Frontend
-https://el-hotel-booking-app.netlify.app/
+### 🌐 Frontend
 
-### Backend API
-https://hotel-booking-app-5g3h.onrender.com
+👉 https://el-hotel-booking-app.netlify.app/
 
-### GitHub Repository
-https://github.com/sdaabimanyu/Hotel-Booking-App
+### ⚙ Backend API
+
+👉 https://hotel-booking-app-5g3h.onrender.com
+
+### 📂 GitHub Repository
+
+👉 https://github.com/sdaabimanyu/Hotel-Booking-App
 
 ---
 
@@ -45,6 +54,37 @@ Hotel owners can:
 - Check guests in/out
 - Create promotional offers
 - View booking dashboard
+
+---
+
+# 🚀 Key Highlights
+
+- 🔐 Clerk Authentication
+- 💳 Stripe Payment Integration
+- 📧 Automated Email Notifications
+- 🔔 Real-Time In-App Notifications
+- ⭐ Hotel Reviews & Ratings
+- ❤️ Favorite Hotels & Rooms
+- 🎁 Hotel Offers & Discounts
+- 🏨 Hotel Owner Dashboard
+- 📅 Booking Status Tracking
+- 🤖 Automated Daily Booking Reminders using GitHub Actions
+
+---
+
+## 📑 Table of Contents
+
+- [Project Overview](#-project-overview)
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Installation](#-installation)
+- [Environment Variables](#-environment-variables)
+- [Screenshots](#-screenshots)
+- [Deployment](#-deployment)
+- [Future Improvements](#-future-improvements)
+- [Author](#-author)
+
 
 ---
 
@@ -95,19 +135,14 @@ Hotel owners can:
 
 Booking Status Flow
 
-Pending
-
-↓
-
-Confirmed
-
-↓
-
-Checked-In
-
-↓
-
-Checked-Out
+```mermaid
+flowchart LR
+    Pending --> Confirmed
+    Confirmed --> Checked_In
+    Checked_In --> Checked_Out
+    Pending --> Cancelled
+    Confirmed --> Cancelled
+```
 
 Cancelled can happen before Check-In.
 
@@ -519,4 +554,4 @@ If you like this project,
 
 ## 📄 License
 
-This project is created for learning and portfolio purposes.
+This project was developed as a full-stack portfolio project to demonstrate modern MERN stack development, secure authentication, payment integration, and deployment practices.
