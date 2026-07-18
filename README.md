@@ -1,4 +1,4 @@
-# 🏨 EL Hotel
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/6fb684da-c407-47da-b8c8-d382abe8009f" /># 🏨 EL Hotel
 
 A full-stack **Hotel Booking Web Application** built using the **MERN Stack** that allows users to search hotels,
 book rooms, make secure online payments, receive email notifications, and manage bookings. Hotel owners can register hotels,
@@ -372,29 +372,92 @@ If eligible bookings are found:
 
 # 📸 Screenshots
 
-Add screenshots here.
+---
 
-Example
+## 🏠 Home Page
 
-```
-screenshots/
-
-home.png
-
-hotel-list.png
-
-room-details.png
-
-booking.png
-
-payment.png
-
-dashboard.png
-
-notifications.png
-```
+<p align="center">
+  <img src="screenshots/home.png" width="90%">
+</p>
 
 ---
+
+## 🏨 Hotel Listing
+
+<p align="center">
+  <img src="screenshots/hotels.png" width="90%">
+</p>
+
+---
+
+## 🛏 Room Details
+
+<p align="center">
+  <img src="screenshots/room-details1.png" width="32%">
+  <img src="screenshots/room-details2.png" width="32%">
+  <img src="screenshots/room-details3.png" width="32%">
+</p>
+
+---
+
+## 📅 Booking Process
+
+<p align="center">
+  <img src="screenshots/booking-1.png" width="32%">
+  <img src="screenshots/booking-2.png" width="32%">
+  <img src="screenshots/booking-3.png" width="32%">
+</p>
+
+---
+
+## 💳 Stripe Payment
+
+<p align="center">
+  <img src="screenshots/stripe-payment.png" width="90%">
+</p>
+
+---
+
+## 📖 My Bookings
+
+<p align="center">
+  <img src="screenshots/my-bookings.png" width="90%">
+</p>
+
+---
+
+## 📊 Hotel Owner Dashboard
+
+<p align="center">
+  <img src="screenshots/dashboard.png" width="90%">
+</p>
+
+---
+
+## 🔔 Notifications
+
+<p align="center">
+  <img src="screenshots/notification.png" width="90%">
+</p>
+
+---
+
+## 🎁 Offers
+
+<p align="center">
+  <img src="screenshots/offer-1.png" width="48%">
+  <img src="screenshots/offer-2.png" width="48%">
+</p>
+
+---
+
+## ⭐ Reviews & Ratings
+
+<p align="center">
+  <img src="screenshots/reviews-1.png" width="48%">
+  <img src="screenshots/reviews-2.png" width="48%">
+</p>
+
 
 # 🚀 Deployment
 
