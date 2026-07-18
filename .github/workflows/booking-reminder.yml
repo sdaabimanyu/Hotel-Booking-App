@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Call Reminder API
+      - name: Call Upcoming Booking Reminder API
         run: |
-          curl -X GET \
+          curl --request GET \
           "${{ secrets.REMINDER_API_URL }}" \
-          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+          --header "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
