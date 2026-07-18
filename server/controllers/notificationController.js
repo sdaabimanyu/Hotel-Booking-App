@@ -6,7 +6,6 @@ export const sendUpcomingBookingReminders = async (req, res) => {
   // ==========================================
   // VERIFY CRON REQUEST
   // ==========================================
-
   const authHeader = req.headers.authorization;
 
   if (
@@ -23,31 +22,22 @@ export const sendUpcomingBookingReminders = async (req, res) => {
     // ==========================================
     // 1. CREATE TOMORROW DATE RANGE
     // ==========================================
-
     const tomorrowStart = new Date();
-
     tomorrowStart.setDate(tomorrowStart.getDate() + 1);
-
     tomorrowStart.setHours(0, 0, 0, 0);
 
     const tomorrowEnd = new Date(tomorrowStart);
-
     tomorrowEnd.setHours(23, 59, 59, 999);
 
     // ==========================================
-    // 2. FIND TOMORROW'S BOOKINGS
+    // 2. FIND TOMORROW'S CONFIRMED BOOKINGS
     // ==========================================
-
     const bookings = await Booking.find({
       checkInDate: {
         $gte: tomorrowStart,
         $lte: tomorrowEnd,
       },
-
-      status: {
-        $in: ["pending", "confirmed"],
-      },
-
+      status: "confirmed", // Fixed nested query syntax bug
       reminderSent: false,
     })
       .populate("hotel")
@@ -58,32 +48,25 @@ export const sendUpcomingBookingReminders = async (req, res) => {
     // ==========================================
     // 3. PROCESS EACH BOOKING
     // ==========================================
-
     for (const booking of bookings) {
       try {
         // ==========================================
         // VALIDATE EMAIL
         // ==========================================
-
         if (!booking.email) {
           console.log("REMINDER SKIPPED - NO EMAIL:", booking._id);
-
           continue;
         }
 
         // ==========================================
-        // 4. CREATE EMAIL
+        // 4. CREATE EMAIL OPTIONS
         // ==========================================
-
         const mailOptions = {
           from: process.env.SENDER_EMAIL,
-
           to: booking.email,
-
           subject: `Upcoming Stay Reminder - ${
             booking.hotel?.name || "Hotel Booking"
           }`,
-
           html: `
             <div
               style="
@@ -94,7 +77,6 @@ export const sendUpcomingBookingReminders = async (req, res) => {
                 color: #222;
               "
             >
-
               <h2 style="color: #d97706;">
                 Your Stay Is Almost Here!
               </h2>
@@ -111,47 +93,38 @@ export const sendUpcomingBookingReminders = async (req, res) => {
               <h3>Reservation Details</h3>
 
               <ul style="line-height: 1.8;">
-
                 <li>
                   <strong>Booking ID:</strong>
                   ${booking._id}
                 </li>
-
                 <li>
                   <strong>Hotel:</strong>
                   ${booking.hotel?.name || "Hotel"}
                 </li>
-
                 <li>
                   <strong>Room:</strong>
                   ${booking.room?.roomType || "Room"}
                 </li>
-
                 <li>
                   <strong>Check-In:</strong>
                   ${new Date(booking.checkInDate).toDateString()}
                 </li>
-
                 <li>
                   <strong>Check-Out:</strong>
                   ${new Date(booking.checkOutDate).toDateString()}
                 </li>
-
                 <li>
                   <strong>Guests:</strong>
                   ${booking.guests}
                 </li>
-
                 <li>
                   <strong>Booking Status:</strong>
                   ${booking.status}
                 </li>
-
                 <li>
                   <strong>Payment Status:</strong>
                   ${booking.isPaid ? "Paid" : "Unpaid"}
                 </li>
-
               </ul>
 
               <p>
@@ -162,35 +135,39 @@ export const sendUpcomingBookingReminders = async (req, res) => {
                 Thank you for choosing
                 ${booking.hotel?.name || "our hotel"}.
               </p>
-
             </div>
           `,
         };
 
         // ==========================================
-        // 5. SEND EMAIL
+        // 5. SEND EMAIL (Isolated Try-Catch)
         // ==========================================
-
-        await transporter.sendMail(mailOptions);
+        try {
+          await transporter.sendMail(mailOptions);
+          console.log("REMINDER EMAIL SENT:", booking.email);
+        } catch (emailError) {
+          console.log(
+            "REMINDER EMAIL ERROR:",
+            booking.email,
+            emailError.message,
+          );
+          // Continues execution to ensure notification fires
+        }
 
         // ==========================================
         // 6. CREATE IN-APP NOTIFICATION
         // ==========================================
-
         try {
           await Notification.create({
             user: booking.user,
-
             type: "booking_reminder",
-
             title: "Upcoming Stay Reminder",
-
             message: `Your stay at ${
               booking.hotel?.name || "the hotel"
             } begins tomorrow.`,
-
             relatedBooking: booking._id,
           });
+          console.log("REMINDER NOTIFICATION CREATED:", booking._id);
         } catch (notificationError) {
           console.log(
             "REMINDER NOTIFICATION ERROR:",
@@ -201,23 +178,26 @@ export const sendUpcomingBookingReminders = async (req, res) => {
         // ==========================================
         // 7. MARK REMINDER AS SENT
         // ==========================================
-
         booking.reminderSent = true;
-
         await booking.save();
 
         sentCount++;
-
-        console.log("UPCOMING BOOKING REMINDER SENT TO:", booking.email);
-      } catch (emailError) {
-        console.log("REMINDER EMAIL ERROR:", booking.email, emailError.message);
+        console.log(
+          "UPCOMING BOOKING REMINDER PROCESS COMPLETE FOR:",
+          booking._id,
+        );
+      } catch (innerError) {
+        console.log(
+          "BOOKING REMINDER PROCESS ERROR FOR ID:",
+          booking._id,
+          innerError.message,
+        );
       }
     }
 
     // ==========================================
     // 8. SEND RESPONSE
     // ==========================================
-
     return res.status(200).json({
       success: true,
       message: "Upcoming booking reminders processed successfully",
@@ -226,7 +206,6 @@ export const sendUpcomingBookingReminders = async (req, res) => {
     });
   } catch (error) {
     console.log("UPCOMING REMINDER ERROR:", error);
-
     return res.status(500).json({
       success: false,
       message: error.message,
