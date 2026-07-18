@@ -1,4 +1,4 @@
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/6fb684da-c407-47da-b8c8-d382abe8009f" /># 🏨 EL Hotel
+# 🏨 EL Hotel
 
 A full-stack **Hotel Booking Web Application** built using the **MERN Stack** that allows users to search hotels,
 book rooms, make secure online payments, receive email notifications, and manage bookings. Hotel owners can register hotels,
